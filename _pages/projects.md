@@ -1,65 +1,44 @@
 ---
 layout: page
-title: projects
+title: 研究项目
 permalink: /projects/
-description: A growing collection of your cool projects.
+description: 围绕多模态交互、视觉恢复与模型部署开展研究和工程实践。
 nav: true
 nav_order: 3
-display_categories: [work, fun]
-horizontal: false
 ---
 
-<!-- pages/projects.md -->
-<div class="projects">
-{% if site.enable_project_categories and page.display_categories %}
-  <!-- Display categorized projects -->
-  {% for category in page.display_categories %}
-  <a id="{{ category }}" href=".#{{ category }}">
-    <h2 class="category">{{ category }}</h2>
-  </a>
-  {% assign categorized_projects = site.projects | where: "category", category %}
-  {% assign sorted_projects = categorized_projects | sort: "importance" %}
-  <!-- Generate cards for each project -->
-  {% if page.horizontal %}
-  <div class="container">
-    <div class="row row-cols-1 row-cols-md-2">
-    {% for project in sorted_projects %}
-      {% include projects_horizontal.liquid %}
-    {% endfor %}
-    </div>
-  </div>
-  {% else %}
-  <div class="row row-cols-1 row-cols-md-3">
-    {% for project in sorted_projects %}
-      {% include projects.liquid %}
-    {% endfor %}
-  </div>
-  {% endif %}
-  {% endfor %}
+## 多轮多模态路由与交互理解
 
-{% else %}
+面向电视、具身智能设备和移动端的多轮交互，研究视觉依赖判断、图像来源路由与意图分发。工作涵盖任务规则定义、训练数据构建、模型微调、困难样本分析以及推理部署。
 
-<!-- Display projects without categories -->
+**技术关键词：** Qwen3 / Qwen3-VL、规则预训练、SFT、LoRA、学习动态分析。
 
-{% assign sorted_projects = site.projects | sort: "importance" %}
+## GUI 理解、视觉定位与智能操作
 
-  <!-- Generate cards for each project -->
+根据屏幕截图、用户指令和历史操作，理解交互目标并定位界面控件。围绕电视大屏和移动端场景，开展单步视觉定位与多步操作验证，关注相似控件、复杂布局和连续操作中的可靠性。
 
-{% if page.horizontal %}
+**技术关键词：** GUI Grounding、视觉语言模型、Action 与边界框预测、SFT、偏好优化。
 
-  <div class="container">
-    <div class="row row-cols-1 row-cols-md-2">
-    {% for project in sorted_projects %}
-      {% include projects_horizontal.liquid %}
-    {% endfor %}
-    </div>
-  </div>
-  {% else %}
-  <div class="row row-cols-1 row-cols-md-3">
-    {% for project in sorted_projects %}
-      {% include projects.liquid %}
-    {% endfor %}
-  </div>
-  {% endif %}
-{% endif %}
-</div>
+## 多任务单 LoRA 能力融合
+
+将界面定位、环境感知、模态路由和意图分发等任务纳入统一模型，开展多源数据组织、联合训练与任务配比优化。结合分任务评测和困难样本治理，分析任务间干扰，兼顾模型能力与部署成本。
+
+**技术关键词：** 多任务学习、LoRA、任务采样、数据再平衡、模型评测。
+
+## 电视 AI 画质参数自动优化
+
+围绕对比度、色度与饱和度等画质参数，开展数据采集、代理建模与参数优化研究。结合贝叶斯优化和可微代理模型，探索从目标参考画面到画质参数的求解方法，并进行实机验证。
+
+**技术关键词：** 贝叶斯优化、可微代理模型、参数反演、画质评价。
+
+## 卡通形象可控视频生成
+
+面向定制卡通形象的视频内容生成，开展视频数据清洗、镜头切分、片段筛选和文本描述标注。通过定制化 LoRA 微调与效果评测，关注角色一致性、文本匹配和视频时序稳定性。
+
+**技术关键词：** 视频生成、多模态数据、LoRA、角色一致性、时序一致性。
+
+## 图像与视频恢复增强
+
+研究图像与视频去模糊、去噪、超分辨率及画质增强，关注时序信息融合、真实退化和局部细节恢复。结合真实数据构建、困难区域分析与端侧约束，开展模型训练和主客观效果验证。
+
+**技术关键词：** 视频去模糊、时序融合、超分辨率、真实退化、端侧部署。

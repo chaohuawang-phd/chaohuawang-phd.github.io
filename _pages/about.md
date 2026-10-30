@@ -1,34 +1,36 @@
 ---
 layout: about
-title: about
+title: 关于我
 permalink: /
-subtitle: <a href='#'>Affiliations</a>. Address. Contacts. Motto. Etc.
-
-profile:
-  align: right
-  image: prof_pic.jpg
-  image_circular: false # crops the image to make it circular
-  more_info: >
-    <p>555 your office number</p>
-    <p>123 your address street</p>
-    <p>Your City, State 12345</p>
-
-selected_papers: true # includes a list of papers marked as "selected={true}"
-social: true # includes social icons at the bottom of the page
-
+subtitle: Chaohua Wang · 工学博士 · 博士后 · 高级算法工程师（副高）
+profile: false
+selected_papers: false
+social: true
 announcements:
-  enabled: true # includes a list of news items
-  scrollable: true # adds a vertical scroll bar if there are more than 3 news items
-  limit: 5 # leave blank to include all the news in the `_news` folder
-
+  enabled: false
 latest_posts:
-  enabled: true
-  scrollable: true # adds a vertical scroll bar if there are more than 3 new posts items
-  limit: 3 # leave blank to include all the blog posts
+  enabled: false
 ---
 
-Write your biography here. Tell the world about yourself. Link to your favorite [subreddit](https://www.reddit.com). You can put a picture in, too. The code is already in, just name your picture `prof_pic.jpg` and put it in the `img/` folder.
+我是**王超华**，现为**海信视像科技股份有限公司博士后、高级算法工程师（副高）**。2024 年，我于西安电子科技大学获得计算机科学与技术工学博士学位。
 
-Put your address / P.O. box / other info right below your picture. You can also disable any of these elements by editing `profile` property of the YAML header of your `_pages/about.md`. Edit `_bibliography/papers.bib` and Jekyll will render your [publications page](/al-folio/publications/) automatically.
+我的研究围绕计算机视觉与多模态智能展开，涵盖**图像与视频恢复增强、多模态大模型、具身智能，以及端侧模型优化与部署**。我关注从数据构建、算法设计、模型训练与评测，到实际设备部署的完整过程，希望让算法更好地服务于真实场景。
 
-Link to your social media connections, too. This theme is set up to use [Font Awesome icons](https://fontawesome.com/) and [Academicons](https://jpswalsh.github.io/academicons/), like the ones below. Add your Facebook, Twitter, LinkedIn, Google Scholar, or just disable all of them.
+## 研究关注
+
+- **多模态大模型**：视觉语言理解、模态路由、指令理解与多轮交互。
+- **图像与视频恢复增强**：去模糊、视频时序融合、超分辨率与真实退化建模。
+- **具身智能与界面理解**：环境感知、视觉定位及面向任务的交互。
+- **端侧模型优化**：参数高效微调、多任务能力融合、量化与推理部署。
+
+[了解研究方向]({{ '/research/' | relative_url }}) · [查看研究项目]({{ '/projects/' | relative_url }})
+
+## 代表性论文
+
+**基于记忆机制的时序融合视频去模糊网络**
+
+*Memory Based Temporal Fusion Network for Video Deblurring*
+
+第一作者，发表于 **International Journal of Computer Vision（IJCV），2023**。
+
+[查看论文成果]({{ '/publications/' | relative_url }}) · [教育与经历]({{ '/cv/' | relative_url }})

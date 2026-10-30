@@ -1,12 +1,45 @@
 ---
-layout: cv
+layout: page
+title: 教育与经历
 permalink: /cv/
-title: CV
+description: 教育背景、工作经历与研究工程能力。
 nav: true
-nav_order: 5
-cv_pdf: /assets/pdf/example_pdf.pdf # you can also use external links here
-cv_format: rendercv # options: rendercv, jsonresume
-description: This is a description of the page. You can modify it in '_pages/cv.md'. You can also change or remove the top pdf download button.
-toc:
-  sidebar: left
+nav_order: 4
 ---
+
+## 工作经历
+
+**海信视像科技股份有限公司**
+
+2024.10—至今 · 博士后 / 高级算法工程师（副高）
+
+围绕多模态大模型、视觉交互和图像画质增强开展研究与工程实践，工作涵盖任务定义、数据治理、模型训练、评测诊断与推理部署。
+
+## 教育经历
+
+**西安电子科技大学 · 人工智能学院**
+
+2020.03—2024.09 · 计算机科学与技术 · 工学博士
+
+研究方向为图像与视频恢复增强。
+
+**西安电子科技大学 · 电子工程学院**
+
+2017.09—2020.01 · 信号与信息处理 · 硕士阶段
+
+后转入博士阶段学习，未获硕士学位；该阶段研究自然语言处理与图像描述生成。
+
+**郑州大学 · 信息工程学院**
+
+2013.09—2017.07 · 电子信息工程 · 工学学士
+
+## 研究与工程能力
+
+- **大模型训练与部署：** Qwen3 / Qwen3-VL、SFT、LoRA、多任务联合训练、LLaMA-Factory 与 vLLM。
+- **数据治理与评测：** 多轮多模态数据构建、标签一致性审核、困难与噪声样本分析、场景重平衡及分任务评测。
+- **视觉算法：** 图像与视频恢复增强、GUI 理解与定位、可控视频生成、模型效率优化。
+- **开发与实验：** Python、C++、PyTorch、TensorFlow、OpenCV 与 Linux。
+
+## 科研与产学合作
+
+博士期间参与动态多阶段视频去噪、老旧电影智能修复和手机端生成式图像超分辨率等产学合作研究。代表性论文发表于 *International Journal of Computer Vision*（IJCV），详见[论文成果]({{ '/publications/' | relative_url }})。
