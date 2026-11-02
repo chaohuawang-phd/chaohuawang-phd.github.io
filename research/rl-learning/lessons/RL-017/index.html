@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151a17"><meta name="description" content="分析ε变化如何影响采样，并连接本阶段的前置概念。"><meta name="color-scheme" content="light"><title>RL-017｜探索策略：ε-greedy的代价与覆盖 · 王超华</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%23151a17'/%3E%3Cpath d='M31 14a13 13 0 1 0 0 20' fill='none' stroke='%23c8f45b' stroke-width='5'/%3E%3Ccircle cx='32' cy='24' r='3' fill='%23c8f45b'/%3E%3C/svg%3E"><link rel="stylesheet" href="../../styles.css"><link rel="stylesheet" href="../../assets/katex/katex.min.css"><script src="../../script.js" defer></script></head>
+<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-017</span></div><section class="lesson-hero"><p class="eyebrow">RL-017 · WEEK 03 · 新知识</p><h1>探索策略：ε-greedy的代价与覆盖</h1><p class="lesson-summary">分析ε变化如何影响采样，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">TD控制</span><span class="tag">模态路由</span><span class="tag">GUI</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>讲义 · PPT 可用</span></div><div class="button-row"><a class="button small" href="./lecture.md" download>讲义下载 · MD</a><a class="button small" href="./RL-017.pptx" download>PPT 下载</a><a class="button small" href="./RL-017.pdf">PDF 阅读版</a></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="本课目录"><h2>本课目录</h2><ol><li><a href="#section-1">1. 今天解决什么问题，与前面哪些单元有关</a></li><li><a href="#section-2">2. 学习目标</a></li><li><a href="#section-3">3. 直觉、定义和必要公式</a></li><li><a href="#section-8">4. 手算例子或更新过程</a></li><li><a href="#section-14">5. 与前一种方法的关系</a></li><li><a href="#section-15">6. 一个主要研究应用</a></li><li><a href="#section-16">7. 常见误解、失败条件和适用边界</a></li><li><a href="#section-17">8. 三道理解题</a></li><li><a href="#section-18">9. 下一单元与待复习问题</a></li><li><a href="#section-19">10. 可核查的参考来源与证据说明</a></li><li><a href="#section-20">参考答案（练习完成后再看）</a></li></ol></aside><article class="lecture"><p>课程：强化学习学习与应用 · 第 3 周 / 单元 17<br>课程版本：1.0.0 · 内容版本：1.0.0 · 日期：2026-11-01（Asia/Shanghai）<br>预计学习：30～45 分钟 · 汇报：10～15 分钟<br>前置：<a href="../RL-016/">RL-016：Q-learning：用贪心目标学习控制</a>，并能回忆 <a href="../RL-015/">RL-015</a> 中的合法动作、平局和 ε-greedy。<br>证据说明：选择规则与覆盖要求来自原始教材和论文；以下概率、环境、冻结估计和退火反例是<strong>教学假设及数学推导</strong>；真实应用为工程推断。随机采样、学习训练、真实 GUI 执行及性能实验均<strong>未运行（NOT_RUN）</strong>。</p>
+<h2 id="section-1">1. 今天解决什么问题，与前面哪些单元有关</h2>
+<p>Q-learning 可以用后继合法动作的最大估计构造目标，但实际行为依然需要获得数据。今天研究这个实际行为：ε=0.2 到底给每个动作多少概率？一个在页面上概率不小的动作，从整个任务起点看为什么仍很难覆盖？把 ε 逐渐减到 0，是否就能兼顾探索与最优？</p>
+<p>本课将概率分成三层：当前状态下的动作概率、到达一个状态动作对的整条路径概率、有限任务里至少访问一次的概率。再把这些概率接到回报、成功、步骤和反馈成本上。三层混淆，会把“有探索”“期望访问 0.9 次”“所有动作已覆盖”误当成同一件事。</p>
+<p>为隔离行为的作用，本课明确<strong>冻结 Q，不做任何 Q 更新</strong>。沿用前课的小 GUI 核，重复任务均从 H2 开始。下面的表是理论枚举，不是训练日志或学习曲线；退火部分另给一个独立的两步反例，不能和 GUI 主例混成同一环境。</p>
+<p>建议用约 8 分钟理解合法动作概率，约 12 分钟复算路径与覆盖，约 8 分钟比较代价和退火，余下时间做题并核对应用合同。</p>
+<h2 id="section-2">2. 学习目标</h2>
+<ol>
+<li>能按全合法集合均匀探索和平局约定，计算唯一最大、多个最大及单合法动作的概率，区分探索分支与非贪心动作。</li>
+<li>能从完整任务起点计算路径概率、有限访问次数的期望与未访问概率，并说清独立性、冻结 Q、固定 ε、初态和可达性的前提。</li>
+<li>能区分行为代价、Q-learning 的单次目标和收敛要求，解释退火不能自动保证覆盖，并为真实 GUI 或路由补齐反馈、预算、成本和对照。</li>
+</ol>
+<h2 id="section-3">3. 直觉、定义和必要公式</h2>
+<h3 id="section-4">3.1 ε 控制哪个随机选择</h3>
+<p>给定完整状态 x，A(x) 是已知、非空的合法动作集合，大小为 k；B(x) 是当前估计 Q 中达到合法最大值的动作集合，大小为 m。这里 k、m 都是动作数量，不能和前课的迭代次数或任务次数混用。ε∈[0,1]，本课约定：以 1−ε 在 B(x) 内均匀选，以 ε 在<strong>全部 A(x)</strong> 内均匀选。因此合法动作 a 的行为概率为：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>b</mi><mi>ε</mi></msub><mo stretchy="false">(</mo><mi>a</mi><mo>∣</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mi>ε</mi><mi>k</mi></mfrac><mo>+</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mi>ε</mi></mrow><mi>m</mi></mfrac><mtext> </mtext><mn mathvariant="bold">1</mn><mo stretchy="false">{</mo><mi>a</mi><mo>∈</mo><mi>B</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo stretchy="false">}</mo><mo separator="true">,</mo><mspace width="2em"/><mi>a</mi><mo>∈</mo><mi>A</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">b_{\varepsilon}(a\mid x)
+=\frac{\varepsilon}{k}
++\frac{1-\varepsilon}{m}\,\mathbf{1}\{a\in B(x)\},
+\qquad a\in A(x).</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">ε</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.7936em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.1076em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">ε</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:2.0074em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">m</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal">ε</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathbf">1</span><span class="mopen">{</span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)}</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">A</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mord">.</span></span></span></span></span></div>
+<p>b_epsilon 是实际行为策略，竖线表示给定当前状态；指示量在 a 属于 B(x) 时取 1，否则为 0。非法动作概率为 0。探索分支包含贪心动作，所以“进入探索分支”和“选中非贪心动作”是两个事件。<a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">原始 ε-greedy 定义见教材 §2.2。</a></p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>合法集合与最大动作</th>
+<th>ε=0.2 的行为概率</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>k=2，m=1</td>
+<td>唯一最大：0.8+0.2/2=0.9；另一个：0.1</td>
+</tr>
+<tr>
+<td>k=2，m=2</td>
+<td>两个都最大，各 0.8/2+0.2/2=0.5</td>
+</tr>
+<tr>
+<td>k=4，m=2</td>
+<td>每个最大动作 0.8/2+0.2/4=0.45；另外两个各 0.05</td>
+</tr>
+<tr>
+<td>k=1，m=1</td>
+<td>唯一合法动作概率为 1</td>
+</tr>
+</tbody></table></div>
+<p>均匀平局是本课明确约定，不是所有实现的默认行为。最大<strong>数值</strong>不随选中哪个并列动作变化，实际动作仍要按已声明规则抽取。ε=0 也可能因平局规则在多个动作之间选择，但不会自动为所有状态动作提供覆盖。</p>
+<p>合法范围必须先确定。未知 mask 或非终止空集合应保留异常，先核查状态和动作定义；不硬抽动作、不加入未允许的动作，也不为继续计算而伪标终止。探索始终受合法和已允许动作集合约束。</p>
+<h3 id="section-5">3.2 从条件动作概率到路径概率</h3>
+<p>在 F1 页面，cancel 的条件概率可能是 0.1；但首先必须到达 F1。对完整状态路径，应按时间顺序乘上到达事件的条件概率、行为选择概率，以及必要的环境分支概率。</p>
+<p>因此“F1,cancel 的概率”必须说明起点和机会单位：是已经到 F1 后的一次选择，还是从 H2 开始的一个完整任务？状态出现次数不是固定任务数；完整状态 (page,h) 也不能只按页面合并。本课每个状态动作在单条主例任务中至多出现一次，便于把访问事件转成计数。</p>
+<h3 id="section-6">3.3 有限任务覆盖的含义</h3>
+<p>设固定协议下，一个完整任务访问指定状态动作对的概率为 p。在本课任务彼此独立同分布、Q、ε、合法集合、初态分布及环境均保持所需固定条件的协议下，做 M 个任务的访问计数 C_M 可同时写成：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="double-struck">E</mi><mo stretchy="false">[</mo><msub><mi>C</mi><mi>M</mi></msub><mo stretchy="false">]</mo><mo>=</mo><mi>M</mi><mi>p</mi><mo separator="true">,</mo><mspace width="2em"/><mi>Pr</mi><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>C</mi><mi>M</mi></msub><mo>=</mo><mn>0</mn><mo stretchy="false">)</mo><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><msup><mo stretchy="false">)</mo><mi>M</mi></msup><mo separator="true">,</mo><mspace width="2em"/><mi>Pr</mi><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>C</mi><mi>M</mi></msub><mo>≥</mo><mn>1</mn><mo stretchy="false">)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><msup><mo stretchy="false">)</mo><mi>M</mi></msup><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\mathbb{E}[C_M]=Mp,\qquad
+\Pr(C_M=0)=(1-p)^M,\qquad
+\Pr(C_M\ge1)=1-(1-p)^M.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathbb">E</span><span class="mopen">[</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">Mp</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop">Pr</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.1413em;vertical-align:-0.25em;"></span><span class="mord mathnormal">p</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop">Pr</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.1413em;vertical-align:-0.25em;"></span><span class="mord mathnormal">p</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span></span></span></span></span></span></span></span><span class="mord">.</span></span></span></span></span></div>
+<p>M 是完整任务数，C_M 是这 M 个任务里指定对的访问次数，E 表示对假设随机机制取期望，Pr 表示概率。E[C_M]=Mp 本身只需每任务的访问概率均为 p 和期望可加；零访问的固定幂式还依赖独立等条件。这里每任务至多访问该对一次；一般可能重复访问的任务，次数与“是否访问”的定义应另行区分。</p>
+<p>期望次数不能四舍五入成覆盖结论；至少访问一次也不等于整个任务图覆盖，更不等于得到足够估计精度。若真实 Q、ε 或 mask 随历史改变，任务一般不再具有这里的同一个固定 p，不能直接照搬固定幂公式。若状态根本不可达，增大 ε 也不会使其出现。</p>
+<h3 id="section-7">3.4 固定探索与退火</h3>
+<p>固定 ε 便于说明概率，但会持续保留某些探索动作。退火是随时间或任务编号改变 ε 的计划；必须标明编号指环境步、任务、动作访问次数还是其他量。</p>
+<p>ε 下降能减少一部分探索行为，却也可能在稀有路径获得足够数据前关闭机会。ε 趋向 0 只描述选择规则的一个参数，不同时证明可达性、每对无限访问、合适学习步长或价值已经学准。教材和原始论文的控制结论都带有访问与其他条件，不能只留下一个退火公式。<a href="https://www.gatsby.ucl.ac.uk/~dayan/papers/cjch.pdf">覆盖条件可回查教材 §6.4～6.5 及原论文的表格设定。</a></p>
+<h2 id="section-8">4. 手算例子或更新过程</h2>
+<h3 id="section-9">4.1 GUI 主例的完整假设</h3>
+<p>以下为<strong>已给定教学模型的理论枚举</strong>。没有抽随机数、收集轨迹或训练。H 是主页，F 是表单页，z 是终止；完整键为 (page,h)，每动作消耗一次预算，h=0 为任务本身终止。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>页面动作</th>
+<th>环境后果与即时奖励</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>H：open</td>
+<td>r=−1，预算尚可继续则进入 F，用完则终止</td>
+</tr>
+<tr>
+<td>H：stop</td>
+<td>r=0，终止</td>
+</tr>
+<tr>
+<td>F：save</td>
+<td>以 0.8 概率 r=10、以 0.2 概率 r=0，均终止</td>
+</tr>
+<tr>
+<td>F：cancel</td>
+<td>r=0，终止</td>
+</tr>
+</tbody></table></div>
+<p>γ=0.9，无额外 save 成本、终止加分或预算补偿。每个任务<strong>独立重新从 H2 开始</strong>。Q 固定为 H2 的 open=1、stop=0，F1 的 save=4、cancel=−2；它只是定义当前贪心排序的教学估计，既不是模型真值，也不继承 RL-016 的最终表。整个主例不写入 Q。</p>
+<p>合法集合固定为 H 的 open/stop、F 的 save/cancel。ε 在每个比较方案的所有任务里固定；行为抽取按第 3 节约定，任务间及每次条件选择采用相应独立抽取假设，环境反馈按给定核产生。令 g=1−ε/2，为每个页面上唯一贪心动作的概率；非贪心动作概率为 ε/2。后面的独立任务覆盖计算依赖这些条件，不把它们当成真实系统已经满足的事实。</p>
+<h3 id="section-10">4.2 ε=0.2 时的四条完整路径</h3>
+<p>此时 g=0.9。从 H2 开始的路径分布是：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>完整路径</th>
+<th>概率计算</th>
+<th align="right">路径概率</th>
+<th align="right">从 H2 的完整回报 G</th>
+<th align="right">动作步数 L</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>stop</td>
+<td>0.1</td>
+<td align="right">0.1</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td>open，save，成功</td>
+<td>0.9×0.9×0.8</td>
+<td align="right">0.648</td>
+<td align="right">−1+0.9×10=8</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td>open，save，失败</td>
+<td>0.9×0.9×0.2</td>
+<td align="right">0.162</td>
+<td align="right">−1</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td>open，cancel</td>
+<td>0.9×0.1</td>
+<td align="right">0.09</td>
+<td align="right">−1</td>
+<td align="right">2</td>
+</tr>
+</tbody></table></div>
+<p>四项概率之和为 1。成功路径的环境概率 0.8 与两个行为概率 0.9 各有来源；stop、cancel 和 save 失败都按定义结束，不能再补一个未来奖励。</p>
+<p>F1,cancel 从任务起点的访问概率是 0.09，不是条件概率 0.1。类似地，四个状态动作对每任务访问概率为 H2,open：0.9，H2,stop：0.1，F1,save：0.81，F1,cancel：0.09。它们不是互斥的四条完整路径，因此这四个访问概率不要求和为 1；同一任务可以同时访问 H2,open 与 F1,save。</p>
+<h3 id="section-11">4.3 行为回报、成功和步数</h3>
+<p>本例成功率是 0.648，指教学核中 save 得奖励 10 的事件。期望回报和期望动作步数可直接由表中真实奖励与路径概率计算：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.25em" columnalign="right left" columnspacing="0em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mi mathvariant="double-struck">E</mi><mo stretchy="false">[</mo><mi>G</mi><mo stretchy="false">]</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mn>0.648</mn><mo>×</mo><mn>8</mn><mo>−</mo><mn>0.162</mn><mo>−</mo><mn>0.09</mn><mo>=</mo><mn>4.932</mn><mo separator="true">,</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mi mathvariant="double-struck">E</mi><mo stretchy="false">[</mo><mi>G</mi><mo stretchy="false">]</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mi>g</mi><mo stretchy="false">(</mo><mo>−</mo><mn>1</mn><mo>+</mo><mn>7.2</mn><mi>g</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><mspace width="2em"/><mi mathvariant="double-struck">E</mi><mo stretchy="false">[</mo><mi>L</mi><mo stretchy="false">]</mo><mo>=</mo><mn>1</mn><mo>+</mo><mi>g</mi><mo separator="true">,</mo><mspace width="2em"/><mi>g</mi><mo>=</mo><mn>1</mn><mo>−</mo><mi>ε</mi><mi mathvariant="normal">/</mi><mn>2.</mn></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
+\mathbb E[G]
+&amp;=0.648\times8-0.162-0.09=4.932,\\
+\mathbb E[G]&amp;=g(-1+7.2g),\qquad
+\mathbb E[L]=1+g,\qquad g=1-\varepsilon/2.
+\end{aligned}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:3em;vertical-align:-1.25em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.75em;"><span style="top:-3.91em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathbb">E</span><span class="mopen">[</span><span class="mord mathnormal">G</span><span class="mclose">]</span></span></span><span style="top:-2.41em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathbb">E</span><span class="mopen">[</span><span class="mord mathnormal">G</span><span class="mclose">]</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.25em;"><span></span></span></span></span></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.75em;"><span style="top:-3.91em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">0.648</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">8</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">0.162</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">0.09</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">4.932</span><span class="mpunct">,</span></span></span><span style="top:-2.41em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">g</span><span class="mopen">(</span><span class="mord">−</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">7.2</span><span class="mord mathnormal" style="margin-right:0.03588em;">g</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathbb">E</span><span class="mopen">[</span><span class="mord mathnormal">L</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">g</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">g</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal">ε</span><span class="mord">/2.</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.25em;"><span></span></span></span></span></span></span></span></span></span></span></span></div>
+<p>L 是每个完整任务的实际动作次数，不是运行时延或训练计算量。一般式中，open 先付 −1；到 F 后以概率 g 执行 save，其环境期望即时奖励为 8，再乘折扣 0.9，因此得到 7.2g。这是在已知教学核上求行为回报期望，没有把假设 Q 的 4、−2 加权成新的学习目标。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>同一冻结 Q 与已知教学核</th>
+<th align="right">ε=0</th>
+<th align="right">ε=0.2</th>
+<th align="right">ε=1</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>每页贪心动作概率 g</td>
+<td align="right">1</td>
+<td align="right">0.9</td>
+<td align="right">0.5</td>
+</tr>
+<tr>
+<td>行为期望回报 E[G]</td>
+<td align="right">6.2</td>
+<td align="right">4.932</td>
+<td align="right">1.3</td>
+</tr>
+<tr>
+<td>教学成功概率</td>
+<td align="right">0.8</td>
+<td align="right">0.648</td>
+<td align="right">0.2</td>
+</tr>
+<tr>
+<td>期望动作步数 E[L]</td>
+<td align="right">2</td>
+<td align="right">1.9</td>
+<td align="right">1.5</td>
+</tr>
+</tbody></table></div>
+<p>ε 增大后，更多任务可能提前 stop，所以平均步数反而减少，同时成功和期望回报下降。不能用“更快结束”代替任务收益，也不能断言探索一定增加动作次数。相对本例同一冻结排序的 ε=0 方案，ε=0.2 的模型内期望回报差为 6.2−4.932=1.268；这不是所有任务中探索的普遍损失，更不是 ε=0 适合真实学习的结论。未知价值时，缺少探索本身可能让错误排序长期得不到纠正。</p>
+<h3 id="section-12">4.4 十个任务仍可能一次也没访问</h3>
+<p>取 ε=0.2、M=10，指定对为 F1,cancel。整任务 p=0.09，因此 E[C_10]=10×0.09=0.9，但未访问概率为 0.91 的 10 次方，即约 <strong>0.389416</strong>；至少访问一次的概率约 <strong>0.610584</strong>。</p>
+<p>这里的 10 是 H2 起始任务数，不是已经到 F1 的次数。F1 出现次数本身随机，不能把其期望 9 次当成固定 9 次机会，再随意改写未访问公式。即使某次真实采集恰好访问一次，也不能把理论 61.06% 称为那次日志的覆盖率。</p>
+<p>从固定初态 H2 出发，这个核只会到达 F1 或终止，H1、F2 不可达。合法动作内均匀探索不会创造新的初态。若研究确需这些状态，必须另行定义初态、可达路径与允许的采集方案；不能把本例“四对有正概率”写成整个状态空间已覆盖。</p>
+<h3 id="section-13">4.5 独立反例：ε_n=1/n 仍可能错过稀有路径</h3>
+<p>下面是<strong>另一个纯采集教学模型</strong>，不使用 GUI 的 H/F 或其奖励。每个任务从 X 开始：X 有立即终止 exit 和进入 Y 的 enter；Y 有立即终止 exit 和终止的 probe。每个状态各有两个固定合法动作，冻结估计均使 exit 为唯一贪心、enter/probe 为非贪心；所有实际奖励设为 0，不进行 Q 更新。指定要覆盖的对为 Y,probe。</p>
+<p>全局任务编号 n=1,2,…，每任务使用 ε_n=1/n，并在该任务的两个决定中保持这个 ε_n；n 不是各状态自己的访问次数。按全合法均匀探索，进入 Y 和随后选择 probe 都须选中非贪心动作，各自条件概率 1/(2n)，因此该任务的完整目标路径概率 p_n 为：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.25em" columnalign="right left" columnspacing="0em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><msub><mi>p</mi><mi>n</mi></msub></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mfrac><mn>1</mn><mrow><mn>2</mn><mi>n</mi></mrow></mfrac><mfrac><mn>1</mn><mrow><mn>2</mn><mi>n</mi></mrow></mfrac><mo>=</mo><mfrac><mn>1</mn><mrow><mn>4</mn><msup><mi>n</mi><mn>2</mn></msup></mrow></mfrac><mo separator="true">,</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mi>Pr</mi><mo>⁡</mo><mo stretchy="false">(</mo><mtext>至少一个任务访问 </mtext><mi>Y</mi><mo separator="true">,</mo><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">b</mi><mi mathvariant="normal">e</mi></mrow><mo stretchy="false">)</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>≤</mo><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mi mathvariant="normal">∞</mi></munderover><msub><mi>p</mi><mi>n</mi></msub><mo>≤</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mi mathvariant="normal">.</mi></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
+p_n&amp;=\frac{1}{2n}\frac{1}{2n}=\frac{1}{4n^2},\\
+\Pr(\text{至少一个任务访问 }Y,\mathrm{probe})
+&amp;\le\sum_{n=1}^{\infty}p_n
+\le\frac12.
+\end{aligned}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:5.5259em;vertical-align:-2.513em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:3.013em;"><span style="top:-5.3429em;"><span class="pstrut" style="height:3.6514em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-2.7055em;"><span class="pstrut" style="height:3.6514em;"></span><span class="mord"><span class="mop">Pr</span><span class="mopen">(</span><span class="mord text"><span class="mord cjk_fallback">至少一个任务访问</span><span class="mord"> </span></span><span class="mord mathnormal" style="margin-right:0.22222em;">Y</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathrm">probe</span></span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.513em;"><span></span></span></span></span></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:3.013em;"><span style="top:-5.3429em;"><span class="pstrut" style="height:3.6514em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span><span class="mord mathnormal">n</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span><span class="mord mathnormal">n</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">4</span><span class="mord"><span class="mord mathnormal">n</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7401em;"><span style="top:-2.989em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mpunct">,</span></span></span><span style="top:-2.7055em;"><span class="pstrut" style="height:3.6514em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.6514em;"><span style="top:-1.8829em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mrel mtight">=</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2671em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord">.</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.513em;"><span></span></span></span></span></span></span></span></span></span></span></span></div>
+<p>最后一步用到 1/n² 的级数不超过 2：第一项为 1，其余项可由从 1 到无穷的 x 的负二次方积分上界为 1。对各任务覆盖事件使用并集上界，不需要任务之间独立。这里得到的是上界，不是精确概率；“始终没有覆盖”的概率下界是至少 0.5，不能写成恰好 0.5。</p>
+<p>虽然 ε_n→0，且 ε_n 的和发散，<strong>两次稀有选择连成的路径</strong>仍可能永远没有覆盖。这个反例只推翻把退火条件单独当成覆盖保证的说法，不声称是一次真实 Q-learning 训练过程，也不证明所有 1/n 计划都会失败。一般控制还需检查状态可达、访问机会、估计变化和学习条件；完整收敛讨论留给后续单元。</p>
+<h2 id="section-14">5. 与前一种方法的关系</h2>
+<p>RL-016 关注给定转移怎样写 Q；本课关注行为怎样产生转移，以及代价与机会怎样累计。冻结 Q 和合法集合时，对于同一 H2 open、r=−1 到 F1 的转移，Q-learning 的合法最大值仍为 4，目标仍为 −1+0.9×4=2.6；改变 ε 不会直接改这个单次 max 目标，却会改变这条转移、后续动作和结果被观察到的频率。</p>
+<p>如果真的开始学习，行为改变会影响后续数据，Q 也可能改变，所以不能把“同快照目标不变”推广为整个训练不受 ε 影响。目标不包含下一行为动作，也不等于行为没有代价。此处没有把 ε 下的动作价值平均写成另一种算法的目标。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>应分别报告的对象</th>
+<th>本课例子</th>
+<th>能支持的结论</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>行为动作概率</td>
+<td>给定 F1 后 cancel 为 0.1</td>
+<td>当前页面下的选择规则</td>
+</tr>
+<tr>
+<td>整任务访问概率</td>
+<td>从 H2 到 F1,cancel 为 0.09</td>
+<td>指定初态和路径下的机会</td>
+</tr>
+<tr>
+<td>有限覆盖概率</td>
+<td>十任务至少一次约 0.610584</td>
+<td>固定独立协议下的概率，不是实际日志结果</td>
+</tr>
+<tr>
+<td>行为期望回报</td>
+<td>ε=0.2 时 4.932</td>
+<td>已知教学核内的理论值，不是训练性能</td>
+</tr>
+<tr>
+<td>Q-learning 单次目标</td>
+<td>同快照 open 目标 2.6</td>
+<td>一次自举构造，不是完整 G 或成功率</td>
+</tr>
+</tbody></table></div>
+<p>实践中，ε、初始估计、mask、初态分布、奖励与反馈质量都影响数据。两种探索计划若交互预算、允许动作或评价策略不同，即使总任务数相同，也不能直接宣布谁更优。</p>
+<h2 id="section-15">6. 一个主要研究应用</h2>
+<p>主要应用选择<strong>多步 GUI 控制的数据覆盖规划</strong>：某个动作即使在到达页面后有一定概率，通往该页的路径也可能很稀有。可以先在可信小模型中检查路径与反馈成本，再决定是否有必要采集。真实系统还不能默认已有本课的完整状态、奖励、独立 reset 或可信核，以下均为<strong>【待确认】</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>合同项</th>
+<th>需要从真实任务补齐的内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1. 观测与完整状态</td>
+<td>【待确认】指令、画面、结构信息、历史和剩余预算；同一页面是否因隐藏状态而具有不同后果</td>
+</tr>
+<tr>
+<td>2. 合法动作</td>
+<td>【待确认】动作粒度、允许集合、mask 依据及版本；未知、禁用、失效动作如何处理</td>
+</tr>
+<tr>
+<td>3. 行为与探索计划</td>
+<td>【待确认】Q 版本、ε 数值及计时单位、平局和随机选择规则；是否冻结或随学习改变</td>
+</tr>
+<tr>
+<td>4. 奖励与业务代价</td>
+<td>【待确认】成功、失败、取消、错误操作、步骤、时间的单位及权重、折扣；不直接借教学奖励</td>
+</tr>
+<tr>
+<td>5. 反馈来源</td>
+<td>【待确认】谁核验操作后果、延迟和缺失；点击命中或提示出现是否证明实际业务结果</td>
+</tr>
+<tr>
+<td>6. 时间与终止</td>
+<td>【待确认】任务期限、预算耗尽、真实终止、外部截断与 reset 的独立标志</td>
+</tr>
+<tr>
+<td>7. 初态与可达性</td>
+<td>【待确认】每类任务初态、重置方式及成本，目标状态是否可达、需要经过哪些选择</td>
+</tr>
+<tr>
+<td>8. 数据与覆盖</td>
+<td>【待确认】状态动作、机会分母、完整路径、版本、失败/截断/缺失原因；报告实际计数，不能以理论期望替代</td>
+</tr>
+<tr>
+<td>9. 指标与评价策略</td>
+<td>【待确认】成功、回报、错误、取消、环境步、访问次数与未知区域；探索行为和冻结评价策略分别报告</td>
+</tr>
+<tr>
+<td>10. 采集与训练成本</td>
+<td>【待确认】核验标注、环境交互、重复、调参和训练开销，以及获得稀有路径的机会成本</td>
+</tr>
+<tr>
+<td>11. 推理与执行成本</td>
+<td>【待确认】视觉编码、合法候选、Q 查询、抽样、等待、恢复和结果核验的延迟及资源费用</td>
+</tr>
+<tr>
+<td>12. 方法与非 RL 对照</td>
+<td>【待确认】探索计划的方法比较与非 RL 行为基线分开；固定流程、监督定位加流程或示范策略按任务、输入、权限、预算、成功判据匹配</td>
+</tr>
+</tbody></table></div>
+<p>拟议研究先锁定目标状态动作及机会单位，记录哪些状态没有到达、哪些动作没有尝试、哪些结果不可核。比较探索方案时固定允许范围、任务与预算，分开训练、调参和测试，做独立重复并报告不确定性。实际 Q 更新的日志不能假装成固定 p 的独立任务模型。没有本次运行结果，就不绘经验学习曲线或填入覆盖提升数字。</p>
+<p>外部采集停止不自动等于任务本身终止；reset 后的新图不能补成旧后继。Q-learning 若持有原任务有效后继和合法 mask，可按前课条件处理一步目标；本课的完整任务回报与覆盖公式则必须另核任务是否完整、分母和缺失机制，不能只丢掉失败或截断任务后沿用原协议的概率结论。</p>
+<p>模态路由的<strong>真实输入、标签语义、可选动作及业务错误成本均【待确认】</strong>，不能拿本课 save/cancel 或已有但未经本课确认的标签替换。独立一次路由先判断单步选择是否足够，多步只有在选择改变后续观测、成本和结果时再讨论。SR 同样先确认是否存在连续计算分配、停止等真实决策；普通单次重建优先建立监督与固定处理基线，不强套 ε-greedy。</p>
+<h2 id="section-16">7. 常见误解、失败条件和适用边界</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>误解</th>
+<th>检查办法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>“ε=0.2 就有 20% 的非贪心动作”</td>
+<td>探索分支也能选贪心；二合法唯一最大时非贪心只有 0.1</td>
+</tr>
+<tr>
+<td>“每个动作加 ε/k 就足够，平局不重要”</td>
+<td>利用概率还要在 m 个最大动作中分配，明确合法集与平局规则</td>
+</tr>
+<tr>
+<td>“F 页 cancel=0.1，十个任务就有一次”</td>
+<td>先乘到达 F1 的 0.9；期望 0.9 次仍有约 38.94% 零访问概率</td>
+</tr>
+<tr>
+<td>“一次正覆盖代表整个状态空间和价值都可靠”</td>
+<td>分开可达状态、每对计数、结果反馈与估计精度；H1、F2 在主例初态下不可达</td>
+</tr>
+<tr>
+<td>“探索多一定更慢，步数少就是收益高”</td>
+<td>主例提前停止使步数减少，但成功与回报也下降；真实成本需多指标核验</td>
+</tr>
+<tr>
+<td>“ε 退火且总探索量发散就保证覆盖”</td>
+<td>稀有路径可能需多个连续选择；独立反例只有概率上界，不是收敛训练</td>
+</tr>
+<tr>
+<td>“Q-learning 的 max 不含 ε，训练就不受探索影响”</td>
+<td>同快照目标与产生数据的行为分开；后续覆盖、成本和估计都会受影响</td>
+</tr>
+</tbody></table></div>
+<p>固定 ε&gt;0 对某个已到达状态的合法动作给出正条件概率，但不自动保证该状态被访问，更不提供有限预算内的全覆盖。ε=0 也可能使错误的初始排序失去纠正机会。原始表格控制结论还要求相应的访问、问题和步长条件；本课不以一次退火计划替代这些条件，不向任意神经网络或真实业务作保证。</p>
+<h2 id="section-17">8. 三道理解题</h2>
+<p><strong>题 1｜选择概率与目标。</strong> ε=0.2 时，四个合法动作中有两个并列最大，各动作概率是多少？这是否意味着 20% 动作一定非贪心？回到主例同一冻结 Q，ε 改为 1 时，给定同一 open 转移的 Q-learning 目标会否直接改变？</p>
+<p><strong>题 2｜路径、计数与成本。</strong> 按主例 ε=0.2，复算四条完整路径的概率、成功概率、E[G]、E[L]；F1,cancel 从任务起点的概率是多少？十个独立同分布任务的期望访问次数、零访问概率和至少一次概率各是什么，能否称为全状态已覆盖？</p>
+<p><strong>题 3｜退火与应用。</strong> 在独立 X/Y 反例中，每任务 n 使用 ε_n=1/n，为什么通往 Y,probe 的概率为 1/(4n²)？“至少一次”与“永不覆盖”的界分别是什么，能否写成精确概率或真实 Q-learning 结果？为 GUI 或路由列四项待确认合同及一个非 RL 行为对照。</p>
+<h2 id="section-18">9. 下一单元与待复习问题</h2>
+<p>下一单元为 <strong>RL-018《Expected SARSA与Double Q：改进目标估计》</strong>。本课只预告它将继续比较目标估计，不提前给出这两种方法的更新式，也不把本课的行为回报期望改称它们的目标。</p>
+<p>若概率分配仍不清楚，回看 RL-015 的合法集合与平局；若把行为与目标混合，回看 RL-016；若把理论枚举当作经验曲线，回看 RL-012～014 的证据边界。以上是条件自查入口，不是个人薄弱点诊断。材料生成不等于已学习或已理解，建议独立作答后核对答案；没有新反馈时按既有依赖顺序继续。</p>
+<h2 id="section-19">10. 可核查的参考来源与证据说明</h2>
+<ol>
+<li>Sutton、Barto，<em>Reinforcement Learning: An Introduction</em>，第 2 版：<a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">原始教材 PDF</a>。本次实际选读 §2.2 印刷页 27～28 的贪心与全动作均匀探索，及 §6.4 的 129 页、§6.5 的 131 页的行为覆盖与条件性控制说明。第二章的 bandit 保证不能无条件搬到多步 GUI。</li>
+<li>Watkins、Dayan，<em>Technical Note: Q-Learning</em>，1992：<a href="https://www.gatsby.ucl.ac.uk/~dayan/papers/cjch.pdf">作者大学站点原文</a>。本次实际选读印刷页 280～282 的有限表格设定、覆盖与定理条件，并核对 282 页公式；没有复核全文证明或附录，也不复现实验。</li>
+</ol>
+<p>来源核查日期为 2026-11-01。教材完整网络打开受文件体积限制，使用重新校验的原文缓存读取上述选页；论文原文可读。来源访问记录和文件校验保存在私有验证资料中，不能据元数据请求或全文件下载声称通读全文。</p>
+<p>ε-greedy 机制和控制前提属于<strong>已发表知识</strong>；冻结 Q、独立 reset、完整路径、有限覆盖计算及 X/Y 反例属于<strong>教学假设与精确数学推导</strong>，不是论文实验结果。真实 GUI/路由/SR 的适配和采集计划属于<strong>工程推断及拟议研究</strong>。本课未运行随机采样、学习训练、真实 GUI、GPU 或服务器实验，没有实际覆盖或性能提升，状态为<strong>未运行（NOT_RUN）</strong>。</p>
+<details class="answers" id="section-20"><summary>参考答案（练习完成后再看）</summary><p><strong>题 1 参考答案。</strong> k=4、m=2，每个最大动作得到 0.8/2+0.2/4=0.45，另外两个各得 0.05，总和为 1。进入探索分支的概率是 0.2，但它也可能选中两个贪心动作，因此本例实际选非贪心的总概率为 0.1。两个都最大时平分利用概率，不能只给其中一个 0.8。唯一合法时概率为 1；未知或非终止空 mask 应先保留异常。</p>
+<p>同一冻结表、同一合法集合、同一个 open 后继转移下，Q-learning 最大值仍为 max(4,−2)=4，目标仍为 −1+0.9×4=2.6。ε=1 改变实际动作分布和未来获得的经验，不直接改变这个快照目标；真实开始更新 Q 后，不能继续断言后续目标和训练都不受 ε 影响。</p>
+<p><strong>题 2 参考答案。</strong> 四路径概率依次 stop=0.1，open-save 成功=0.9×0.9×0.8=0.648，失败=0.9×0.9×0.2=0.162，open-cancel=0.9×0.1=0.09，合计 1；对应回报 0、8、−1、−1。成功概率为 0.648；E[G]=0.648×8−0.162−0.09=4.932。步数为 1、2、2、2，所以 E[L]=0.1+2×0.9=1.9。这些是已知教学核下的理论值，不是样本结果。</p>
+<p>F1,cancel 的整任务概率 p=0.09，条件到 F1 后才是 0.1。M=10 且保持本课独立同分布、冻结 Q、固定 ε 与完整任务条件时，E[C_10]=0.9；P(C_10=0)=0.91^10≈0.389416；P(C_10≥1)≈0.610584。期望不是保证，至少一次也不等于全空间覆盖或估计可靠。H1、F2 从给定 H2 初态不可达。真实 Q 或协议改变、任务截断时，应重新核查模型与分母，不能直接沿用这些数。</p>
+<p><strong>题 3 参考答案。</strong> 这是独立于 GUI 的固定两动作、固定估计排序模型。任务 n 从 X reset，两个决定都使用 ε_n=1/n；非贪心 enter 和 probe 各有条件概率 1/(2n)，完整路径概率相乘为 p_n=1/(4n²)。对“某个任务访问 Y,probe”的事件取并集上界，P(曾访问)≤Σp_n≤1/2，因为 Σ1/n²≤2；不依赖跨任务独立性。于是 P(从未访问)≥1/2，二者都是界，不能换成等号。这表明仅有 ε_n→0、Σε_n 发散仍不能保证路径覆盖，不是一次实际训练或所有退火计划失败的证明。</p>
+<p>真实合同可列完整状态与初态可达性、合法动作及 mask、探索计时与版本、奖励业务成本、独立反馈、终止/截断/reset、访问机会分母和评价预算。非 RL 行为对照可用固定流程或监督定位加流程，匹配输入、权限、预算、成功判据；探索方案之间属于方法比较。路由输入、标签语义、动作、错误成本仍待确认，不能代用教学状态或旧标签。当前证据为教材机制、数学推导与拟议合同，真实覆盖、学习和性能均 NOT_RUN。</p>
+</details></article></div><section class="pdf-preview wrap" aria-labelledby="pdf-preview-title"><h2 id="pdf-preview-title">同内容伴随 PDF · 阅读版</h2><p>本课 PDF 使用与 PPT 相同的源内容，经独立排版用于阅读，非 PowerPoint 原生导出；可编辑汇报请使用 PPT。手机或浏览器未显示时，可<a href="./RL-017.pdf" style="text-decoration:underline">直接打开 PDF 阅读版</a>。</p><iframe src="./RL-017.pdf#toolbar=1" title="RL-017 同内容伴随 PDF 阅读版" loading="lazy"></iframe></section><div class="lesson-navigation wrap"><a href="../RL-016/"><span>← 上一单元 · RL-016</span><strong>Q-learning：用贪心目标学习控制</strong></a><a class="next" href="../RL-018/"><span>下一单元 · RL-018 →</span><strong>Expected SARSA与Double Q：改进目标估计</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>

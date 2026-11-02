@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151a17"><meta name="description" content="写出Q-learning目标，并连接本阶段的前置概念。"><meta name="color-scheme" content="light"><title>RL-016｜Q-learning：用贪心目标学习控制 · 王超华</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%23151a17'/%3E%3Cpath d='M31 14a13 13 0 1 0 0 20' fill='none' stroke='%23c8f45b' stroke-width='5'/%3E%3Ccircle cx='32' cy='24' r='3' fill='%23c8f45b'/%3E%3C/svg%3E"><link rel="stylesheet" href="../../styles.css"><link rel="stylesheet" href="../../assets/katex/katex.min.css"><script src="../../script.js" defer></script></head>
+<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-016</span></div><section class="lesson-hero"><p class="eyebrow">RL-016 · WEEK 03 · 新知识</p><h1>Q-learning：用贪心目标学习控制</h1><p class="lesson-summary">写出Q-learning目标，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">TD控制</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>讲义 · PPT 可用</span></div><div class="button-row"><a class="button small" href="./lecture.md" download>讲义下载 · MD</a><a class="button small" href="./RL-016.pptx" download>PPT 下载</a><a class="button small" href="./RL-016.pdf">PDF 阅读版</a></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="本课目录"><h2>本课目录</h2><ol><li><a href="#section-1">1. 今天解决什么问题，与前面哪些单元有关</a></li><li><a href="#section-2">2. 学习目标</a></li><li><a href="#section-3">3. 直觉、定义和必要公式</a></li><li><a href="#section-9">4. 手算例子或更新过程</a></li><li><a href="#section-15">5. 与前一种方法的关系</a></li><li><a href="#section-16">6. 一个主要研究应用</a></li><li><a href="#section-17">7. 常见误解、失败条件和适用边界</a></li><li><a href="#section-18">8. 三道理解题</a></li><li><a href="#section-19">9. 下一单元与待复习问题</a></li><li><a href="#section-20">10. 可核查的参考来源与证据说明</a></li><li><a href="#section-21">参考答案（练习完成后再看）</a></li></ol></aside><article class="lecture"><p>课程：强化学习学习与应用 · 第 3 周 / 单元 16<br>课程版本：1.0.0 · 内容版本：1.0.0 · 日期：2026-10-31（Asia/Shanghai）<br>预计学习：30～45 分钟 · 汇报：10～15 分钟<br>前置：<a href="../RL-015/">RL-015：SARSA：沿当前行为策略学习动作价值</a>。需要能复述动作价值、更新前后快照、ε-greedy 与真终止。<br>证据说明：算法机制来自原始教材与 Watkins、Dayan 论文；数字与动作序列是<strong>教学假设及精确手算</strong>；真实 GUI 应用是工程推断和拟议方案。随机采样、训练、GUI 执行与性能比较均<strong>未运行（NOT_RUN）</strong>。</p>
+<h2 id="section-1">1. 今天解决什么问题，与前面哪些单元有关</h2>
+<p>上一课的 SARSA 会先选定下一行为动作，再用这个动作的当前估计构造目标。今天的问题是：如果行为策略正在探索，学习目标能否仍按当前表中最好的合法动作来构造？</p>
+<p>Q-learning 在非终止后继上读取最大的合法动作估计值。实际下一步仍由行为策略选择，所以目标中的最大值所对应的动作，可以与下一次真正执行的动作不同。这个区别形成了本课的 off-policy 控制机制。</p>
+<p>我们将复用 RL-015 的环境核和同一组 fresh Q 初值，让实际轨迹仍然执行 open 后 cancel。第一步 Q-learning 的目标是 2.6，SARSA 在相同 pre 表及下一行为动作 cancel 下的目标是 −2.8。两个目标都含有估计量，都不能直接叫作真实回报或性能。</p>
+<p>建议用约 8 分钟读目标与行为的区分，约 12 分钟手算和对比，再用约 8 分钟检查终止、mask 和覆盖边界，余下时间做三题。今天不运行实验，不展开后续改进算法。</p>
+<h2 id="section-2">2. 学习目标</h2>
+<ol>
+<li>能解释 Q-learning 的贪心目标、实际行为策略和最优动作价值 q* 分别是什么，说明 off-policy 为什么允许二者动作不同。</li>
+<li>能用合法动作与同一份更新前 Q，复算目标、TD 误差、单项写入和终止更新，并与独立的同 pre SARSA 对照区分。</li>
+<li>能判断有效后继、外部截断、reset、覆盖和步长条件如何限制更新与结论，为 GUI 控制列出真实反馈、成本和非 RL 行为对照。</li>
+</ol>
+<h2 id="section-3">3. 直觉、定义和必要公式</h2>
+<h3 id="section-4">3.1 学习对象、目标策略与行为策略</h3>
+<p>固定策略下 q_pi(x,a) 是从完整状态 x 出发，先执行合法 a，之后持续按 π 行动所得折扣回报的期望。最优动作价值 q*(x,a) 则考虑在这一步之后采用最优后续决策所能达到的期望。这里优化的是期望折扣回报，不是挑一条观察到的最大回报。</p>
+<p>Q(x,a) 是当前估计表。Q-learning 的目标对象是 q*，但初始化表和有限次写入的 Q 可以离 q* 很远。目标对象、一步目标 y、当前估计 Q、单条完整回报 G 是四个不同对象。</p>
+<p>行为策略决定实际执行哪个动作，进而决定收到什么经验。本课继续采用由当前 Q 导出的 ε-greedy 行为。目标中的贪心选择则在后继合法动作中读取最大的 Q 值。它表示按当前估计进行的贪心后续评估，并不表示已经知道真正的最优动作。</p>
+<p>Off-policy 指这两种规则可以不同。例如，后继表里 save 的值最大，行为仍可能探索 cancel。一次 Q-learning 更新不需要把实际 cancel 改成 save，也不需要等待或虚构 save 的奖励。行为策略仍会影响访问覆盖、成本和有限样本结果，不能从“目标不直接使用下一行为动作”推断“数据来源不重要”。<a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">教材 §6.5 对目标与行为的区分见式 6.8 及其解释。</a></p>
+<h3 id="section-5">3.2 先确认合法后继，再读取 max 值</h3>
+<p>完整状态仍为 x=(page,h)，h 是剩余动作预算；H2 与 H1 分开。当前动作记为 a，后继候选动作记为 u。A(x′) 是后继 x′ 的已知非空合法动作集合。Q_pre 表示本次写入前的表：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>M</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow></msub><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo><mo>=</mo><munder><mrow><mi>max</mi><mo>⁡</mo></mrow><mrow><mi>u</mi><mo>∈</mo><mi>A</mi><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo></mrow></munder><msub><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow></msub><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>u</mi><mo stretchy="false">)</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">M_{\mathrm{pre}}(x&#x27;)=\max_{u\in A(x&#x27;)}Q_{\mathrm{pre}}(x&#x27;,u).</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.088em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">M</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.7679em;vertical-align:-0.966em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.4306em;"><span style="top:-2.309em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">u</span><span class="mrel mtight">∈</span><span class="mord mathnormal mtight">A</span><span class="mopen mtight">(</span><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6828em;"><span style="top:-2.786em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose mtight">)</span></span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">max</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.966em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">u</span><span class="mclose">)</span><span class="mord">.</span></span></span></span></span></div>
+<p>M_pre 是一个<strong>数值</strong>。max 返回最大估计值；argmax 描述取得最大值的动作或动作集合。若 save 和 cancel 都估计为 4，最大值仍是 4；选择哪个并列动作去执行，是行为规则需要解决的另一件事。</p>
+<p>非法动作不能进入 max。一个非法动作即便存有很大的数，也没有资格成为目标候选。若合法 mask 未知，或非终止状态的集合为空，应保留异常并核查状态及动作合同，不能计算空集合最大值、擅加动作或为了继续计算把状态改成终止。真实终止采用下一节的独立分支，根本不访问终止后的空动作表。</p>
+<h3 id="section-6">3.3 一步目标、TD 误差和写入</h3>
+<p>在时刻 t，x_t 是完整状态，a_t 是本步实际执行的合法动作；r_(t+1) 是该动作产生的即时奖励，x_(t+1) 是真实后继。d_(t+1)=1 表示原任务真正终止，否则为 0。γ 是未来奖励折扣，本课为 0.9；α 是本次写入的步长，本课为 0.5。对已具备有效数据的转移：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>y</mi><mi>t</mi></msub><mo>=</mo><mrow><mo fence="true">{</mo><mtable rowspacing="0.36em" columnalign="left left" columnspacing="1em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><msub><mi>r</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo separator="true">,</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><msub><mi>d</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mn>1</mn><mo separator="true">,</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><msub><mi>r</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>+</mo><mi>γ</mi><msub><mi>M</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow></msub><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false">)</mo><mo separator="true">,</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><msub><mi>d</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mn>0</mn><mo separator="true">,</mo></mrow></mstyle></mtd></mtr></mtable></mrow><mspace width="2em"/><msub><mi>δ</mi><mi>t</mi></msub><mo>=</mo><msub><mi>y</mi><mi>t</mi></msub><mo>−</mo><msub><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow></msub><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo separator="true">,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">y_t=\begin{cases}
+r_{t+1},&amp;d_{t+1}=1,\\
+r_{t+1}+\gamma M_{\mathrm{pre}}(x_{t+1}),&amp;d_{t+1}=0,
+\end{cases}
+\qquad
+\delta_t=y_t-Q_{\mathrm{pre}}(x_t,a_t).</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:3em;vertical-align:-1.25em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size4">{</span></span><span class="mord"><span class="mtable"><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.69em;"><span style="top:-3.69em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mpunct">,</span></span></span><span style="top:-2.25em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">M</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mpunct">,</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.19em;"><span></span></span></span></span></span><span class="arraycolsep" style="width:1em;"></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.69em;"><span style="top:-3.69em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">1</span><span class="mpunct">,</span></span></span><span style="top:-2.25em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">0</span><span class="mpunct">,</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.19em;"><span></span></span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03785em;">δ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0379em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0361em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mord">.</span></span></span></span></span></div>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow></msub><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo separator="true">,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>=</mo><msub><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow></msub><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo separator="true">,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>+</mo><mi>α</mi><msub><mi>δ</mi><mi>t</mi></msub><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">Q_{\mathrm{post}}(x_t,a_t)=Q_{\mathrm{pre}}(x_t,a_t)+\alpha\delta_t.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0361em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">post</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0361em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03785em;">δ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0379em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">.</span></span></span></span></span></div>
+<p>下标 t 标识当前转移，t+1 是它产生奖励与后继的时间；pre、post 仅标识<strong>这一次写入前后</strong>，不是两套不同算法。δ 是目标减当前估计，αδ 是本次改变量。一般表格更新可取 0&lt;α≤1；收敛讨论还要约束随访问变化的步长序列。折扣任务取 0≤γ&lt;1，本课不借此公式宣称任意 γ=1 任务也自动收敛。</p>
+<p>先从同一 pre 表读出当前项和后继最大值，算好 y 与 δ，再只写当前 (x_t,a_t)。即使一般任务存在自转移，也不将正在构造的 post 值放回同一次目标。其他表项保持原值。终止时 y=r，保留进入终态的实际奖励，不取 max、不选下一动作；“终止后续为 0”不表示进入终态的奖励为 0。</p>
+<p>δ 依然是含估计量的目标与当前估计之间的差，不是真实 q* 误差。目标大、δ 小或 Q 增加，都不能独立证明成功率提高或价值学准。<a href="https://www.gatsby.ucl.ac.uk/~dayan/papers/cjch.pdf">这是教材式 6.8 的表格更新；原始论文也强调初始估计和表格条件。</a></p>
+<h3 id="section-7">3.4 行为探索和下一动作的时机</h3>
+<p>沿用本课约定：ε∈[0,1]；以 1−ε 在当前 Q 最大的合法动作中均匀选择，以 ε 在全部合法动作中均匀选择。探索也可能选到贪心动作。ε=0.2、两个合法动作且唯一最大时，概率为 0.9/0.1；两个并列最大时各为 0.5；仅一个合法动作时为 1。</p>
+<p>Q-learning 可先完成当前目标与写入，再到后继按行为规则选择下一步动作。它的 y 不需要下一行为动作 a′。若某个实现已提前选定 a′，也必须如实记录接下来执行的行为；不能因为目标 max 由 save 提供，就声称执行了 save。本课伪代码采用下一循环再选动作的顺序，主例人为指定接下来选中合法的 cancel。</p>
+<p>SARSA 则把已选 a′ 的 pre 值放进当前目标，并沿用该动作执行。两课动作选择时机的这一差异必须和各自目标一起理解，不能把“无需 a′ 计算 Q-learning 目标”误读为“可以修改已发生的动作日志”。</p>
+<h3 id="section-8">3.5 终止、外部截断和缺失数据</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>情况</th>
+<th>Q-learning 当前更新的处理</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>原任务到 z，或事先定义 h=0 即结束</td>
+<td>d=1，y=r；不取空集合 max，不选下一动作</td>
+</tr>
+<tr>
+<td>只是外部采集停止，原任务在定义上继续，旧 x′ 与其合法 mask 有效且属于同一 MDP</td>
+<td>不能仅因停止采集设 d=1；可以用旧 x′ 的 pre 最大值构造非终止目标，不要求已选下一行为动作或实际续接</td>
+</tr>
+<tr>
+<td>旧 x′、mask 或真终止含义缺失、失效</td>
+<td>保留缺失原因，暂不构造无法核实的目标，不编动作、后继或终止标签</td>
+</tr>
+<tr>
+<td>reset 后获得另一个任务的初始画面</td>
+<td>它不能替代上一条记录的真实 x′；另记新任务与初始状态</td>
+</tr>
+</tbody></table></div>
+<p>这里不要求实际续接，是指<strong>计算这条一步目标</strong>无需未来行为动作。真实后继、合法动作和同一环境/奖励定义仍必须成立。reset 不能消除这一信息要求；外部截断也不能被当成原任务的预算结束。若研究流程选择只留下成功或完整记录，会改变数据选择机制，应保留失败、取消和截断原因，不能不加条件声称评价无偏。</p>
+<h2 id="section-9">4. 手算例子或更新过程</h2>
+<h3 id="section-10">4.1 沿用环境核，重新声明 fresh Q</h3>
+<p>以下是<strong>人为指定的教学记录</strong>，没有抽随机数，没有实际 GUI 操作或训练。H 为主页，F 为表单页，z 为终止；完整键是 (page,h)，h≤2，每次操作消耗一次预算，h=0 真终止。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>页面与合法动作</th>
+<th>环境后果与奖励</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>H：open</td>
+<td>r=−1；预算尚可继续则到 F，用完则终止</td>
+</tr>
+<tr>
+<td>H：stop</td>
+<td>r=0，终止</td>
+</tr>
+<tr>
+<td>F：save</td>
+<td>以 0.8 概率得 10、以 0.2 概率得 0；均终止</td>
+</tr>
+<tr>
+<td>F：cancel</td>
+<td>r=0，终止</td>
+</tr>
+</tbody></table></div>
+<p>没有额外 save 成本、终止加分或预算补偿。γ=0.9、α=0.5、ε=0.2；save 的环境概率 0.8 与行为选择概率 0.9 含义不同。</p>
+<p>本课独立从下表开始。它和 RL-015 的<strong>初表</strong>相同，便于比较目标；不继承其最终 Q，也不使用模型真值填表：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>状态动作</th>
+<th align="right">初始 Q</th>
+<th align="right">已执行并更新次数 N</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>(H2,open)</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>(H2,stop)</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>(F1,save)</td>
+<td align="right">4</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>(F1,cancel)</td>
+<td align="right">−2</td>
+<td align="right">0</td>
+</tr>
+</tbody></table></div>
+<p>其他合法 H1、F2 表项可明确初始化为 0、N=0，本条轨迹没有访问它们。N 只记录覆盖，固定 α=0.5 不随它自动改成 1/N。未访问值可以参与当前估计，但参与计算不表示已经被数据验证。</p>
+<h3 id="section-11">4.2 第一步：目标读取 save 的估计，行为仍将选 cancel</h3>
+<p>初始 H2 的 open 唯一最大，ε-greedy 的 open/stop 概率为 0.9/0.1。人为指定执行 open，观察 r=−1 到 F1，d=0。后继合法动作是 save、cancel；它们的 pre 值为 4、−2。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>第 1 条转移的量</th>
+<th>计算与结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>当前项 pre</td>
+<td>Q_pre(H2,open)=1</td>
+</tr>
+<tr>
+<td>后继合法 pre 最大值</td>
+<td>max(4,−2)=4，对应 save</td>
+</tr>
+<tr>
+<td>Q-learning 目标 y</td>
+<td>−1+0.9×4=2.6</td>
+</tr>
+<tr>
+<td>TD 误差 δ</td>
+<td>2.6−1=1.6</td>
+</tr>
+<tr>
+<td>当前项 post</td>
+<td>1+0.5×1.6=1.8</td>
+</tr>
+<tr>
+<td>本次写入与覆盖</td>
+<td>只写 H2,open；其 N=1，F 两项未动</td>
+</tr>
+</tbody></table></div>
+<p>4 是初始化估计，不是真实 q*、模型期望奖励或一次 save 成功的奖励。此次没有执行 save，也没有得到 save 的奖励。目标 2.6 是一次自举目标，1.8 是更新后的当前 Q，不能把二者互称。</p>
+<p>进入下一循环，F1 的表仍是 save=4、cancel=−2，因此行为概率仍为 0.9/0.1。我们人为指定实际选中 cancel 并执行。这个动作合法且有正概率；它与目标最大值的动作不同，正是本例展示的机制。<strong>目标使用 save 的估计，不会把实际 cancel 换成 save。</strong></p>
+<h3 id="section-12">4.3 第二步：实际 cancel 真终止</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>第 2 条转移的量</th>
+<th>计算与结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>当前动作与 pre</td>
+<td>实际执行 (F1,cancel)，Q_pre=−2</td>
+</tr>
+<tr>
+<td>实际后果</td>
+<td>r=0，到 z，d=1</td>
+</tr>
+<tr>
+<td>目标 y</td>
+<td>0，不取 max、不选下一动作</td>
+</tr>
+<tr>
+<td>TD 误差 δ</td>
+<td>0−(−2)=2</td>
+</tr>
+<tr>
+<td>当前项 post</td>
+<td>−2+0.5×2=−1</td>
+</tr>
+</tbody></table></div>
+<p>−1 是朝终止目标 0 移动后的估计，cancel 的即时奖励仍是 0。两步后的表为：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>状态动作</th>
+<th align="right">最终 Q</th>
+<th align="right">N</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>(H2,open)</td>
+<td align="right">1.8</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td>(H2,stop)</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>(F1,save)</td>
+<td align="right">4</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>(F1,cancel)</td>
+<td align="right">−1</td>
+<td align="right">1</td>
+</tr>
+</tbody></table></div>
+<p>第二步不会自动回写 H2；没有额外回放或整表同步求解。save 的 4、stop 的 0 仍是未经本条经验更新的初始化。完整实际奖励为 −1、0，因此 G_H2=−1+0.9×0=−1，G_F1=0。Q-learning 把 H2,open 从 1 写成 1.8，与该轨迹 G 为 −1 可以同时成立，因为它使用了后继估计进行自举。这不证明算法比 SARSA 更好，也不说明这条行为已获得更高回报。</p>
+<h3 id="section-13">4.4 独立的同 pre SARSA 对照</h3>
+<p>把另一份表重置为<strong>相同初始 pre</strong>，保持同样的 H2 open 转移，且让 SARSA 按自己的规则在当前写入前选定下一行为动作 cancel。比较如下：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>相同 pre 与同一实际下一动作 cancel</th>
+<th align="right">Q-learning</th>
+<th align="right">SARSA 独立对照</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>后继目标读取的值</td>
+<td align="right">max(4,−2)=4</td>
+<td align="right">Q_pre(F1,cancel)=−2</td>
+</tr>
+<tr>
+<td>第一步目标 y</td>
+<td align="right">2.6</td>
+<td align="right">−2.8</td>
+</tr>
+<tr>
+<td>第一步 δ</td>
+<td align="right">1.6</td>
+<td align="right">−3.8</td>
+</tr>
+<tr>
+<td>第一步 H2,open 的 post</td>
+<td align="right">1.8</td>
+<td align="right">−0.9</td>
+</tr>
+</tbody></table></div>
+<p>SARSA 的对照不接在 Q-learning 的 1.8 后面更新，也不写入本课主表。两条实际行为都可以是 open、cancel；不同的是目标。若 SARSA 当时选定的是 save，它的<strong>这一次</strong>目标也会是 2.6，但行为随之变成 save。这个局部数值相等不能使两算法在一般探索、平局、更新顺序和后续访问上都相同。</p>
+<h3 id="section-14">4.5 可检查伪代码</h3>
+<p>输入为明确初始化的 Q、γ、α、ε、任务结束定义和合法 mask；输出为顺序 Q 更新、访问计数与真实转移日志。以下仅为机制伪代码，<strong>未运行（NOT_RUN）</strong>：</p>
+<pre><code class="language-text">初始化合法状态动作的 Q、N=0
+每个任务观察完整 x，Q 按训练约定跨任务保留
+重复到原任务真正终止：
+    核对当前 x 与非空合法 mask，按当前 ε-greedy 选 a
+    执行 a，观察实际 r、旧任务真实 x_next、true_terminal
+    保存本次写入前 Q_pre；old = Q_pre[x,a]
+    若 true_terminal：target = r
+    否则若 x_next 或其合法 mask 缺失/无效：
+        保存待核日志与缺失原因；跳过本次 Q/N 写入，暂停当前采集循环
+    否则：target = r + gamma*max_legal Q_pre[x_next,u]
+    Q[x,a] = old + alpha*(target-old)；N[x,a] += 1
+    保存行为动作、奖励、结束/截断、mask、pre/target/post 和版本
+    若 true_terminal：结束本任务，不选下一动作
+    x = x_next；下一循环另按行为规则选择实际动作
+    若外部采集停止：保存该边界，不因停止而改标任务终止
+</code></pre>
+<p>缺失分支立即退出当前采集循环，不再执行下面的 Q/N 写入，因此不会使用尚未定义的 target。非终止分支不需要预先选 a′。若外部截断但仍持有有效旧后继与 mask，可以先完成这条更新再结束采集；若后继缺失，保存待核记录，不用 reset 图补目标。选择下一行为动作需要重新具备可执行的当前状态合同，和旧记录能否完成一步更新是两个问题。Fresh Q 只在本课教学开始时初始化，不是每个动作之后或每次环境 reset 都清空。</p>
+<h2 id="section-15">5. 与前一种方法的关系</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>SARSA</th>
+<th>Q-learning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>非终止后继项</td>
+<td>已选下一行为动作的 Q_pre(x′,a′)</td>
+<td>后继全部合法动作 Q_pre 的最大值</td>
+</tr>
+<tr>
+<td>当前目标是否需要 a′</td>
+<td>需要，且随后沿用执行</td>
+<td>不需要，实际下一动作由行为规则另选</td>
+</tr>
+<tr>
+<td>行为与目标的联系</td>
+<td>当前目标纳入行为选中的下一动作</td>
+<td>目标按当前表贪心，行为可以继续探索</td>
+</tr>
+<tr>
+<td>一步需要的基础数据</td>
+<td>真转移、合法状态动作、结束定义，并有有效选定 a′</td>
+<td>真转移、合法状态动作、结束定义与后继 mask，不必有 a′</td>
+</tr>
+<tr>
+<td>两者共同点</td>
+<td>动作价值、采样奖励与后继、自举、pre/post、覆盖与成本都要核查</td>
+<td>同左，名称本身不提供数据或效果保证</td>
+</tr>
+</tbody></table></div>
+<p>Q-learning 不需要已知转移概率来完成样本更新，但需要真实转移和可信的动作集合。“Model-free”不能解释为“无需环境假设或结果反馈”。最大值只在动作维度进行，不是对所有可能后继、奖励分支做已知模型的期望计算。</p>
+<p>在数据来自同一 MDP、奖励定义一致、覆盖等条件成立时，目标规则可以与采集行为不同；不连续的有效转移也可以构成更新输入。但这不允许把不同页面预算、不同任务奖励版本或失效 mask 的日志随意拼接，更不表示一份只含 cancel 的有限日志足以学会从未观察过的 save 结果。Off-policy 不是自动解决离线数据缺覆盖的保证。</p>
+<p>原始论文的收敛证据针对有限、表格表示等特定条件。它不保证有限预算内的行为回报排序，也不直接为神经网络 Q 提供同样结论。教材的 Cliff Walking 是特定设置的例子，本课不复现实验、不引用其曲线来宣布本研究哪种方法胜出。</p>
+<h2 id="section-16">6. 一个主要研究应用</h2>
+<p>主应用仍是<strong>存在多步后果且可核验任务结果的 GUI 控制</strong>。当前动作改变页面和后续可选动作，才有必要讨论长期动作价值。若只是对一张截图独立返回一个位置，先建立监督定位或固定流程对照，不把教学的多步状态硬贴上去。</p>
+<p>Q-learning 的建模问题是：行为为了获取覆盖可能尝试不同合法动作，目标是否按当前贪心后续评估来更新？真实研究必须先补齐下面的合同；所有业务字段目前均为<strong>【待确认】</strong>。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>合同项</th>
+<th>真实研究需要核实的内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1. 观测与完整状态</td>
+<td>【待确认】指令、画面、结构信息、必要历史和剩余预算如何构成状态，是否遗漏影响动作后果的变量</td>
+</tr>
+<tr>
+<td>2. 合法动作与 mask</td>
+<td>【待确认】动作粒度、允许范围、mask 依据与版本，空/未知/失效集合如何记录；非法动作不得进入行为或 max</td>
+</tr>
+<tr>
+<td>3. 行为与目标规则</td>
+<td>【待确认】ε、平局、Q 版本、实际行为动作和概率；目标用哪个 pre 快照及合法最大值，不能把目标动作当实际执行动作</td>
+</tr>
+<tr>
+<td>4. 奖励与折扣</td>
+<td>【待确认】成功、失败、取消、步骤和时间成本的单位及权重、γ；不照搬教学 10、0、−1</td>
+</tr>
+<tr>
+<td>5. 反馈来源</td>
+<td>【待确认】任务后果由谁、何时核验；点击命中、按钮出现或保存提示是否足以证明业务成功</td>
+</tr>
+<tr>
+<td>6. 终止与截断</td>
+<td>【待确认】原任务结束、预算耗尽、外部停止、reset 独立标志，是否保存原任务真实后继和合法 mask</td>
+</tr>
+<tr>
+<td>7. 初始任务与重置</td>
+<td>【待确认】初始分布、任务隔离、重置成本、跨任务 Q 是否按训练协议保留</td>
+</tr>
+<tr>
+<td>8. 数据与覆盖</td>
+<td>【待确认】真实状态动作奖励后继、终止/mask/版本、pre/post 与失败缺失记录，逐状态动作计数；a′ 可记录以审计行为但不作为本算法目标必需输入</td>
+</tr>
+<tr>
+<td>9. 指标与评价策略</td>
+<td>【待确认】成功率、回报、错误操作、取消、步骤、时间和覆盖；探索行为与冻结贪心评价分别标注，δ 或目标值不当作效果</td>
+</tr>
+<tr>
+<td>10. 采集与训练成本</td>
+<td>【待确认】反馈与标注、环境交互、重复、调参和训练成本，表更新便宜不等于经验便宜</td>
+</tr>
+<tr>
+<td>11. 推理与执行成本</td>
+<td>【待确认】视觉编码、合法候选、Q 查询与 max、交互等待、失败恢复和结果核验开销</td>
+</tr>
+<tr>
+<td>12. 方法与非 RL 对照</td>
+<td>【待确认】方法比较可包括条件匹配的 SARSA；非 RL 行为对照包括固定流程、监督定位加流程或示范策略，匹配任务、输入、动作权限、预算和成功判据</td>
+</tr>
+</tbody></table></div>
+<p>拟议评价应分开训练与评价任务、调参和测试，记录交互步数、更新次数与计算成本，使用独立重复报告不确定性，保留失败和外部截断。行为会改变后续访问，不能拿两种算法各自不同的日志大小直接比较公平性；固定教学记录只能核对更新机制。此处没有真实学习曲线或性能数字。</p>
+<p>SR 若具有连续的计算分配、处理选择或停止决策，并有后续质量与成本反馈，可以进一步检查是否需要这种控制；普通单次重建先用监督与固定处理基线。模态路由若只做一次选择并立即得到结果，先考虑单步建模；只有选择影响后续观测、成本和回报，且日志能记录这些依赖，才讨论多步 Q-learning。真实输入、标签和成本仍待确认，不用算法名称替代业务定义。</p>
+<h2 id="section-17">7. 常见误解、失败条件和适用边界</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>常见误解</th>
+<th>核查办法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>“目标用 save，所以实际应该改执行 save”</td>
+<td>分开日志中的实际动作与目标 max；本例执行的是 cancel，save 只提供估计值 4</td>
+</tr>
+<tr>
+<td>“y=2.6、Q=1.8 就是真实 q* 或回报提高”</td>
+<td>标注初值、目标、post 与实际 G；本条 G_H2=−1，且没有真实性能实验</td>
+</tr>
+<tr>
+<td>“取 max 不需要合法 mask”</td>
+<td>先核查非空已知合法集合；非法高值和未知集合都不能进入目标</td>
+</tr>
+<tr>
+<td>“off-policy 可以用任何日志学到所有动作”</td>
+<td>核对同一 MDP、奖励版本、真实转移和覆盖；未访问动作仍可能只有初值</td>
+</tr>
+<tr>
+<td>“采集一停就终止，或一定要有 a′ 才能更新”</td>
+<td>区分真终止和外部截断；有效旧 x′+mask 可构 Q-learning 目标，缺失则暂不补算</td>
+</tr>
+<tr>
+<td>“第二步会自动修正第一步，所有 Q 都同步收敛”</td>
+<td>每次只写当前项，额外更新必须明确记录；两步表不是整表求解</td>
+</tr>
+</tbody></table></div>
+<p>Watkins、Dayan 的原始收敛定理有明确范围：有限、平稳的受控 Markov 问题，表格型动作价值、有界奖励、折扣条件、每个状态动作对得到无限次有效更新，以及按每对访问序列满足“步长之和发散、平方和收敛”等条件。这里只点明证据边界，不重讲证明。<a href="https://www.gatsby.ucl.ac.uk/~dayan/papers/cjch.pdf">原论文第 280～282 页包含问题设定、覆盖和定理条件。</a></p>
+<p>本课固定 α=0.5、两步人工记录不满足一个完整渐近证明。固定 ε=0.2 也不会自动保证所有状态都能到达或所有对无限更新。即便在条件满足时 Q 的目标是 q*，持续探索的行为策略仍可能执行次优动作，其实际回报不等于纯贪心策略的回报。ε=0 又可能失去必要覆盖。表格收敛不能无条件扩展到任意函数近似，本课不展开其他新算法。</p>
+<h2 id="section-18">8. 三道理解题</h2>
+<p><strong>题 1｜目标与行为。</strong> 后继合法表为 save=4、cancel=−2，ε=0.2。行为选 cancel 时，Q-learning 和 SARSA 的后继项各是什么？为什么 Q-learning 不需要把实际动作换成 save？两个值并列为 4 时 max 与动作平局各怎样处理？</p>
+<p><strong>题 2｜完整复算。</strong> 从本课 fresh 表出发，实际轨迹 H2 open、r=−1 到 F1；下一步实际 cancel、r=0 到 z。请给出 Q-learning 两步的 pre、y、δ、post、最终四项 Q 与 N、完整 G。再从独立相同 pre 计算 SARSA 的第一步；能否把它顺序写入 Q-learning 主表？</p>
+<p><strong>题 3｜截断与真实研究。</strong> 采集器在非终止 F1 停止，没有下一行为动作，但保有原任务真实 x′ 和有效 mask，之后也不续接。能否构造本课的一步目标？若只有 reset 后的新图，或旧 mask 缺失，又该怎样处理？列四项真实研究合同及一个非 RL 行为对照，并说明两步表能支持什么结论。</p>
+<h2 id="section-19">9. 下一单元与待复习问题</h2>
+<p>下一单元为 <strong>RL-017《探索策略：ε-greedy的代价与覆盖》</strong>，将进一步讨论探索怎样改变采样与成本。今天只保留所需概率、合法范围与覆盖边界，不预先展开调度或其他算法。</p>
+<p>若仍把实际下一动作与目标动作混为一谈，可并排复述 RL-015 的五事件与本课 max 目标；若混淆 q*、Q、y 和 G，先回到定义与第 4 节；若把一次数值变化当作算法排名，回查 RL-012～014 的评价与证据边界。材料可用不代表已经掌握，建议先独立做三题再核答案；没有新的学习反馈时保持既定依赖顺序，不据发布推断个人理解状态。</p>
+<h2 id="section-20">10. 可核查的参考来源与证据说明</h2>
+<ol>
+<li>Sutton、Barto，<em>Reinforcement Learning: An Introduction</em>，第 2 版，§6.5，印刷页 131～132：<a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">原始教材 CMU PDF</a>。本次读取式 6.8、伪代码、行为影响覆盖的限定；同次回查 §2.2 的 27～28 页和 §6.4 的 129～130 页。132 页含特定 Cliff Walking 例子，本课不复现其实验或采用其曲线作为本研究证据。</li>
+<li>Christopher J. C. H. Watkins、Peter Dayan，<em>Technical Note: Q-Learning</em>，<em>Machine Learning</em> 8，279～292，1992：<a href="https://www.gatsby.ucl.ac.uk/~dayan/papers/cjch.pdf">作者大学站点原文 PDF</a>，<a href="https://link.springer.com/article/10.1023/A:1022676722315">出版记录与 DOI</a>。实际选读原文 279～282 页，核查有限问题、更新、初值、表格、覆盖和定理条件；另外实际查看了 282 页的公式图像。未声称复核完整证明及附录。出版页的作者、年份、卷页和 DOI 可读，出版页全文属于订阅预览范围，不冒称从该页读到全文。</li>
+</ol>
+<p><strong>实际读取记录（2026-10-31）：</strong>教材缓存 548 页、43,634,706 字节，SHA-256 为 <code>f1df4739245b64b2411932d76f3f996e687f674cc51040f84f0fb1ff02fb4e4d</code>，当天重新校验并读取上述六个选页。原 URL 的 HEAD 为 200；web 全 PDF 打开因体积限制为 400，未重下整本书。论文作者站点当天 GET 为 200，下载为 14 页、685,568 字节，SHA-256 为 <code>3f1938a6001991f3171e13a93196fc8fc27978f18c87445321bb25058f35776f</code>；实际语义阅读范围仍为 279～282 页。元数据请求与全文件下载不代表通读全文。</p>
+<p>证据分层：更新机制是<strong>已发表知识</strong>；fresh Q、参数、open/cancel 两步和独立 SARSA 表是<strong>教学假设与精确算术</strong>；GUI 合同与评价是<strong>工程推断及拟议研究设计</strong>。没有随机采样、研究训练、真实 GUI、GPU 或服务器运行，没有经验曲线或性能提升结论，研究状态为<strong>未运行（NOT_RUN）</strong>。</p>
+<details class="answers" id="section-21"><summary>参考答案（练习完成后再看）</summary><p><strong>题 1 参考答案。</strong> Q-learning 读取 max(4,−2)=4，SARSA 读取已选 cancel 的 −2。前者对当前表的贪心后续构造目标，实际行为仍可探索，因此不需要将 cancel 改成 save；本条经验没有观察 save 的奖励，4 仍只是估计。SARSA 的 a′ 则应在写入前选定并沿用执行。若二者并列为 4，Q-learning 最大值仍为 4；本课均匀平局 ε-greedy 行为给两个动作各 0.5。只有一个合法动作时概率为 1；mask 未知或非终止时为空，不硬算目标或动作。</p>
+<p><strong>题 2 参考答案。</strong> 第一步 pre_current=1，后继合法 pre 值 4、−2，M_pre=4，d=0；y=−1+0.9×4=2.6，δ=2.6−1=1.6，post_Hopen=1+0.5×1.6=1.8，N_Hopen=1。只更新 H2,open，F 的表未动；下一循环按行为人为指定执行 cancel，不虚构 save 奖励。</p>
+<p>第二步 pre_Fcancel=−2，实际 r=0、d=1；y=0，不取 max 或选下一动作；δ=2，post_Fcancel=−2+0.5×2=−1，N_Fcancel=1。H 不自动回写。最终按 Hopen、Hstop、Fsave、Fcancel 顺序为 1.8、0、4、−1，N 为 1、0、0、1。实际奖励 −1、0，故 G_H2=−1、G_F1=0；2.6 是目标，1.8 是 post，都不等于已知 q* 或真实性能。</p>
+<p>独立同 pre 的 SARSA 必须先选定下一动作 cancel：y=−1+0.9×(−2)=−2.8，δ=−2.8−1=−3.8，Hpost=1+0.5×(−3.8)=−0.9。它用另一张相同初表作对照，不能在 Q-learning 的 1.8 后再顺序写入；目标差异也不构成两算法的总体排名。若 SARSA 选 save，单次目标相同但行为改变，仍不能推广一般等价。</p>
+<p><strong>题 3 参考答案。</strong> 若原任务按定义继续，旧 x′ 与合法 mask 有效且属于同一 MDP，则可以用 pre 最大值构造 Q-learning 的非终止一步目标；不需要已有 a′ 或实际恢复执行。这个结论只解决该更新的数据条件，不允许缺少真实后继。若只有 reset 后新图，它不是旧 x′；若旧 mask 缺失，也无法确认 max 候选，应保留边界和缺失原因，暂不构造目标，不补一个新动作或伪标真终止。任务自身 h=0 的情形则 d=1，目标直接为 r。</p>
+<p>真实合同可选完整状态及预算、合法 mask 与版本、奖励和独立后果核验、终止/截断/reset、数据覆盖、行为与目标、评价策略和成本。非 RL 行为对照可用固定流程或监督定位加流程，在相同输入、权限、预算和成功判据下比较；SARSA 是方法对照，属于 RL。当前两步表只能核对教学机制和算术，不能声称覆盖充分、学到真实 q*、已收敛或 GUI 成功率提升；真实研究为 NOT_RUN。</p>
+</details></article></div><section class="pdf-preview wrap" aria-labelledby="pdf-preview-title"><h2 id="pdf-preview-title">同内容伴随 PDF · 阅读版</h2><p>本课 PDF 使用与 PPT 相同的源内容，经独立排版用于阅读，非 PowerPoint 原生导出；可编辑汇报请使用 PPT。手机或浏览器未显示时，可<a href="./RL-016.pdf" style="text-decoration:underline">直接打开 PDF 阅读版</a>。</p><iframe src="./RL-016.pdf#toolbar=1" title="RL-016 同内容伴随 PDF 阅读版" loading="lazy"></iframe></section><div class="lesson-navigation wrap"><a href="../RL-015/"><span>← 上一单元 · RL-015</span><strong>SARSA：沿当前行为策略学习动作价值</strong></a><a class="next" href="../RL-017/"><span>下一单元 · RL-017 →</span><strong>探索策略：ε-greedy的代价与覆盖</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>

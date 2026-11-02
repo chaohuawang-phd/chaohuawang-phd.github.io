@@ -25,11 +25,17 @@ latest_posts:
 
 [了解研究方向]({{ '/research/' | relative_url }}) · [查看研究项目]({{ '/projects/' | relative_url }})
 
+## 强化学习学习与应用
+
+沿着有前后依赖的课程路线，学习强化学习算法，并结合超分辨率、模态路由与 GUI 分析实际应用。栏目集中提供讲义、可编辑 PPT 和 PDF 阅读版。
+
+[进入强化学习栏目]({{ '/research/rl-learning/' | relative_url }})
+
 ## 代表性论文
 
 **基于记忆机制的时序融合视频去模糊网络**
 
-*Memory Based Temporal Fusion Network for Video Deblurring*
+_Memory Based Temporal Fusion Network for Video Deblurring_
 
 第一作者，发表于 **International Journal of Computer Vision（IJCV），2023**。
 

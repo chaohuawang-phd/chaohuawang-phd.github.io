@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151a17"><meta name="description" content="写出一个有限MDP，并连接本阶段的前置概念。"><meta name="color-scheme" content="light"><title>RL-002｜MDP：如何给状态、动作和转移一个严格定义？ · 王超华</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%23151a17'/%3E%3Cpath d='M31 14a13 13 0 1 0 0 20' fill='none' stroke='%23c8f45b' stroke-width='5'/%3E%3Ccircle cx='32' cy='24' r='3' fill='%23c8f45b'/%3E%3C/svg%3E"><link rel="stylesheet" href="../../styles.css"><link rel="stylesheet" href="../../assets/katex/katex.min.css"><script src="../../script.js" defer></script></head>
+<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-002</span></div><section class="lesson-hero"><p class="eyebrow">RL-002 · WEEK 01 · 新知识</p><h1>MDP：如何给状态、动作和转移一个严格定义？</h1><p class="lesson-summary">写出一个有限MDP，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">RL基础</span><span class="tag">GUI</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>讲义 · PPT 可用</span></div><div class="button-row"><a class="button small" href="./lecture.md" download>讲义下载 · MD</a><a class="button small" href="./RL-002.pptx" download>PPT 下载</a><a class="button small" href="./RL-002.pdf">PDF 阅读版</a></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="本课目录"><h2>本课目录</h2><ol><li><a href="#section-1">1. 今天解决什么问题，与前面哪些单元有关</a></li><li><a href="#section-2">2. 学习目标</a></li><li><a href="#section-3">3. 直觉、定义和必要公式</a></li><li><a href="#section-8">4. 手算例子：一个带随机失败的两步 GUI 环境</a></li><li><a href="#section-12">5. 与前一种方法或概念的关系</a></li><li><a href="#section-15">6. 主要应用：先把多步 GUI 执行合同写清楚</a></li><li><a href="#section-16">7. 常见误解、失败条件和适用边界</a></li><li><a href="#section-17">8. 三道理解题：先独立作答</a></li><li><a href="#section-18">9. 下一单元预告与自查提示</a></li><li><a href="#section-19">10. 可核查的参考来源与证据说明</a></li><li><a href="#section-20">参考答案（练习完成后再看）</a></li></ol></aside><article class="lecture"><p>课程：强化学习学习与应用 · 第 1 周 / 单元 2<br>课程版本：1.0.0 · 内容版本：1.0.0 · 教学日期：2026-10-14（Asia/Shanghai）<br>预计学习：35～45 分钟 · 汇报：10～15 分钟<br>前置：<a href="../RL-001/">RL-001｜从任务到决策：强化学习解决什么问题？</a>；需要概率、期望和折扣回报的基础。<br>证据状态：标准概念与工程建模分析；GUI 数字为<strong>教学假设</strong>；真实研究实验<strong>未运行（NOT_RUN）</strong>。</p>
+<p>建议节奏：复述前课与定义 12 分钟 → 随机例子手算 10 分钟 → 终止与应用分析 10 分钟 → 三题自测及对照答案 10 分钟。</p>
+<h2 id="section-1">1. 今天解决什么问题，与前面哪些单元有关</h2>
+<p>上一课把任务拆成观测、动作、奖励和回报。今天继续问：这些对象怎样构成一个能检查假设、复算结果的数学模型？</p>
+<p>假设 GUI 系统收到“进入设置并保存”的任务。点击“打开设置”可能成功，也可能由于页面异常而失败；到了表单，再点“保存”仍可能成功或失败。如果只画一条成功演示路线，我们没有说明随机结果、失败退出或成本。若把截图直接叫作状态，还可能漏掉登录状态、焦点和加载阶段。</p>
+<p>Markov Decision Process（MDP，马尔可夫决策过程）提供一套描述决策环境的语言。它要求检查“当前状态与动作是否已经包含预测下一步所需的信息”，并规定下一状态与即时奖励的概率。<strong>把任务写成 MDP，是定义问题；它本身还不是解决问题的学习算法。</strong></p>
+<p>本课用一个自然最多两步的 GUI 小环境说明联合转移核、随机轨迹和任务终止。我们枚举给定行为产生的结果，不做价值函数估计或更新。策略与探索在 RL-003 深入，价值函数在 RL-004 开始。</p>
+<h2 id="section-2">2. 学习目标</h2>
+<p>学完后应当能够：</p>
+<ol>
+<li>写出一个有限 MDP 的状态、合法动作、转移与奖励、折扣、初始分布和终止定义，并检查概率是否归一。</li>
+<li>通过“相同截图、不同历史、不同后果”的反例，判断状态表示是否满足 Markov 性；说明有限期限何时需要纳入状态。</li>
+<li>手算一个带随机转移的短任务，区分单步期望奖励、整段期望回报、真实终止与采集截断。</li>
+</ol>
+<h2 id="section-3">3. 直觉、定义和必要公式</h2>
+<h3 id="section-4">3.1 一张 MDP 说明表</h3>
+<p>常见教材把 MDP 写为状态、动作、转移、奖励和折扣组成的对象。本课把初始分布和任务终止也明确列出：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>对象</th>
+<th>记号</th>
+<th>含义</th>
+<th>必须回答的问题</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>状态空间</td>
+<td>S</td>
+<td>本模型中所有可能状态</td>
+<td>哪些变量影响未来？是否包括终止状态？</td>
+</tr>
+<tr>
+<td>动作空间</td>
+<td>A，以及 A(s)</td>
+<td>总动作集合与状态 s 下的合法动作</td>
+<td>此时哪些动作可执行？</td>
+</tr>
+<tr>
+<td>转移概率</td>
+<td>P(s′｜s,a)</td>
+<td>执行动作后进入下一状态的概率</td>
+<td>哪些后果可能发生，各占多少？</td>
+</tr>
+<tr>
+<td>奖励说明</td>
+<td>R</td>
+<td>本课用 R(s,a) 表示单步期望奖励</td>
+<td>每一步怎么计收益和成本？</td>
+</tr>
+<tr>
+<td>折扣因子</td>
+<td>γ</td>
+<td>未来奖励的权重</td>
+<td>优化什么时间尺度的回报？</td>
+</tr>
+<tr>
+<td>初始分布</td>
+<td>ρ₀</td>
+<td>一次任务开始时的状态分布</td>
+<td>环境如何重置，起点如何采样？</td>
+</tr>
+<tr>
+<td>终止集合</td>
+<td>Tₑ</td>
+<td>进入后本次任务结束的状态集合</td>
+<td>成功、失败或放弃怎样确认？</td>
+</tr>
+</tbody></table></div>
+<p>S、A、P、R、γ 是常用的组成记号；ρ₀ 和 Tₑ 让一次任务的起止规则清楚。<strong>字母 R 在本课不是回报 G，也不是任意一个模型损失。</strong>有些文献把奖励写为 R(s,a,s′) 或直接写随机奖励分布，应先确认它的定义再读公式。</p>
+<p>下面采用有限状态、有限动作和有限奖励取值的教学环境，并采用时间齐次模型：同一个状态与动作使用同一个环境核。Markov 性与时间齐次是需要说明的两项假设；后者并不是只靠“与历史无关”就自动成立。</p>
+<h3 id="section-5">3.2 联合核同时描述下一状态与奖励</h3>
+<p>继续沿用 RL-001 的时间下标：时刻 t 的动作 a_t，产生下一状态 s_(t+1) 和奖励 r_(t+1)。大写 S_t、A_t、R_t 表示随机变量，小写 s、a、r 表示某个具体取值。</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>p</mi><mo stretchy="false">(</mo><msup><mi>s</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>r</mi><mo>∣</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><mi>Pr</mi><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>S</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msup><mi>s</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><msub><mi>R</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mi>r</mi><mo>∣</mo><msub><mi>S</mi><mi>t</mi></msub><mo>=</mo><mi>s</mi><mo separator="true">,</mo><msub><mi>A</mi><mi>t</mi></msub><mo>=</mo><mi>a</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">p(s&#x27;,r\mid s,a)
+=\Pr(S_{t+1}=s&#x27;,R_{t+1}=r\mid S_t=s,A_t=a)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0519em;vertical-align:-0.25em;"></span><span class="mord mathnormal">p</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop">Pr</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0102em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0077em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">A</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span></span></span></span></span></div>
+<ul>
+<li>p：环境的<strong>联合转移核</strong>，给出下一状态与奖励这对结果的概率。</li>
+<li>s：当前状态；a：在当前状态合法的动作。</li>
+<li>s′：可能的下一状态；r：可能的即时奖励。</li>
+<li>Pr：概率；竖线表示在给定当前状态和动作的条件下。</li>
+</ul>
+<p>对每个非终止状态 s 与合法动作 a，所有可能后果的概率必须相加为 1：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><munder><mo>∑</mo><mrow><msup><mi>s</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo>∈</mo><mi>S</mi></mrow></munder><munder><mo>∑</mo><mrow><mi>r</mi><mo>∈</mo><mi mathvariant="script">R</mi></mrow></munder><mi>p</mi><mo stretchy="false">(</mo><msup><mi>s</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>r</mi><mo>∣</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\sum_{s&#x27;\in S}\sum_{r\in\mathcal R}p(s&#x27;,r\mid s,a)=1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.3717em;vertical-align:-1.3217em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.8557em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6828em;"><span style="top:-2.786em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mrel mtight">∈</span><span class="mord mathnormal mtight" style="margin-right:0.05764em;">S</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.3217em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.8557em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span><span class="mrel mtight">∈</span><span class="mord mathcal mtight">R</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.3217em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">p</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span></span></div>
+<p>这里的 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="script">R</mi></mrow><annotation encoding="application/x-tex">\mathcal R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathcal">R</span></span></span></span> 是奖励的可能取值集合，不能与期望奖励函数 R 混淆。联合核并未假设“下一状态”和“奖励”相互独立。例如，保存成功会同时产生“成功状态”和成功收益，这两个结果显然有关联。</p>
+<p>如果只想看下一状态，把奖励取值求和：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>P</mi><mo stretchy="false">(</mo><msup><mi>s</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo>∣</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><munder><mo>∑</mo><mrow><mi>r</mi><mo>∈</mo><mi mathvariant="script">R</mi></mrow></munder><mi>p</mi><mo stretchy="false">(</mo><msup><mi>s</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>r</mi><mo>∣</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">P(s&#x27;\mid s,a)=\sum_{r\in\mathcal R}p(s&#x27;,r\mid s,a)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0519em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.3717em;vertical-align:-1.3217em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.8557em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span><span class="mrel mtight">∈</span><span class="mord mathcal mtight">R</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.3217em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">p</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span></span></span></span></span></div>
+<p>如果只想看这一步的平均奖励，把所有结果按奖励加权：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>R</mi><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><munder><mo>∑</mo><mrow><msup><mi>s</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo>∈</mo><mi>S</mi></mrow></munder><munder><mo>∑</mo><mrow><mi>r</mi><mo>∈</mo><mi mathvariant="script">R</mi></mrow></munder><mi>r</mi><mtext> </mtext><mi>p</mi><mo stretchy="false">(</mo><msup><mi>s</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>r</mi><mo>∣</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">R(s,a)=\sum_{s&#x27;\in S}\sum_{r\in\mathcal R}r\,p(s&#x27;,r\mid s,a)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.3717em;vertical-align:-1.3217em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.8557em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6828em;"><span style="top:-2.786em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mrel mtight">∈</span><span class="mord mathnormal mtight" style="margin-right:0.05764em;">S</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.3217em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.8557em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span><span class="mrel mtight">∈</span><span class="mord mathcal mtight">R</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.3217em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">p</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span></span></span></span></span></div>
+<p>P 是概率，R(s,a) 是单步期望奖励。后者不包含之后还未执行的动作，不能当成整段回报。上述联合核及其边缘概率、期望奖励的关系，可对照 <a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">Sutton 与 Barto 第二版教材原稿，CMU 正式课程托管 PDF</a> 第 3.1 节、式 (3.2)～(3.6)。</p>
+<h3 id="section-6">3.3 Markov 性：当前状态是否足够？</h3>
+<p>记 h_t 为到时刻 t 已发生的状态、动作与奖励历史。时间齐次 MDP 的条件可以写成：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>Pr</mi><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>S</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msup><mi>s</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><msub><mi>R</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mi>r</mi><mo>∣</mo><msub><mi>h</mi><mi>t</mi></msub><mo separator="true">,</mo><msub><mi>A</mi><mi>t</mi></msub><mo>=</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><mi>p</mi><mo stretchy="false">(</mo><msup><mi>s</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>r</mi><mo>∣</mo><msub><mi>S</mi><mi>t</mi></msub><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\Pr(S_{t+1}=s&#x27;,R_{t+1}=r\mid h_t,A_t=a)
+=p(s&#x27;,r\mid S_t,a)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop">Pr</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0102em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0077em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">h</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">A</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0519em;vertical-align:-0.25em;"></span><span class="mord mathnormal">p</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span></span></span></span></span></div>
+<p>这句话的含义是：给定当前状态和动作，再知道更早历史，不会改变下一结果的条件分布。它<strong>不意味着未来是确定的</strong>；随机转移完全可以满足 Markov 性。</p>
+<p>考虑两次完全相同的设置页截图：第一次背后的账户未登录，第二次已经登录。点击“保存”后的成功概率不同。如果模型只保留截图，却让更早的登录经历改变后果，这个截图表示就没有提供足够信息。可以考虑加入当前登录或权限变量、加载阶段和必要历史，再检查是否仍有遗漏。增加历史是一种改善信息的办法，不能只凭“用了最近三帧”就证明 Markov 性成立。</p>
+<p>观测 o_t 是智能体能拿到的信息，状态 s_t 是模型中对未来充分的表示。真实 GUI 常常只能获得部分观测；准确的说法可以是“使用截图与历史近似状态”，而不是未经检查就声称完整状态可见。</p>
+<h3 id="section-7">3.4 有限期限不能悄悄藏起来</h3>
+<p>假设任务规定“最多允许两次点击”，而且可以返回主页重试。那么相同页面在“还剩两步”与“只剩一步”时，合法动作、到期后果或可获得的回报可能不同。</p>
+<p>解决方式之一是把剩余预算 b_t 加入状态：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mover accent="true"><mi>s</mi><mo stretchy="true">~</mo></mover><mi>t</mi></msub><mo>=</mo><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo separator="true">,</mo><msub><mi>b</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\widetilde s_t=(s_t,b_t)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8406em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6906em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">s</span></span><span class="svg-align" style="width:calc(100% - 0.1111em);margin-left:0.1111em;top:-3.4306em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.26em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.26em" viewBox="0 0 600 260" preserveAspectRatio="none"><path d="M200 55.538c-77 0-168 73.953-177 73.953-3 0-7
+-2.175-9-5.437L2 97c-1-2-2-4-2-6 0-4 2-7 5-9l20-12C116 12 171 0 207 0c86 0
+ 114 68 191 68 78 0 168-68 177-68 4 0 7 2 9 5l12 19c1 2.175 2 4.35 2 6.525 0
+ 4.35-2 7.613-5 9.788l-19 13.05c-92 63.077-116.937 75.308-183 76.128
+-68.267.847-113-73.952-191-73.952z"/></svg></span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span></div>
+<p>其中 b_t 是任务内剩余步数；每执行一次计入预算的动作，就按任务规则更新。也可以明确使用随时间变化的转移、动作或奖励模型，不把它误写成固定 p 的时间齐次模型。只有当阶段变量已唯一确定剩余预算时，才无需重复保存等价信息。</p>
+<p>本课下一节的小环境没有返回或重试，流程本身自然最多两步。它不靠一个藏在模型外的“两步截止器”来结束，因此不会漏掉影响该例后果的剩余时间变量。</p>
+<h2 id="section-8">4. 手算例子：一个带随机失败的两步 GUI 环境</h2>
+<p><strong>所有界面、概率、收益与成本都是教学假设；没有运行真实 GUI 实验。</strong>假设任务是打开一个表单并保存，表单的目标值已经准备好，不另计输入步骤。</p>
+<h3 id="section-9">4.1 状态、初态、动作与终态</h3>
+<p>我们使用四个状态：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>状态</th>
+<th>含义</th>
+<th>本模型里的合法动作</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>H</td>
+<td>主页，尚未打开表单</td>
+<td>open：打开表单</td>
+</tr>
+<tr>
+<td>F</td>
+<td>表单准备好，可以保存</td>
+<td>save：保存</td>
+</tr>
+<tr>
+<td>S</td>
+<td>保存成功，任务结束</td>
+<td>不再执行真实 GUI 动作</td>
+</tr>
+<tr>
+<td>X</td>
+<td>执行失败，任务结束</td>
+<td>不再执行真实 GUI 动作</td>
+</tr>
+</tbody></table></div>
+<p>表中的 S 只是“成功状态”的标签，与第 3 节表示状态空间的 S 不同；本例的整个状态空间是 {H,F,S,X}。</p>
+<p>初态固定为 H，即 ρ₀(H)=1、其他初态概率为 0。终止集合 Tₑ={S,X}。执行 open 或 save 都花费 1 个成本单位；成功保存额外获得 10，所以成功保存这一步的净奖励为 <strong>9</strong>。open 失败或 save 失败都只有成本，奖励为 −1。</p>
+<p>在这个最小例子中，每个非终止状态只有一个合法动作，因此行为已经固定。它是一个合法而退化的 MDP，用于理解环境随机性与起止规则；<strong>不是一个需要学习动作优劣的策略优化难题</strong>。真实应用若支持返回、取消、重试或不同保存方式，必须扩展 A(s) 与对应环境核，不能把本例的动作限制直接搬过去。</p>
+<h3 id="section-10">4.2 联合转移表</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>当前状态与动作</th>
+<th>下一状态 s′</th>
+<th align="right">即时奖励 r</th>
+<th align="right">p(s′,r｜s,a)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>H, open</td>
+<td>F</td>
+<td align="right">−1</td>
+<td align="right">0.80</td>
+</tr>
+<tr>
+<td>H, open</td>
+<td>X</td>
+<td align="right">−1</td>
+<td align="right">0.20</td>
+</tr>
+<tr>
+<td>F, save</td>
+<td>S</td>
+<td align="right">+9</td>
+<td align="right">0.75</td>
+</tr>
+<tr>
+<td>F, save</td>
+<td>X</td>
+<td align="right">−1</td>
+<td align="right">0.25</td>
+</tr>
+</tbody></table></div>
+<p>未列出的结果概率为 0。每个当前状态与动作组分别相加为 1，不能把整张表所有行加起来要求为 1。表中两组各对应一个不同的条件分布。</p>
+<p>单步期望奖励为：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>R</mi><mo stretchy="false">(</mo><mi>H</mi><mo separator="true">,</mo><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">p</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">n</mi></mrow><mo stretchy="false">)</mo><mo>=</mo><mn>0.80</mn><mo stretchy="false">(</mo><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo>+</mo><mn>0.20</mn><mo stretchy="false">(</mo><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo>=</mo><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">R(H,\mathrm{open})=0.80(-1)+0.20(-1)=-1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathrm">open</span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.80</span><span class="mopen">(</span><span class="mord">−</span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.20</span><span class="mopen">(</span><span class="mord">−</span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">−</span><span class="mord">1</span></span></span></span></span></div>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>R</mi><mo stretchy="false">(</mo><mi>F</mi><mo separator="true">,</mo><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">v</mi><mi mathvariant="normal">e</mi></mrow><mo stretchy="false">)</mo><mo>=</mo><mn>0.75</mn><mo stretchy="false">(</mo><mn>9</mn><mo stretchy="false">)</mo><mo>+</mo><mn>0.25</mn><mo stretchy="false">(</mo><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo>=</mo><mn>6.5</mn></mrow><annotation encoding="application/x-tex">R(F,\mathrm{save})=0.75(9)+0.25(-1)=6.5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathrm">save</span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.75</span><span class="mopen">(</span><span class="mord">9</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.25</span><span class="mopen">(</span><span class="mord">−</span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">6.5</span></span></span></span></span></div>
+<p>这并不表示从 H 开始的回报是 −1，也不表示每次保存都得到 6.5。实际保存得到 9 或 −1，6.5 是这些可能结果的平均。</p>
+<h3 id="section-11">4.3 枚举完整轨迹，而不是只看成功演示</h3>
+<p>给定行为是“在 H 执行 open；如果到 F，再执行 save”。取 γ=0.9，沿用前课的折扣回报。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>完整结果</th>
+<th align="right">概率</th>
+<th>奖励序列</th>
+<th align="right">G₀</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第一步失败，H→X</td>
+<td align="right">0.20</td>
+<td>[−1]</td>
+<td align="right">−1</td>
+</tr>
+<tr>
+<td>打开后保存失败，H→F→X</td>
+<td align="right">0.80×0.25=0.20</td>
+<td>[−1,−1]</td>
+<td align="right">−1+0.9×(−1)=−1.9</td>
+</tr>
+<tr>
+<td>打开后保存成功，H→F→S</td>
+<td align="right">0.80×0.75=0.60</td>
+<td>[−1,+9]</td>
+<td align="right">−1+0.9×9=7.1</td>
+</tr>
+</tbody></table></div>
+<p>三个完整结果的概率和为 1。期望回报是把完整回报按完整轨迹概率加权：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="double-struck">E</mi><mo stretchy="false">[</mo><msub><mi>G</mi><mn>0</mn></msub><mo stretchy="false">]</mo><mo>=</mo><mn>0.20</mn><mo stretchy="false">(</mo><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo>+</mo><mn>0.20</mn><mo stretchy="false">(</mo><mo>−</mo><mn>1.9</mn><mo stretchy="false">)</mo><mo>+</mo><mn>0.60</mn><mo stretchy="false">(</mo><mn>7.1</mn><mo stretchy="false">)</mo><mo>=</mo><mn>3.68</mn></mrow><annotation encoding="application/x-tex">\mathbb E[G_0]=0.20(-1)+0.20(-1.9)+0.60(7.1)=3.68</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathbb">E</span><span class="mopen">[</span><span class="mord"><span class="mord mathnormal">G</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.20</span><span class="mopen">(</span><span class="mord">−</span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.20</span><span class="mopen">(</span><span class="mord">−</span><span class="mord">1.9</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.60</span><span class="mopen">(</span><span class="mord">7.1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">3.68</span></span></span></span></span></div>
+<p>还可以直接从“第二步只有 0.80 的机会发生”来核对：−1+0.9×0.80×6.5=3.68。若忽略打开失败的 0.20，就会把第二步奖励当成总能获得，从而算错。</p>
+<p>这个行为的成功率是 0.60，期望动作数是 1+0.80=1.80。若 γ=1，三种回报变成 −1、−2、8，期望回报是 4.2；也等于成功期望收益 10×0.60 减期望成本 1.80。</p>
+<p><strong>这些数值是对指定模型和指定行为的手算，不是训练结果、最优策略结论或真实 GUI 成功率。</strong>没有比较新算法，也不能把本课的 3.68 与上课另一个教学环境的 6.2 当作算法性能对比。</p>
+<h2 id="section-12">5. 与前一种方法或概念的关系</h2>
+<p>本课并未引入新算法。它把 RL-001 的口头决策描述变成可以逐项检查的环境模型。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>RL-001 已建立的概念</th>
+<th>本课增加的约束</th>
+<th>得到什么，又付出什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>观测与状态</td>
+<td>检查对未来是否充分</td>
+<td>能讨论 Markov 性；需要识别隐藏变量</td>
+</tr>
+<tr>
+<td>选择动作</td>
+<td>明确每个状态的合法动作</td>
+<td>避免执行不可能动作；要维护动作接口</td>
+</tr>
+<tr>
+<td>获得奖励</td>
+<td>写出下一状态与奖励的联合核</td>
+<td>不能把有关联的结果随意拆开；模型可能未知</td>
+</tr>
+<tr>
+<td>累积回报</td>
+<td>明确初态、随机轨迹与终止</td>
+<td>能完整枚举小环境；复杂环境难以列全</td>
+</tr>
+</tbody></table></div>
+<p>真实任务通常不知道精确 p。写出 MDP 并不要求事先掌握全部转移概率；它要求你说明这些变量、依赖与任务规则。我们今天给定概率，是为了可以独立复算。后续算法会讨论如何在未知环境或有限数据下学习。</p>
+<p>知道模型时还可以直接规划、枚举或执行可靠规则；这些是应比较的基线。采用 MDP 语言，不会自动证明需要深度 RL。</p>
+<h3 id="section-13">终止、吸收与重置</h3>
+<p>本例进入 S 或 X 后，真实任务结束。为了统一数学求和，可以给每个终态 z 增加一个仅用于数学记账的 idle 动作：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>p</mi><mo stretchy="false">(</mo><mi>z</mi><mo separator="true">,</mo><mn>0</mn><mo>∣</mo><mi>z</mi><mo separator="true">,</mo><mrow><mi mathvariant="normal">i</mi><mi mathvariant="normal">d</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">e</mi></mrow><mo stretchy="false">)</mo><mo>=</mo><mn>1</mn><mo separator="true">,</mo><mspace width="1em"/><mi>z</mi><mo>∈</mo><msub><mi>T</mi><mi>e</mi></msub></mrow><annotation encoding="application/x-tex">p(z,0\mid z,\mathrm{idle})=1,\quad z\in T_e</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">p</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathrm">idle</span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">e</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></div>
+<p>它只回到自身并产生 0 奖励，称为吸收约定。这个虚拟动作不是新增的 GUI 点击，也不增加实际任务长度。<strong>进入成功状态那一步仍然获得 9，只有终止之后追加的奖励才是 0。</strong>下一次任务通过 ρ₀ 重置开始；重置不是当前任务里的一个获益动作。</p>
+<h3 id="section-14">真实终止与采集截断</h3>
+<p>任务定义中的成功、失败，或明确写进任务的期限结束，可以产生 <code>terminated</code>。采集器为了控制数据量或墙钟时间提前停止，而真实任务仍可继续，是 <code>truncated</code>。最后一条已采集数据不自动等于终止状态。</p>
+<p>任务内有限期限影响结果时，需要把剩余时间或预算纳入表示，或使用明确的时间相关模型。采集截断则保留真正的最后观测与截断原因；自动重置后的新观测不能配到上一任务的动作上。两者对后续学习目标的影响，会在价值估计与 TD 单元讨论，今天不推导更新公式。<a href="https://gymnasium.farama.org/tutorials/gymnasium_basics/handling_time_limits/">Gymnasium 官方时限文档</a>明确区分这两种信号。</p>
+<h2 id="section-15">6. 主要应用：先把多步 GUI 执行合同写清楚</h2>
+<p>这一节是<strong>工程推断和拟议建模</strong>；真实研究实验<strong>未运行</strong>。使用 MDP 语言的目的，是知道该记录什么、怎样判断任务成功，以及哪些假设仍有缺口。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>一个可检验的多步 GUI 设计</th>
+<th>需要核实的条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>观测或状态</td>
+<td>指令、截图、允许使用的历史；必要的焦点、加载和剩余预算</td>
+<td>实际能获取哪些变量，是否足以预测后果</td>
+</tr>
+<tr>
+<td>动作</td>
+<td>点击、输入、滚动、返回、结束及参数</td>
+<td>合法动作集合、坐标系、文本权限和执行语义</td>
+</tr>
+<tr>
+<td>转移</td>
+<td>动作造成页面与任务进度变化，也可能失败或延迟</td>
+<td>执行器反馈、异步状态、重置与随机性</td>
+</tr>
+<tr>
+<td>奖励</td>
+<td>独立成功收益减操作与资源代价</td>
+<td>成功是否真正保存到系统，而不只是出现提示</td>
+</tr>
+<tr>
+<td>反馈来源</td>
+<td>环境结果、持久状态回读或可信人工核查</td>
+<td>结果的真实性、延迟、噪声和复核办法</td>
+</tr>
+<tr>
+<td>时间结构</td>
+<td>多个动作改变后续可见信息和可选操作</td>
+<td>任务内预算、外部采集截断分别记录</td>
+</tr>
+<tr>
+<td>数据</td>
+<td>指令、决策前观测、历史、合法动作、执行动作、结果、奖励及终止信号</td>
+<td>防止未来信息泄漏，保留重置与最终观测</td>
+</tr>
+<tr>
+<td>评价</td>
+<td>完整任务成功率、步骤数、非法动作率、失败/截断比例、端到端时延与成本</td>
+<td>同一任务分布、相同执行权限和固定预算</td>
+</tr>
+<tr>
+<td>训练成本</td>
+<td>环境交互、重置、反馈验证与样本筛选</td>
+<td>样本量、执行调用、标注和计算预算</td>
+</tr>
+<tr>
+<td>推理成本</td>
+<td>每步视觉或文本模型调用，加执行和等待</td>
+<td>每个任务总调用数、费用、显存、p50/p95 时延</td>
+</tr>
+</tbody></table></div>
+<p><strong>先比较的非 RL 基线：</strong>固定流程或有限状态机、规则加监督控件定位、同一初始模型的示范学习策略；若转移模型已知，还可以使用枚举或搜索规划。评价须使用相同初态分布、任务目标、输入权限和动作预算。一次控件定位的命中率有用，但不能替代多步任务的最终成功率。</p>
+<p>本课小环境的流程已固定，因此规则执行足够。真实环境若有返回、重试、取消或多条路径，才出现值得分析的动作选择问题；若隐藏信息太多，需要讨论部分可观测模型或历史表示，而不是继续声称截图天然是 Markov 状态。</p>
+<p><strong>其他两个方向的边界：</strong>单次模态路由若没有后续动作影响，先讨论监督或 Contextual Bandit；若调用图像后可以继续获取信息、重试或改变预算，再明确多步状态和动作。SR 的单次重建仍可先用监督基线；只有提出迭代、停止或计算分配等可执行决策后，才建立对应状态、转移与质量—计算成本目标。本课不替实际模态标签作定义，也不提出已验证的 SR 增益。</p>
+<h2 id="section-16">7. 常见误解、失败条件和适用边界</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>误解或失败</th>
+<th>本课的纠正</th>
+<th>实际检查</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Markov 就是没有随机性</td>
+<td>它要求当前状态充分，不要求结果确定</td>
+<td>同一条件下可以有多个后果</td>
+</tr>
+<tr>
+<td>用了截图就有完整状态</td>
+<td>截图是观测，可能遗漏登录、焦点或加载</td>
+<td>构造相同截图不同后果的反例</td>
+</tr>
+<tr>
+<td>P 与奖励可以随便独立采样</td>
+<td>下一状态和奖励可能相关</td>
+<td>保留联合结果或合理的条件奖励模型</td>
+</tr>
+<tr>
+<td>R(F,save)=6.5 就是每次奖励</td>
+<td>它是单步平均；实际是 9 或 −1</td>
+<td>逐轨迹计算，再求期望</td>
+</tr>
+<tr>
+<td>每张转移表所有行和为 1</td>
+<td>每个当前状态—动作组分别归一</td>
+<td>分组检查概率质量</td>
+</tr>
+<tr>
+<td>两步上限无需表示</td>
+<td>任务期限影响结果时，剩余预算可能是状态的一部分</td>
+<td>区分自然两步流程、任务内期限和外部截断</td>
+</tr>
+<tr>
+<td>保存成功后持续得到 +9</td>
+<td>成功收益只在到达时给一次</td>
+<td>吸收后奖励为 0，防止重复计收益</td>
+</tr>
+<tr>
+<td>最后一条日志就是 terminal</td>
+<td>可能只是采集停止</td>
+<td>保留 <code>terminated</code>、<code>truncated</code> 与最终观测</td>
+</tr>
+<tr>
+<td>把任务写成 MDP 就证明 RL 有效</td>
+<td>MDP 是问题定义，方法还需基线与验证</td>
+<td>明确数据和 NOT_RUN 状态</td>
+</tr>
+</tbody></table></div>
+<p>如果输入权限、动作语义、奖励真实性或任务边界尚不清楚，先完善执行与评价合同。把不确定条件明确记下来，比为不清楚的任务选择算法更有用。</p>
+<h2 id="section-17">8. 三道理解题：先独立作答</h2>
+<p>请用约 8 分钟回答，再看文末答案。</p>
+<p><strong>题 1｜检查 Markov 性。</strong> 两次看到完全相同的设置页截图，第一次账户未登录，第二次账户已登录；点击保存后的结果分布不同。如果仅用截图作为状态，它是否满足 Markov 性？你会加入哪些信息，并怎样判断仍然有没有遗漏？</p>
+<p><strong>题 2｜复算随机两步任务。</strong> 从 H 开始，在 H 执行 open，成功到 F 的概率为 0.80，否则进入失败终态 X；open 的奖励都是 −1。在 F 执行 save，以 0.75 的概率进入成功终态 S 并获得 9，否则进入 X 并获得 −1。求三个完整结果的概率、γ=0.9 时各轨迹回报及期望回报、成功率和期望动作数。若 γ=1，期望回报是多少？这些计算能否证明一种算法比另一种更好？</p>
+<p><strong>题 3｜期限还是截断？</strong> 现在扩展环境，允许保存失败后返回主页重试。情形 A：任务本身规定最多两次动作，预算耗尽就失败。情形 B：任务允许继续，采集器只为控制数据长度，在两次动作后停止记录。A 中剩余预算是否应进入状态，或使用时间相关模型？B 能否自动把最后状态标为 terminal 并假定后续回报为 0？</p>
+<h2 id="section-18">9. 下一单元预告与自查提示</h2>
+<p>下一单元是 <strong>RL-003｜策略、轨迹与探索：数据从哪里来？</strong> 我们将把“给定行为”进一步写成策略，区分策略概率与环境转移概率，并解释探索怎样改变采样数据。当前课主要定义环境；后续课再讨论如何选择或学习行为。</p>
+<p>进入下一课前，可检查三点：能否为每个状态列合法动作；能否说明 p、P、R 与 G 的区别；能否给出真实终止和采集截断各一个例子。遇到困难时优先回到相应定义与手算表，不需要提前学习价值更新算法。</p>
+<h2 id="section-19">10. 可核查的参考来源与证据说明</h2>
+<ol>
+<li><strong>Sutton 与 Barto，第二版教材原稿，第 3 章。</strong><a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">CMU 正式课程托管原始 PDF</a>本次于 2026-10-14 实际下载并读取，文件 548 页，标题页为 <em>Reinforcement Learning: An Introduction, second edition</em>，版权页标 2018；该课程 PDF 是仍保留排版占位的二版原稿，不能把它称作已核对的最终出版排版。重点核对册页 48～49 的联合核、边缘概率与即时奖励，册页 54～57 的任务终止、回报与零奖励吸收约定。<a href="https://mitpress.mit.edu/9780262039246/reinforcement-learning/">MIT Press 第二版官方页</a>用于核实正式出版版本。作者 <a href="https://incompleteideas.net/book/RLbook2020.pdf">原始 PDF 入口</a> 本次未能读取，因此不声称作者官网读取成功。</li>
+<li><strong>原始 MDP 文献的延伸入口。</strong> Richard Bellman，<em>A Markovian Decision Process</em>，1957，卷 6，679～684，DOI：10.1512/iumj.1957.6.56038。<a href="https://iumj.org/article/1116/">期刊原始入口</a>与<a href="https://iumj.s3-us-west-2.amazonaws.com/abstracts/56038_abs.pdf">期刊提供的首面 PDF</a>。本次核查了题录，并可读取期刊首面文件；该文件只有一页，不能称为论文全文核查。本课不展开其中的递推分析。</li>
+<li><strong>Gymnasium 官方文档：</strong><a href="https://gymnasium.farama.org/tutorials/gymnasium_basics/handling_time_limits/">Handling Time Limits</a>，本次于 2026-10-14 读取，核对环境内期限、剩余时间表示和 <code>termination</code> / <code>truncation</code> 的区别。其学习更新示例留待后续课程，本课不提前推导。</li>
+</ol>
+<p><strong>已发表知识：</strong>MDP 联合转移核、Markov 性、奖励与转移的边缘关系、终止与吸收约定。<br><strong>工程推断：</strong>GUI 状态、执行接口、反馈和基线设计；SR 与路由的建模边界。<br><strong>教学假设：</strong>H/F/S/X 环境、0.80/0.20 与 0.75/0.25 转移概率、操作成本 1、成功收益 10、γ=0.9。<br><strong>研究假设：</strong>未来在真实执行与反馈合同明确后检验多步决策方法；当前没有算法改善证据。<br><strong>实际实验结果：</strong>无，<strong>未运行（NOT_RUN）</strong>。手算与文件检查只核实教学一致性。</p>
+<details class="answers" id="section-20"><summary>参考答案（练习完成后再看）</summary><p><strong>题 1。</strong> 仅截图没有满足题目中的 Markov 性，因为相同截图和同一动作的后果还依赖截图未包含的账户状态。可以加入真实可获取的登录、权限等变量，并检查焦点、异步加载、页面历史、剩余预算等是否也影响未来。对候选表示，考察在相同表示与动作下，按不同历史分组时后果分布是否仍不同；若不同就有遗漏。有限数据里未发现差异，不等于证明现实系统严格 Markov。历史或记忆可以帮助，但不自动提供充分状态。</p>
+<p><strong>题 2。</strong> 首步失败概率 0.20，奖励 [−1]，G₀=−1；第二步失败概率 0.80×0.25=0.20，奖励 [−1,−1]，G₀=−1.9；成功概率 0.80×0.75=0.60，奖励 [−1,+9]，G₀=7.1。γ=0.9 时期望回报为 0.20×(−1)+0.20×(−1.9)+0.60×7.1=3.68。成功率为 0.60，期望动作数为 0.20×1+0.80×2=1.80。γ=1 时期望回报为 0.20×(−1)+0.20×(−2)+0.60×8=4.2。结果依赖给定教学环境和固定行为，没有训练或比较算法，不能声称方法提升。第一步失败的任务不会执行第二步，不能无条件加上 6.5 的第二步期望奖励。</p>
+<p><strong>题 3。</strong> A 中期限是任务定义的一部分；在允许重试的环境中，相同页面可能对应不同剩余步数，而合法动作或到期后果不同。应把剩余预算纳入状态，或明确采用时间相关的有限期限模型；预算耗尽后的任务失败可以是实际终止。B 中只是外部采集截断，最后的真实状态仍可能继续转移，不能自动设为 terminal 或断言后续回报为 0。应保留终止与截断的不同信号、真正的最后观测和停止原因；后续学习方法再按这些语义处理，不把新一次 reset 的观测误接到旧任务。</p>
+</details></article></div><section class="pdf-preview wrap" aria-labelledby="pdf-preview-title"><h2 id="pdf-preview-title">同内容伴随 PDF · 阅读版</h2><p>本课 PDF 使用与 PPT 相同的源内容，经独立排版用于阅读，非 PowerPoint 原生导出；可编辑汇报请使用 PPT。手机或浏览器未显示时，可<a href="./RL-002.pdf" style="text-decoration:underline">直接打开 PDF 阅读版</a>。</p><iframe src="./RL-002.pdf#toolbar=1" title="RL-002 同内容伴随 PDF 阅读版" loading="lazy"></iframe></section><div class="lesson-navigation wrap"><a href="../RL-001/"><span>← 上一单元 · RL-001</span><strong>从任务到决策：强化学习解决什么问题？</strong></a><a class="next" href="../RL-003/"><span>下一单元 · RL-003 →</span><strong>策略、轨迹与探索：数据从哪里来？</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>

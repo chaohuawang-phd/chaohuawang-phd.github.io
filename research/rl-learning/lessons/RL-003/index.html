@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151a17"><meta name="description" content="解释策略概率与环境概率，并连接本阶段的前置概念。"><meta name="color-scheme" content="light"><title>RL-003｜策略、轨迹与探索：数据从哪里来？ · 王超华</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%23151a17'/%3E%3Cpath d='M31 14a13 13 0 1 0 0 20' fill='none' stroke='%23c8f45b' stroke-width='5'/%3E%3Ccircle cx='32' cy='24' r='3' fill='%23c8f45b'/%3E%3C/svg%3E"><link rel="stylesheet" href="../../styles.css"><link rel="stylesheet" href="../../assets/katex/katex.min.css"><script src="../../script.js" defer></script></head>
+<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-003</span></div><section class="lesson-hero"><p class="eyebrow">RL-003 · WEEK 01 · 新知识</p><h1>策略、轨迹与探索：数据从哪里来？</h1><p class="lesson-summary">解释策略概率与环境概率，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">RL基础</span><span class="tag">模态路由</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>讲义 · PPT 可用</span></div><div class="button-row"><a class="button small" href="./lecture.md" download>讲义下载 · MD</a><a class="button small" href="./RL-003.pptx" download>PPT 下载</a><a class="button small" href="./RL-003.pdf">PDF 阅读版</a></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="本课目录"><h2>本课目录</h2><ol><li><a href="#section-1">1. 今天解决什么问题，与前面哪些单元有关</a></li><li><a href="#section-2">2. 学习目标</a></li><li><a href="#section-3">3. 直觉、定义和必要公式</a></li><li><a href="#section-8">4. 手算例子：同一环境，三种策略收集不同数据</a></li><li><a href="#section-13">5. 与前一种方法的关系：探索改变什么？</a></li><li><a href="#section-14">6. 主要应用：模态路由的数据与反馈合同</a></li><li><a href="#section-16">7. 常见误解、失败条件和适用边界</a></li><li><a href="#section-17">8. 三道理解题：先独立作答</a></li><li><a href="#section-18">9. 下一单元预告与自查提示</a></li><li><a href="#section-19">10. 可核查的参考来源与证据说明</a></li><li><a href="#section-20">参考答案（练习完成后再看）</a></li></ol></aside><article class="lecture"><p>课程：强化学习学习与应用 · 第 1 周 / 单元 3<br>课程版本：1.0.0 · 内容版本：1.0.0 · 教学日期：2026-10-15（Asia/Shanghai）<br>预计学习：35～45 分钟 · 汇报：10～15 分钟<br>前置：<a href="../RL-001/">RL-001｜从任务到决策</a>、<a href="../RL-002/">RL-002｜MDP 的严格定义</a>；需要条件概率、期望和回报的基础。<br>证据状态：标准概念与工程分析；路由分组、概率和成本均为<strong>教学假设</strong>；真实研究实验<strong>未运行（NOT_RUN）</strong>。</p>
+<p>建议节奏：前置与概念 12 分钟 → 轨迹概率与手算 12 分钟 → 探索、日志与应用 10 分钟 → 三题自测及答案核对 8 分钟。</p>
+<h2 id="section-1">1. 今天解决什么问题，与前面哪些单元有关</h2>
+<p>RL-001 介绍了策略、奖励和回报；RL-002 定义了环境的联合转移核 p(s′,r｜s,a)。上一课的 GUI 小环境在每个非终止状态只有一个合法动作，所以没有真正比较“选哪个动作”。今天把策略这一侧补完整：同样的输入，系统怎样选择动作？选择规则改变后，我们收集到的数据为什么也会改变？</p>
+<p>设一个请求可以选择文本分支或图像分支。路由器有 20% 的概率选择图像，图像分支在这一类请求上有 95% 的概率回答正确。这两个概率不是一回事：前者决定做什么，后者描述做了之后发生什么。一次完整记录还需要说明这个请求来自什么初始分布。</p>
+<p>本课学习确定策略、随机策略和完整轨迹的概率，并用一个单步路由环境比较给定策略的期望收益。它是单步决策例子，不被包装成多步 GUI 或多步 MDP 应用。我们不会推导任何价值更新、Q-learning 或 PPO 目标；“怎样从数据学习好策略”将在后续课中逐步解决。</p>
+<h2 id="section-2">2. 学习目标</h2>
+<p>学完后，应当能够：</p>
+<ol>
+<li>区分策略概率 π、环境概率 p 和初始分布 ρ₀，说明确定性动作选择为什么仍可能产生随机结果。</li>
+<li>写出有限离散环境中一条完整轨迹的概率，逐项计算一个教学策略的完整结果分布与期望回报。</li>
+<li>解释探索如何改变动作覆盖和数据分布，列出探索成本及必要日志，避免把未选动作的结果当成已知。</li>
+</ol>
+<h2 id="section-3">3. 直觉、定义和必要公式</h2>
+<h3 id="section-4">3.1 策略规定怎样选动作</h3>
+<p>在状态可见的 MDP 中，随机策略可以写为：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>π</mi><mo stretchy="false">(</mo><mi>a</mi><mo>∣</mo><mi>s</mi><mo stretchy="false">)</mo><mo>=</mo><mi>Pr</mi><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>A</mi><mi>t</mi></msub><mo>=</mo><mi>a</mi><mo>∣</mo><msub><mi>S</mi><mi>t</mi></msub><mo>=</mo><mi>s</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><mspace width="2em"/><msub><mi>a</mi><mi>t</mi></msub><mo>∼</mo><mi>π</mi><mo stretchy="false">(</mo><mo>⋅</mo><mo>∣</mo><msub><mi>s</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\pi(a\mid s)=\Pr(A_t=a\mid S_t=s),\qquad
+a_t\sim\pi(\cdot\mid s_t)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mopen">(</span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">s</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop">Pr</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">A</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">s</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∼</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mopen">(</span><span class="mord">⋅</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span></div>
+<ul>
+<li>π：动作选择规则，不一定由神经网络实现。</li>
+<li>s_t：决策前的当前状态；a_t：本次实际选择的动作。</li>
+<li>π(a｜s)：在 s 下选择合法动作 a 的概率。</li>
+<li>“∼”：按该分布采样；“·”：任意合法动作的位置。</li>
+<li>A_t、S_t 表示随机变量，小写 a、s 表示具体取值。</li>
+</ul>
+<p>每个状态下合法动作的概率都非负，而且相加为 1。确定策略 μ(s) 则直接给出一个动作：在相同输入和规则下总选 μ(s)，可以看作该动作概率为 1、其他动作概率为 0 的特殊策略。确定或随机描述的是选择方式，不等于策略最优或实际表现优秀。</p>
+<p>真实系统未必看到完整状态。若输入只是观测 o_t，就应写 π(a｜o_t)；若需要任务和交互历史 h_t，就写 π(a｜h_t)。这是在明确决策依赖的信息，不能仅改一个字母就证明观测具有 Markov 性。</p>
+<p>带参数的网络策略也可写成 π_θ，其中 θ 是模型参数。本课把策略数值直接给定，不执行参数更新。有关确定策略、随机策略及采样的基础定义，可对照 <a href="https://spinningup.openai.com/en/latest/spinningup/rl_intro.html">OpenAI Spinning Up 官方入门</a>的 Policies 部分。</p>
+<h3 id="section-5">3.2 策略概率、正确概率与模型分数</h3>
+<p>上一课的环境核继续使用同一时间约定：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>p</mi><mo stretchy="false">(</mo><msup><mi>s</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>r</mi><mo>∣</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><mi>Pr</mi><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>S</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msup><mi>s</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><msub><mi>R</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mi>r</mi><mo>∣</mo><msub><mi>S</mi><mi>t</mi></msub><mo>=</mo><mi>s</mi><mo separator="true">,</mo><msub><mi>A</mi><mi>t</mi></msub><mo>=</mo><mi>a</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">p(s&#x27;,r\mid s,a)
+=\Pr(S_{t+1}=s&#x27;,R_{t+1}=r\mid S_t=s,A_t=a)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0519em;vertical-align:-0.25em;"></span><span class="mord mathnormal">p</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop">Pr</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0102em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0077em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">A</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span></span></span></span></span></div>
+<p>π 决定动作，p 决定在当前状态执行该动作后的下一状态和奖励。当前策略不选择某个动作，不表示该动作一定失败。反过来，某个动作经常成功，也不表示当前策略经常选择它。</p>
+<p>还要区分网络分数与真实行为概率。模型输出 [0.8,0.2]，如果系统每次都选最大分数动作，实际选择概率是 [1,0]，而不是 [0.8,0.2]。只有确实按该分布采样，且没有其他动作屏蔽或覆盖规则时，它才对应采样概率。归一化、合法动作屏蔽、阈值和回退规则都可能改变最终行为。</p>
+<h3 id="section-6">3.3 一条完整轨迹由三类概率共同产生</h3>
+<p>本节只讨论有限离散状态、动作和奖励，评估中的策略固定，并依赖可见的 Markov 状态。假设任务按定义在有限步内终止，且回报期望有定义；外部采集截断不算任务终止。把长度 T 的完整轨迹写成：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>τ</mi><mo>=</mo><mo stretchy="false">(</mo><msub><mi>s</mi><mn>0</mn></msub><mo separator="true">,</mo><msub><mi>a</mi><mn>0</mn></msub><mo separator="true">,</mo><msub><mi>r</mi><mn>1</mn></msub><mo separator="true">,</mo><msub><mi>s</mi><mn>1</mn></msub><mo separator="true">,</mo><mo>…</mo><mo separator="true">,</mo><msub><mi>a</mi><mrow><mi>T</mi><mo>−</mo><mn>1</mn></mrow></msub><mo separator="true">,</mo><msub><mi>r</mi><mi>T</mi></msub><mo separator="true">,</mo><msub><mi>s</mi><mi>T</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\tau=(s_0,a_0,r_1,s_1,\ldots,a_{T-1},r_T,s_T)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner">…</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.13889em;">T</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.13889em;">T</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.13889em;">T</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span></div>
+<p>其中 τ 是轨迹，T 是实际动作数，s_T 是本次任务的终止状态。按条件概率链式展开，并使用上一课的 MDP 条件，可得：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><munder><mrow><mi>Pr</mi><mo>⁡</mo></mrow><mi>π</mi></munder><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi>ρ</mi><mn>0</mn></msub><mo stretchy="false">(</mo><msub><mi>s</mi><mn>0</mn></msub><mo stretchy="false">)</mo><munderover><mo>∏</mo><mrow><mi>t</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>T</mi><mo>−</mo><mn>1</mn></mrow></munderover><mrow><mo fence="true">[</mo><mi>π</mi><mo stretchy="false">(</mo><msub><mi>a</mi><mi>t</mi></msub><mo>∣</mo><msub><mi>s</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mi>p</mi><mo stretchy="false">(</mo><msub><mi>s</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo separator="true">,</mo><msub><mi>r</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>∣</mo><msub><mi>s</mi><mi>t</mi></msub><mo separator="true">,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo fence="true">]</mo></mrow></mrow><annotation encoding="application/x-tex">\Pr_\pi(\tau)=\rho_0(s_0)
+\prod_{t=0}^{T-1}\left[\pi(a_t\mid s_t)
+p(s_{t+1},r_{t+1}\mid s_t,a_t)\right]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.45em;vertical-align:-0.7em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6833em;"><span style="top:-2.4em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">Pr</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.7em;"><span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:3.0954em;vertical-align:-1.2671em;"></span><span class="mord"><span class="mord mathnormal">ρ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.8283em;"><span style="top:-1.8829em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mrel mtight">=</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∏</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.13889em;">T</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2671em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;">[</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mord mathnormal">p</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mclose delimcenter" style="top:0em;">]</span></span></span></span></span></span></div>
+<ul>
+<li>ρ₀(s₀)：从这个初始状态开始的概率。</li>
+<li>π(a_t｜s_t)：在每一步选择记录中这个动作的概率。</li>
+<li>p(s_(t+1),r_(t+1)｜s_t,a_t)：环境产生记录中这对后果的概率。</li>
+<li>∏：把所有步骤的因子依次相乘；不能只乘动作概率，或只乘成功概率。</li>
+</ul>
+<p>如果已经条件化在某个给定起点，初态因子可以从条件概率表达式中省略；但不能把“给定起点”和“从整个请求分布抽样”的概率混为一谈。若状态不可见、只记录观测，观测生成过程与隐藏状态也会影响轨迹概率；不能把上述公式里的 s 全部机械替换成截图 o 就声称得到完整模型。</p>
+<p>本式的 T 由任务终止语义确定。外部采集截断仍需单独记录，不等于真实 terminal。连续动作或连续奖励需要概率密度等表述，本课的精确事件概率乘积用于离散算例。<a href="https://spinningup.openai.com/en/latest/spinningup/rl_intro.html#the-rl-problem">Spinning Up 的 The RL Problem 部分</a>给出了初态、策略和状态转移的对应分解；本课显式保留了奖励，并使用 RL-002 的联合核。</p>
+<h3 id="section-7">3.4 比较策略，要对完整结果求期望</h3>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>J</mi><mo stretchy="false">(</mo><mi>π</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi mathvariant="double-struck">E</mi><mrow><mi>τ</mi><mo>∼</mo><mi>π</mi></mrow></msub><mo stretchy="false">[</mo><msub><mi>G</mi><mn>0</mn></msub><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo><mo stretchy="false">]</mo><mo>=</mo><munder><mo>∑</mo><mi>τ</mi></munder><munder><mrow><mi>Pr</mi><mo>⁡</mo></mrow><mi>π</mi></munder><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo><msub><mi>G</mi><mn>0</mn></msub><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">J(\pi)=\mathbb E_{\tau\sim\pi}[G_0(\tau)]
+=\sum_{\tau}\Pr_\pi(\tau)G_0(\tau)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.09618em;">J</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathbb">E</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.1132em;">τ</span><span class="mrel mtight">∼</span><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">[</span><span class="mord"><span class="mord mathnormal">G</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mclose">)]</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.3em;vertical-align:-1.25em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.9em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.1132em;">τ</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.25em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6833em;"><span style="top:-2.4em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">Pr</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.7em;"><span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mclose">)</span><span class="mord"><span class="mord mathnormal">G</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mclose">)</span></span></span></span></span></div>
+<p>G₀(τ) 是该轨迹从起点开始的回报；J(π) 是策略在指定初始分布和环境下的期望回报；求和覆盖所有可能的完整轨迹。高概率路径不必有高回报，单条成功路径也不能代表整个策略。</p>
+<p>对于单步任务，G₀=r₁，折扣因子不改变这个唯一奖励。对于多步任务，仍按前两课的规则累积折扣奖励。本课只对给定概率求和，不把这个计算当成学习算法。</p>
+<h2 id="section-8">4. 手算例子：同一环境，三种策略收集不同数据</h2>
+<p><strong>以下完全是教学假设，不代表实际模态输入、0/1 标签、分支效果或业务成本。</strong></p>
+<h3 id="section-9">4.1 先定义选择前可见的信息与环境</h3>
+<p>请求有两个上下文分组 u 和 v，初始概率分别为 ρ₀(u)=0.60、ρ₀(v)=0.40。本例的 ρ₀ 由外部请求流量给定，换路由策略不会改变它。在这个教学模型里，分组由<strong>分支选择前已经可见的输入特征</strong>确定；它不是事后判断“是否需要图像”的正确标签，也不能由调用图像分支后的内容偷算出来。</p>
+<p>每个请求只选择一次动作，然后结束。T 表示文本分支，I 表示图像分支；这里表中的动作 T 是标签，不是第 3 节的轨迹长度 T。本例的轨迹长度固定为 1。两个分支对两个分组都合法；假设图像输入在需要调用时可取得，但路由器不能提前使用该分支的结果。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>上下文</th>
+<th>动作</th>
+<th align="right">环境中的回答正确概率</th>
+<th align="right">固定调用成本</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>u</td>
+<td>T：文本</td>
+<td align="right">0.90</td>
+<td align="right">0.5</td>
+</tr>
+<tr>
+<td>u</td>
+<td>I：图像</td>
+<td align="right">0.95</td>
+<td align="right">2.0</td>
+</tr>
+<tr>
+<td>v</td>
+<td>T：文本</td>
+<td align="right">0.40</td>
+<td align="right">0.5</td>
+</tr>
+<tr>
+<td>v</td>
+<td>I：图像</td>
+<td align="right">0.85</td>
+<td align="right">2.0</td>
+</tr>
+</tbody></table></div>
+<p>答对获得收益 10，答错收益 0，无论答对答错都支付调用成本。于是文本分支的实际净奖励是 9.5 或 −0.5，图像分支是 8 或 −2。各请求最终进入终态 z；联合核仍可区分不同奖励，例如 p(z,8｜u,I)=0.95、p(z,−2｜u,I)=0.05。终态之后不再产生实际操作和额外奖励。</p>
+<h3 id="section-10">4.2 策略 πA 的选择概率</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>选择前的上下文</th>
+<th align="right">πA(T｜上下文)</th>
+<th align="right">πA(I｜上下文)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>u</td>
+<td align="right">0.80</td>
+<td align="right">0.20</td>
+</tr>
+<tr>
+<td>v</td>
+<td align="right">0.30</td>
+<td align="right">0.70</td>
+</tr>
+</tbody></table></div>
+<p>这张表是策略；上一张表是环境。同一行的策略概率和为 1。πA 会按这张表真实采样，不只是输出一个分数后取最大值。</p>
+<p>一条“抽到 u、选择 I、答对并获得 8”的完整路径，其概率是：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><munder><mrow><mi>Pr</mi><mo>⁡</mo></mrow><msub><mi>π</mi><mi>A</mi></msub></munder><mo stretchy="false">(</mo><mi>u</mi><mo separator="true">,</mo><mi>I</mi><mo separator="true">,</mo><mn>8</mn><mo separator="true">,</mo><mi>z</mi><mo stretchy="false">)</mo><mo>=</mo><mn>0.60</mn><mo>×</mo><mn>0.20</mn><mo>×</mo><mn>0.95</mn><mo>=</mo><mn>0.114</mn></mrow><annotation encoding="application/x-tex">\Pr_{\pi_A}(u,I,8,z)=0.60\times0.20\times0.95=0.114</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.5503em;vertical-align:-0.8003em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6833em;"><span style="top:-2.4em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3448em;"><span style="top:-2.3567em;margin-left:-0.0359em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1433em;"><span></span></span></span></span></span></span></span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">Pr</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8003em;"><span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">u</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">8</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0.60</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0.20</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.95</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.114</span></span></span></span></span></div>
+<p>三个因子分别是请求分组、动作选择和环境反馈。若已经给定“当前请求属于 u”，则条件概率是 0.20×0.95=0.19；若还给定已经选择 I，则正确概率是 0.95。条件不同，数值自然不同。</p>
+<h3 id="section-11">4.3 枚举八条完整路径</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>初始分组</th>
+<th>实际动作与结果</th>
+<th align="right">完整路径概率</th>
+<th align="right">净奖励，也就是 G₀</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>u</td>
+<td>T，答对</td>
+<td align="right">0.60×0.80×0.90=0.432</td>
+<td align="right">9.5</td>
+</tr>
+<tr>
+<td>u</td>
+<td>T，答错</td>
+<td align="right">0.60×0.80×0.10=0.048</td>
+<td align="right">−0.5</td>
+</tr>
+<tr>
+<td>u</td>
+<td>I，答对</td>
+<td align="right">0.60×0.20×0.95=0.114</td>
+<td align="right">8</td>
+</tr>
+<tr>
+<td>u</td>
+<td>I，答错</td>
+<td align="right">0.60×0.20×0.05=0.006</td>
+<td align="right">−2</td>
+</tr>
+<tr>
+<td>v</td>
+<td>T，答对</td>
+<td align="right">0.40×0.30×0.40=0.048</td>
+<td align="right">9.5</td>
+</tr>
+<tr>
+<td>v</td>
+<td>T，答错</td>
+<td align="right">0.40×0.30×0.60=0.072</td>
+<td align="right">−0.5</td>
+</tr>
+<tr>
+<td>v</td>
+<td>I，答对</td>
+<td align="right">0.40×0.70×0.85=0.238</td>
+<td align="right">8</td>
+</tr>
+<tr>
+<td>v</td>
+<td>I，答错</td>
+<td align="right">0.40×0.70×0.15=0.042</td>
+<td align="right">−2</td>
+</tr>
+</tbody></table></div>
+<p>八条路径概率之和为 1。用它们分别乘奖励再求和，得到 J(πA)=7.22。也可以先分组核对：文本在 u、v 中的单步期望净奖励分别为 8.5、3.5；图像分别为 7.5、6.5。</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>J</mi><mo stretchy="false">(</mo><msub><mi>π</mi><mi>A</mi></msub><mo stretchy="false">)</mo><mo>=</mo><mn>0.60</mn><mo stretchy="false">(</mo><mn>0.80</mn><mo>×</mo><mn>8.5</mn><mo>+</mo><mn>0.20</mn><mo>×</mo><mn>7.5</mn><mo stretchy="false">)</mo><mo>+</mo><mn>0.40</mn><mo stretchy="false">(</mo><mn>0.30</mn><mo>×</mo><mn>3.5</mn><mo>+</mo><mn>0.70</mn><mo>×</mo><mn>6.5</mn><mo stretchy="false">)</mo><mo>=</mo><mn>7.22</mn></mrow><annotation encoding="application/x-tex">J(\pi_A)=0.60(0.80\times8.5+0.20\times7.5)
++0.40(0.30\times3.5+0.70\times6.5)=7.22</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.09618em;">J</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.60</span><span class="mopen">(</span><span class="mord">0.80</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">8.5</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0.20</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">7.5</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.40</span><span class="mopen">(</span><span class="mord">0.30</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">3.5</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0.70</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">6.5</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">7.22</span></span></span></span></span></div>
+<p>分组内的期望分别为 8.3 和 5.6，再按 0.60/0.40 加权。πA 的整体正确概率为 0.832，图像调用概率为 0.40，期望调用成本为 1.10，因而也有 10×0.832−1.10=7.22。</p>
+<h3 id="section-12">4.4 与确定策略和均匀策略比较</h3>
+<p>设确定策略 μ 在 u 总选 T、在 v 总选 I；均匀策略 πU 则在任一分组对两个动作各取 0.50。三者面对同一请求分布和同一环境表。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>策略</th>
+<th align="right">整体正确概率</th>
+<th align="right">图像调用概率</th>
+<th align="right">期望调用成本</th>
+<th align="right">期望净收益</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>随机策略 πA</td>
+<td align="right">0.832</td>
+<td align="right">0.40</td>
+<td align="right">1.10</td>
+<td align="right">7.22</td>
+</tr>
+<tr>
+<td>确定策略 μ：u选T、v选I</td>
+<td align="right">0.880</td>
+<td align="right">0.40</td>
+<td align="right">1.10</td>
+<td align="right">7.70</td>
+</tr>
+<tr>
+<td>均匀策略 πU</td>
+<td align="right">0.805</td>
+<td align="right">0.50</td>
+<td align="right">1.25</td>
+<td align="right">6.80</td>
+</tr>
+</tbody></table></div>
+<p>确定策略 μ 的期望为 0.60×8.5+0.40×6.5=7.70。它和 πA 的图像调用率、平均调用成本相同，收益仍不同，因为它们<strong>在什么请求上选择什么动作</strong>不同。只比较整体图像调用率会漏掉这个差异。</p>
+<p>以上可以精算，是因为环境概率作为题目条件全部给出。真实日志通常不提供这些已知概率。μ 只是根据教学参数构造的对照，不能当作已经训练出的实际路由器；这些算术结果也不是对真实业务的性能承诺。</p>
+<h2 id="section-13">5. 与前一种方法的关系：探索改变什么？</h2>
+<p>本课继续建模，没有引入新的训练算法。相对 RL-002，环境核保持固定，改变的是智能体如何选择动作。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>前课已说明的内容</th>
+<th>本课新增的机制</th>
+<th>对数据的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ρ₀ 描述任务起点</td>
+<td>区分请求分布与动作选择分布</td>
+<td>初始请求可能不变，动作分布仍会变</td>
+</tr>
+<tr>
+<td>p 描述动作后的反馈</td>
+<td>策略 π 给动作分配概率</td>
+<td>同一环境能产生不同轨迹分布</td>
+</tr>
+<tr>
+<td>按给定行为枚举回报</td>
+<td>比较不同给定策略的期望</td>
+<td>比较的是完整结果，不能只看成功示例</td>
+</tr>
+<tr>
+<td>明确合法动作和反馈</td>
+<td>记录真实行为概率和覆盖</td>
+<td>未选动作的反馈可能完全缺失</td>
+</tr>
+</tbody></table></div>
+<p>在当前请求互不影响、分布固定的单步例子中：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><munder><mrow><mi>Pr</mi><mo>⁡</mo></mrow><mi>π</mi></munder><mo stretchy="false">(</mo><mi>X</mi><mo>=</mo><mi>x</mi><mo separator="true">,</mo><mi>A</mi><mo>=</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi>ρ</mi><mn>0</mn></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mi>π</mi><mo stretchy="false">(</mo><mi>a</mi><mo>∣</mo><mi>x</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\Pr_\pi(X=x,A=a)=\rho_0(x)\pi(a\mid x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.45em;vertical-align:-0.7em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6833em;"><span style="top:-2.4em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">Pr</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.7em;"><span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.07847em;">X</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">ρ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mopen">(</span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span></span></span></span></span></div>
+<p>X 这里表示请求上下文随机变量，不是上一课 GUI 的失败状态标签；A 是本次动作。πA 对四个“上下文—动作”格都有非零选择概率，μ 则完全不覆盖 (u,I) 与 (v,T)。整体图像调用率同为 0.40，并不能说明条件覆盖相同。</p>
+<p><strong>探索（exploration）</strong>是为了获得尚不充分的反馈而尝试其他动作；<strong>利用（exploitation）</strong>是依据已有信息选择预期更有利的动作。随机策略可用于探索，但随机性也可能服务于其他目的，不能看到随机采样就断言已经设计了有效探索。</p>
+<p>本例把所有环境概率给定，因此不存在需要靠探索发现的未知参数；三种策略只是展示覆盖与成本的不同。现实中若概率未知，受控探索可能提供新信息，但也会带来错误后果、调用费用和机会成本。表中均匀策略比 μ 的平均调用成本高 0.15、即时净收益低 0.90；是否能换来长期收益，还需要学习规则、数据量和独立评估，不能从“覆盖更多”直接推出。</p>
+<p>在多步 GUI 中，改变策略还可能让智能体到达不同页面，从而连后续状态分布都改变。本课不展开更新算法；这里只建立“策略影响数据”的因果顺序。探索与利用的基础讨论可对照 <a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">Sutton 与 Barto 第二版原稿</a>第 2 章册页 25～26；该章的训练更新留待相应课程。</p>
+<h2 id="section-14">6. 主要应用：模态路由的数据与反馈合同</h2>
+<p>这一节属于<strong>工程推断</strong>，实际输入来源、标签定义、可用分支和业务代价尚未作为本课的事实条件给出。不能把教学分组 u/v、文本/图像动作或成功概率当成实际系统合同。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>必须说明的项目</th>
+<th>一个可检查的路由设计</th>
+<th>需要核实的条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>选择前的信息</td>
+<td>请求文本、允许使用的上下文、输入可用性</td>
+<td>决策时是否真实可见；不得提前使用图像分支结果</td>
+</tr>
+<tr>
+<td>状态或观测</td>
+<td>在简化模型中把可见上下文写成 x；现实明确是观测还是充分状态</td>
+<td>图像来自什么设备或来源、历史信息权限</td>
+</tr>
+<tr>
+<td>合法动作</td>
+<td>当前允许调用的分支及回退行为</td>
+<td>图像缺失时哪些动作合法，失败是否允许重试</td>
+</tr>
+<tr>
+<td>奖励</td>
+<td>回答收益减成本，必要时区分不同错误代价</td>
+<td>正确的实际定义、验证方式和成本单位</td>
+</tr>
+<tr>
+<td>反馈来源</td>
+<td>选中分支的可核查结果、人工评价或独立全动作评价</td>
+<td>哪些动作有反馈，反馈延迟与噪声</td>
+</tr>
+<tr>
+<td>时间结构</td>
+<td>一次选择结束，或允许获取信息后继续决策</td>
+<td>单步优先比较监督/Contextual Bandit；多步结构另行论证</td>
+</tr>
+<tr>
+<td>训练数据</td>
+<td>决策前输入、合法动作、策略版本、真实采样概率、实际动作、结果与成本</td>
+<td>保留原始结果，未选动作不能臆造标签</td>
+</tr>
+<tr>
+<td>评价</td>
+<td>净收益、回答质量、关键错误、调用率、分组覆盖、时延和费用</td>
+<td>固定任务分布、相同输入权限与预算</td>
+</tr>
+<tr>
+<td>训练成本</td>
+<td>收集反馈、试验调用、标注和模型训练</td>
+<td>探索会不会增加错误或调用开销</td>
+</tr>
+<tr>
+<td>推理成本</td>
+<td>路由器加被选分支、回退和等待</td>
+<td>每请求总成本，以及 p50/p95 端到端时延</td>
+</tr>
+</tbody></table></div>
+<p><strong>先比较的非 RL 基线：</strong>固定文本、固定图像、可解释规则、监督路由分类器和成本敏感监督模型。若拥有独立的全动作评价数据，可以离线比较各分支；若只能看到选中动作的即时反馈，Contextual Bandit 是应理解的单步反馈框架。只有动作改变后续信息、动作集合或长期资源时，才进一步提出具体的多步问题。</p>
+<h3 id="section-15">未选动作的结果不能从日志补出来</h3>
+<p>一条日志“分组 u，选 T，回答失败”，只说明本次 T 的结果。它不说明 I 失败，也不保证 I 成功。即使整体图像分支平均表现较好，也不能给这个特定请求补一个确定反事实结果。</p>
+<p>实际记录的行为概率应对应<strong>真正执行的选择规则</strong>，包含合法动作屏蔽、采样、阈值和可识别的回退逻辑。不要把模型原始置信分数、事后估计的概率或固定 0.5 冒充真实选择概率；无法正确确定时，明确记录未知。概率与覆盖是后续离线评估的重要条件，本课不声称仅靠记录概率就已经完成可靠评估。</p>
+<p>输入、奖励与行为策略可能随版本改变，因此需要保留来源和版本。探索策略也应有明确的合法范围、预算和评价协议。将均匀随机策略直接部署到真实请求，不是由本课教学算例得出的建议。</p>
+<p><strong>其他方向的联系：</strong>多步 GUI 的日志要连接同一次任务的状态/观测、动作与反馈，不能只收成功截图，也不能把 reset 后的新页面接到旧轨迹。SR 若选择迭代步数、早停或区域计算，策略会改变哪些计算路径被采样；仍要先定义决策与固定预算基线。两者均没有在本课运行训练或取得性能增益。</p>
+<h2 id="section-16">7. 常见误解、失败条件和适用边界</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>误解或失败</th>
+<th>为什么不成立</th>
+<th>检查办法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>π(I｜u)=0.20 就是图像正确率</td>
+<td>这是动作选择概率</td>
+<td>分开写策略表与环境表</td>
+</tr>
+<tr>
+<td>确定策略的结果也确定</td>
+<td>环境反馈仍可随机</td>
+<td>固定动作后看结果分布</td>
+</tr>
+<tr>
+<td>轨迹概率只乘每步正确率</td>
+<td>漏了初态和动作选择</td>
+<td>逐项写 ρ₀、π、p</td>
+</tr>
+<tr>
+<td>高频路径就是高收益路径</td>
+<td>概率和回报是不同量</td>
+<td>对完整路径的回报求加权和</td>
+</tr>
+<tr>
+<td>同样调用率意味着同样收益</td>
+<td>条件选择与覆盖可能不同</td>
+<td>按上下文—动作分组核查</td>
+</tr>
+<tr>
+<td>没选某动作就能标它失败</td>
+<td>其结果没有被观测到</td>
+<td>未知保持未知，另收可信反馈</td>
+</tr>
+<tr>
+<td>探索覆盖越多就越有效</td>
+<td>信息收益与试错成本都未自动保证</td>
+<td>同时记录成本、错误与独立验证</td>
+</tr>
+<tr>
+<td>用事后标签当路由输入更准</td>
+<td>使用了决策时不可见的信息</td>
+<td>检查特征时间与来源</td>
+</tr>
+<tr>
+<td>已知教学概率等于真实业务证据</td>
+<td>这是人为设定的模型</td>
+<td>分开标明教学假设与 NOT_RUN</td>
+</tr>
+</tbody></table></div>
+<p>如果没有可信反馈、合法动作说明或足够覆盖，先完善记录与评价流程。本文没有要求开展真实线上探索或研究训练。</p>
+<h2 id="section-17">8. 三道理解题：先独立作答</h2>
+<p>请先用约 8 分钟作答，再对照文末答案。</p>
+<p><strong>题 1｜是哪一种概率？</strong> 已知 ρ₀(u)=0.60、πA(I｜u)=0.20、p(z,8｜u,I)=0.95。0.20 是否表示图像分支回答正确的概率？从整个请求分布抽到路径 (u,I,8,z) 的概率是多少？若改用 μ(u)=T，路径概率变为 0，是否表示图像分支在 u 必定错误？</p>
+<p><strong>题 2｜比较三种给定策略。</strong> 按第 4 节的环境与策略表，计算 πA、确定策略 μ 和均匀策略 πU 的期望净收益、图像调用概率及期望调用成本。为什么两个策略都调用 40% 图像，期望收益仍能不同？这些数值能否证明我们已经训练出更好的实际路由器？</p>
+<p><strong>题 3｜缺失反馈与探索。</strong> 假设生产规则在 u 只选 T、在 v 只选 I，记录到一次“u、T、失败”。能否把该请求的 I 标为失败？哪些上下文—动作格没有覆盖？如果要为评估补充数据，应该记录哪些字段、考虑什么成本与条件，为什么不能声称“随机选分支就会提升效果”？</p>
+<h2 id="section-18">9. 下一单元预告与自查提示</h2>
+<p>下一单元是 <strong>RL-004｜价值函数：从一次结果到期望表现</strong>。它会把“从某个状态开始”或“先执行某个动作”时的期望回报单独表达，连接本课的策略与结果分布。今天先会算完整例子，不需要提前套用任何价值更新公式。</p>
+<p>可用三点检查衔接：能否把策略概率和环境概率分别圈出来；能否说清一条路径概率与该路径回报的差别；能否识别未选动作的反馈缺失。自测答案的理由和假设，与最终数值同样重要。</p>
+<h2 id="section-19">10. 可核查的参考来源与证据说明</h2>
+<ol>
+<li><strong>Sutton 与 Barto，第二版教材原稿。</strong><a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">CMU 正式课程托管 PDF</a>，标题为 <em>Reinforcement Learning: An Introduction, second edition</em>，版权页标 2018，文件含 548 页。本次于 2026-10-15 复读同源已保存的原始文件，核对册页 58 的策略定义及册页 25～26 的评价性反馈、探索与利用。当天课程 URL 的 HTTP HEAD 返回 200，文件长度与保存原稿一致；网页阅读接口因 43 MB 大小限制未载入全文。此 PDF 保留排版占位，不能称作已核对的最终出版排版；书中后续价值函数和更新内容不在本课展开。</li>
+<li><strong>OpenAI Spinning Up 官方教程：</strong><a href="https://spinningup.openai.com/en/latest/spinningup/rl_intro.html">Part 1 — Key Concepts in RL</a>。本次于 2026-10-15 实际读取 Policies、Trajectories 和 The RL Problem 部分，核对确定/随机策略、初始分布、策略—环境轨迹分解与期望目标。其示例的奖励下标可能不同，本课统一采用动作 a_t 后收到 r_(t+1) 的记号；保留随机奖励时使用 RL-002 的联合核。</li>
+</ol>
+<p><strong>已发表知识：</strong>策略、轨迹分布、初始分布与环境的分解、探索与利用的基本含义。<br><strong>工程推断：</strong>路由日志、反馈覆盖、探索成本和公平基线要求。<br><strong>教学假设：</strong>可事先观测的 u/v 分组及 0.60/0.40 分布，全部正确概率、动作概率、收益与成本。<br><strong>研究假设：</strong>真实问题在反馈与评价合同明确后，可能比较不同采样或路由策略；本课没有验证这种收益。<br><strong>实际实验结果：</strong>无，<strong>未运行（NOT_RUN）</strong>。表中的期望来自给定参数手算，不是训练、上线探索或业务测量。</p>
+<details class="answers" id="section-20"><summary>参考答案（练习完成后再看）</summary><p><strong>题 1。</strong> 0.20 是在 u 下选择 I 的概率；0.95 才是已经执行 I 后得到“正确、净奖励 8”这一环境结果的概率。完整路径从请求分布开始，概率为 0.60×0.20×0.95=0.114。若仅条件化在 u，选择 I 并答对的概率为 0.19。μ 在 u 从不选 I，所以该路径概率为 0 来自策略因子为 0，并不改变假设中的环境正确概率 0.95，也不能把没有执行的 I 标为失败。</p>
+<p><strong>题 2。</strong> πA 在 u 的净收益期望为 0.80×8.5+0.20×7.5=8.3，在 v 为 0.30×3.5+0.70×6.5=5.6；总期望为 0.60×8.3+0.40×5.6=7.22。μ 为 0.60×8.5+0.40×6.5=7.70；πU 为 0.60×8.0+0.40×5.0=6.80。图像调用概率分别为 0.40、0.40、0.50，对应成本 0.60×0.5+0.40×2=1.10、1.10，以及 0.50×0.5+0.50×2=1.25。相同总体调用率不代表相同条件分配；πA 和 μ 在 u、v 上的选择方式不同。这些结果建立在题目给定的概率上，没有训练或真实业务数据，不能声称实际路由器已改善。</p>
+<p><strong>题 3。</strong> 不能。该记录只显示本次 T 的失败，I 的反事实结果未知。规则完全不覆盖 (u,I) 与 (v,T)，即使日志很多，这两个格也不会凭空获得结果。可以在合法范围和预算下考虑受控探索，或在独立评价集获取可信的全动作反馈；同时记录决策前可见输入、合法动作、策略版本、真正的采样概率、实际动作、结果、反馈定义与延迟、调用及错误成本。不能把事后信息当输入，也不能伪造未选动作结果。随机采样增加某些覆盖，不保证信息足够、不保证成本可接受，更不保证学习后的净收益提高；需独立评价和完整成本比较。</p>
+</details></article></div><section class="pdf-preview wrap" aria-labelledby="pdf-preview-title"><h2 id="pdf-preview-title">同内容伴随 PDF · 阅读版</h2><p>本课 PDF 使用与 PPT 相同的源内容，经独立排版用于阅读，非 PowerPoint 原生导出；可编辑汇报请使用 PPT。手机或浏览器未显示时，可<a href="./RL-003.pdf" style="text-decoration:underline">直接打开 PDF 阅读版</a>。</p><iframe src="./RL-003.pdf#toolbar=1" title="RL-003 同内容伴随 PDF 阅读版" loading="lazy"></iframe></section><div class="lesson-navigation wrap"><a href="../RL-002/"><span>← 上一单元 · RL-002</span><strong>MDP：如何给状态、动作和转移一个严格定义？</strong></a><a class="next" href="../RL-004/"><span>下一单元 · RL-004 →</span><strong>价值函数：从一次结果到期望表现</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>

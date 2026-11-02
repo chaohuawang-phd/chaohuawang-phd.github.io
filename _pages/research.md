@@ -31,4 +31,8 @@ nav_order: 1
 
 **关注问题**：LoRA、多任务能力融合、轻量化恢复模型、量化与部署一致性。
 
-[查看相关项目]({{ '/projects/' | relative_url }})
+## 强化学习学习与应用
+
+按课程依赖组织强化学习算法、手算例子与研究应用，结合超分辨率、模态路由和 GUI 讨论方法选择与适用边界。讲义、可编辑 PPT 和 PDF 阅读版统一归档在独立栏目中。
+
+[进入强化学习栏目]({{ '/research/rl-learning/' | relative_url }}) · [查看相关项目]({{ '/projects/' | relative_url }})

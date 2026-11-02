@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151a17"><meta name="description" content="复述三类方法的信息需求，并连接本阶段的前置概念。"><meta name="color-scheme" content="light"><title>RL-014｜复习：一张表看懂DP、MC与TD · 王超华</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%23151a17'/%3E%3Cpath d='M31 14a13 13 0 1 0 0 20' fill='none' stroke='%23c8f45b' stroke-width='5'/%3E%3Ccircle cx='32' cy='24' r='3' fill='%23c8f45b'/%3E%3C/svg%3E"><link rel="stylesheet" href="../../styles.css"><link rel="stylesheet" href="../../assets/katex/katex.min.css"><script src="../../script.js" defer></script></head>
+<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-014</span></div><section class="lesson-hero"><p class="eyebrow">RL-014 · WEEK 02 · 复习</p><h1>复习：一张表看懂DP、MC与TD</h1><p class="lesson-summary">复述三类方法的信息需求，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">价值学习</span><span class="tag">复习</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>讲义 · PPT 可用</span></div><div class="button-row"><a class="button small" href="./lecture.md" download>讲义下载 · MD</a><a class="button small" href="./RL-014.pptx" download>PPT 下载</a><a class="button small" href="./RL-014.pdf">PDF 阅读版</a></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="本课目录"><h2>本课目录</h2><ol><li><a href="#section-1">1. 今天解决什么问题，与前面哪些单元有关</a></li><li><a href="#section-3">2. 学习目标</a></li><li><a href="#section-4">3. 直觉、定义和必要公式</a></li><li><a href="#section-9">4. 手算复核：同一旧策略，只取一条两步记录</a></li><li><a href="#section-14">5. 本周资料索引与待自查薄弱点</a></li><li><a href="#section-15">6. 主要应用：真实 GUI 价值预测的十二项合同</a></li><li><a href="#section-16">7. 常见误解、失败条件和适用边界</a></li><li><a href="#section-17">8. 三道理解题：先独立作答</a></li><li><a href="#section-18">9. 下一单元与待复习问题</a></li><li><a href="#section-19">10. 可核查的参考来源与证据说明</a></li><li><a href="#section-20">参考答案（练习完成后再看）</a></li></ol></aside><article class="lecture"><p>课程：强化学习学习与应用 · 第 2 周 / 单元 14（第 2 周第 7 个单元）<br>课程版本：1.0.0 · 内容版本：1.0.0 · 教学日期：2026-10-27（Asia/Shanghai）<br>预计学习：30～45 分钟 · 汇报：10～15 分钟<br>前置：RL-008～013；本页第5节提供本周资料索引与条件自查入口。<br>证据状态：已发表方法与本周知识整理；小环境、初值、步长及两步轨迹均为<strong>教学假设</strong>。只复算指定数字，随机实验、真实研究与训练<strong>未运行（NOT_RUN）</strong>。</p>
+<p>建议节奏：知识地图与信息表 9 分钟 → 两步手算 10 分钟 → 证据边界与资料回查 7 分钟 → GUI 条件及三题自查 10 分钟。</p>
+<h2 id="section-1">1. 今天解决什么问题，与前面哪些单元有关</h2>
+<h3 id="section-2">第二周总结：先问知道什么，再问怎样更新</h3>
+<p>本周的预测主线是：RL-008 在已知模型上求指定策略的价值，RL-010 从完整经验回报估计同一目标，RL-011 用一步经验与后继估计提前更新。RL-009 讨论改变策略和最优目标，是必须分清的另一条线；RL-012 提醒统计对象与比较条件，RL-013 把信息、预算和检查点落到一个固定小任务。</p>
+<p>本页把这六课整理为一张方法信息表和一个两步例子。复习重点不是记住哪个最终数字最大，而是能说清：评价谁、模型是否已知、目标由什么构成、信息何时到达，以及这份结论支持到哪里。</p>
+<p><strong>第二周材料总结不等于学习通过。</strong>下文的薄弱点清单是供读者自查的条件入口，不是对个人基础、已读状态或理解程度的诊断。需要复述的定义会在本页重新给出；资料索引保留稳定编号，方便按需要返回原课。</p>
+<h2 id="section-3">2. 学习目标</h2>
+<p>学完后，应当能够：</p>
+<ol>
+<li>用一张表复述 DP、MC、TD 的信息需求、更新目标、bootstrap、时机、初始化、覆盖与成本，区分固定策略评估和改变策略。</li>
+<li>对同一旧策略与两步教学轨迹，独立核对 DP 同步参考、MC 与 TD 的更新前后，并说明 k、m、h、N 和终止/截断的不同。</li>
+<li>审查目标统计、估计器与固定记录误差的混用，列出公平比较、真实 GUI 合同和需要回查的知识点；不由材料存在推断学习通过或研究有效。</li>
+</ol>
+<h2 id="section-4">3. 直觉、定义和必要公式</h2>
+<h3 id="section-5">3.1 一张表：固定策略预测中的 DP、MC 与 TD</h3>
+<p>这里的Vπ(x)指从完整状态x开始、持续按π行动所得折扣回报的期望；今天评估固定π，暂不改变动作选择。bootstrap 指用现有价值估计构造更新目标中的未来部分。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>比较维度</th>
+<th>DP：已知模型策略评估</th>
+<th>MC：完整回报预测</th>
+<th>TD(0)：一步预测</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>主要信息</td>
+<td>完整奖励/后继联合核 p 与固定 π</td>
+<td>同一固定 π 的完整任务记录</td>
+<td>同一固定 π 的有效一步转移、奖励与真实后继</td>
+</tr>
+<tr>
+<td>更新目标</td>
+<td>对动作与环境结果求模型期望，续值来自旧表</td>
+<td>这次访问之后实际完整发生的 G</td>
+<td>这一步真实 r 加后继当前估计</td>
+</tr>
+<tr>
+<td>是否 bootstrap</td>
+<td>是，使用后继估计；模型已知不等于价值已知</td>
+<td>否；倒序 G 只汇总实际奖励，不借后继 V 补未来</td>
+<td>是，同时有采样与后继估计</td>
+</tr>
+<tr>
+<td>最早更新时间</td>
+<td>模型已给定后可计算，不等真实交互</td>
+<td>原任务真正结束、完整 G 可得后</td>
+<td>一条有效转移与奖励到达后</td>
+</tr>
+<tr>
+<td>本周更新顺序</td>
+<td>同步版每轮只读同一张 old 表，整轮提交 new</td>
+<td>first-visit 由前向最早位置决定，每状态自有 N</td>
+<td>每次读本次 pre，算目标后只写当前，下一转移再读最新表</td>
+</tr>
+<tr>
+<td>初始化与未访问</td>
+<td>初表可给定，终态边界固定；模型可计算未采到的合法状态</td>
+<td>N=0 时没有样本均值；数值初始预测不等于学得价值</td>
+<td>可用显式初值自举，但未访/未更新仍须标明</td>
+</tr>
+<tr>
+<td>覆盖与主要风险</td>
+<td>模型覆盖、误差和计算域；残差小不证明真实模型正确</td>
+<td>完整回报、状态覆盖、相关与筛选；未访问不补零样本</td>
+<td>状态充分性、后继与边界、估计传播、覆盖和步长</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>模型获取/核验、状态动作结果遍历、轮数与表内存</td>
+<td>采样到结束、重置反馈、轨迹缓冲和回报处理</td>
+<td>有效转移采集、反馈核验、价值读取与逐步更新</td>
+</tr>
+</tbody></table></div>
+<p>同一完整任务中的状态回报可能相关。“MC 目标不依赖其他状态的 V”不表示数据在统计上独立。DP 和 TD 都自举，也不表示二者有相同信息来源或数据预算。</p>
+<h3 id="section-6">3.2 用三种写法核对信息来源</h3>
+<p>令 x=(页面,h) 为完整状态，h 是剩余真实动作数。固定 π 的同步 DP 使用：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>v</mi><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><munder><mo>∑</mo><mi>a</mi></munder><mi>π</mi><mo stretchy="false">(</mo><mi>a</mi><mo>∣</mo><mi>x</mi><mo stretchy="false">)</mo><munder><mo>∑</mo><mrow><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>r</mi></mrow></munder><mi>p</mi><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>r</mi><mo>∣</mo><mi>x</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mrow><mo fence="true">[</mo><mi>r</mi><mo>+</mo><mi>γ</mi><msub><mi>v</mi><mi>k</mi></msub><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo><mo fence="true">]</mo></mrow></mrow><annotation encoding="application/x-tex">v_{k+1}(x)=\sum_a\pi(a\mid x)\sum_{x&#x27;,r}p(x&#x27;,r\mid x,a)
+\left[r+\gamma v_k(x&#x27;)\right]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.3em;vertical-align:-1.25em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.9em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">a</span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.25em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mopen">(</span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.4801em;vertical-align:-1.4301em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.856em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6828em;"><span style="top:-2.786em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.4301em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">p</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0519em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;">[</span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mclose delimcenter" style="top:0em;">]</span></span></span></span></span></span></div>
+<p>k 是计算轮数；π 是合法动作概率；p 是后继与奖励联合核；γ 是折扣；v_k 是上一整张表。核中已包含本课每个动作使 h 减1的规律。终态或 h=0 的续值固定0，进入终态这一步奖励仍保留。这里不对动作求 max；同步与合法原地更新是不同安排，不能把轮次表混用。</p>
+<p>完整回报 MC 的两种本周写法为：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>G</mi><mi>t</mi></msub><mo>=</mo><msub><mi>r</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>+</mo><mi>γ</mi><msub><mi>G</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo separator="true">,</mo><mspace width="1em"/><msub><mi>G</mi><mi>T</mi></msub><mo>=</mo><mn>0</mn><mo separator="true">,</mo><mspace width="2em"/><mi>V</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>←</mo><mi>V</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>+</mo><mi>η</mi><mtext> </mtext><mo stretchy="false">[</mo><msub><mi>G</mi><mi>t</mi></msub><mo>−</mo><mi>V</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">G_t=r_{t+1}+\gamma G_{t+1},\quad G_T=0,
+\qquad
+V(x)\leftarrow V(x)+\eta\,[G_t-V(x)]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">G</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7917em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8917em;vertical-align:-0.2083em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mord"><span class="mord mathnormal">G</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">G</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.13889em;">T</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">←</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">η</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mopen">[</span><span class="mord"><span class="mord mathnormal">G</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)]</span></span></span></span></span></div>
+<p>G 的倒序递推只在完整任务记录上累计真实奖励。普通均值先增加该状态的 N，再取 η=1/N；固定 η=.5 是另一种加权更新，不是普通样本均值。first-visit 取每任务中完整 x 的前向最早访问；不能用反向 seen 误选最后访问，也不能把不同 h 合并。同任务没访问 x，就不增加它的 N。</p>
+<p>一步 TD(0) 使用：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>y</mi><mo>=</mo><mi>r</mi><mo>+</mo><mi>γ</mi><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>d</mi><mo stretchy="false">)</mo><msub><mi>V</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow></msub><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo><mo separator="true">,</mo><mspace width="2em"/><mi>δ</mi><mo>=</mo><mi>y</mi><mo>−</mo><msub><mi>V</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><mspace width="2em"/><msub><mi>V</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi>V</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>+</mo><mi>η</mi><mi>δ</mi></mrow><annotation encoding="application/x-tex">y=r+\gamma(1-d)V_{\mathrm{pre}}(x&#x27;),
+\qquad
+\delta=y-V_{\mathrm{pre}}(x),
+\qquad
+V_{\mathrm{post}}(x)=V_{\mathrm{pre}}(x)+\eta\delta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.088em;vertical-align:-0.2861em;"></span><span class="mord mathnormal">d</span><span class="mclose">)</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03785em;">δ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0361em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">post</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0361em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.03785em;">ηδ</span></span></span></span></span></div>
+<p>d=1 表示这次转移使原任务真正终止；否则须有同任务有效真实后继 x′。真终止直接 y=r，不先读无效终态对象再乘0。pre/post 是这次写入前后，不是 DP 的整轮 old/new。δ 是对这次目标的差，不是真实价值误差；固定 η=.5 只为教学手算，不承诺一般任务精确收敛。</p>
+<p>模型期望与两数组参见<a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">教材 §4.1，册页74～75</a>；完整经验/首次访问参见 §5.1、册页91～93；固定步长MC、TD和自举参见 §6.1、册页119～121式(6.1)、(6.2)、(6.5)。</p>
+<h3 id="section-7">3.3 评估与改变策略：不要把 πα 和 π′ 混在一起</h3>
+<p>RL-008 的评估固定旧 πα：在 H 以 .75/.25 选 open/stop，在 F 必 save。该教学模型中 Vπα(H2)=4.65。RL-009 改变行为得到 π′：H2 open、H1 stop、F save，重新评价后 Vπ′(H2)=6.2。</p>
+<p>4.65与6.2属于不同策略；差1.55只是教学模型内的回报单位，不是实际成功率提升。评估按固定策略平均动作；改进或最优更新才比较合法动作，但仍对环境的成功/失败结果取平均，不能选择“本次必成功”。精确旧价值的改进条件也不能无说明套给任意近似表。</p>
+<p>今天的 MC/TD 数据策略仍是旧 πα，不能把 π′ 的6.2当成其目标，也不能合并不同策略版本的日志后声称估计同一个 Vπα。相关原始讨论见<a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">教材 §4.2，册页78～79</a>。</p>
+<h3 id="section-8">3.4 三种误差对象与一个数据边界</h3>
+<p>先分清一次实际回报 G、一次目标 Y，以及处理数据后的估计器 V̂。一次 G 与 Vπ 不同，只给出实现误差，不能由此证明统计有偏。有限二阶矩、同一参照 μ 下有 MSE=Var+Bias²；它是对声明的随机分布取期望，不等于一条指定记录的误差。</p>
+<p>固定策略、正确状态条件和完整抽样下，MC 回报可作无偏目标；这不保证带初值、固定步长的有限估计器无偏。TD 目标偏差依赖后继误差，准确后继等条件下也可无偏，不能无条件概括成“MC无偏、TD有偏、TD总低方差”。</p>
+<p>冻结一张后继快照的条件统计，与跨运行学得随机价值表的总波动不同；共享历史、奖励与后继相关时不能忽略协方差。低目标方差、目标MSE小或δ小，都不能直接推出最终价值估计好、学习快或策略成功。这些定义与条件的具体例子回 RL-012，本课不重复整套数表。</p>
+<h2 id="section-9">4. 手算复核：同一旧策略，只取一条两步记录</h2>
+<h3 id="section-10">4.1 原模型与初始条件</h3>
+<p><strong>本节是人为指定的教学复核，不是随机抽样或真实 GUI 实验。</strong>仍用 H、F、z 和完整 (页面,h)，初态H2，γ=.9。H/open 确定到F、奖励−1；H/stop 到z、奖励0；F/save 以.8得10、.2得0并终止；F/cancel 到z、奖励0。每动作消耗一步，save不另扣成本，终态或h=0后无额外奖罚。</p>
+<p>固定旧 πα 及其模型参考为：H2=4.65、F1=F2=8、H1=−.75，边界为0。下面只取既有 fixture 的 E1 成功记录，不重复 RL-013 的全部七转移：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>环境步 m</th>
+<th>这次到达的信息</th>
+<th align="right">真终止 d</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>H2 —open,−1→ F1</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>F1 —save,10→ z</td>
+<td align="right">1</td>
+</tr>
+</tbody></table></div>
+<p>三个经验方案均 fresh V₀=0、N=0：MC1/N、MC.5、TD.5。共同数值0是初始化预测；对MC来说 N=0仍没有可平均样本，不能显示为已学得均值。表跨任务保留的含义不变，这里只处理一条任务。</p>
+<h3 id="section-11">4.2 第一步：同一条信息，允许的更新时间不同</h3>
+<p>m=1时任务未结束，两个MC不知道完整G，保留初表与N=0。TD读取 preH2=0、preF1=0：y=−1+.9×0=−1，δ=−1，postH2=0+.5×(−1)=−1/2。</p>
+<p>此时只更新H2，F1仍是初值0；不能因为讲义预先写了下一步成功，就提前用未来10或已知模型真值8。DP则是另一层信息：有完整核可求期望，不是“恰好先看到了保存成功”。</p>
+<h3 id="section-12">4.3 第二步：完整回报可得，后继更新不自动回改前驱</h3>
+<p>m=2真终止，进入终态奖励10照常保留。完整回报为 G(F1)=10、G(H2)=−1+.9×10=8。MC1/N首次N=1，直接得到H2=8、F1=10；MC.5从0向完整G移一半，得到4、5。</p>
+<p>TD此时只更新F1：真终止y=10，preF1=0，δ=10，postF1=5；H2仍为−1/2，不回溯改写。检查点均在当前允许的更新完成后读取：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>m</th>
+<th>MC1/N：H2,F1</th>
+<th>MC.5：H2,F1</th>
+<th>TD.5：H2,F1</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>0,0（初始化）</td>
+<td>0,0（初始化）</td>
+<td>0,0（初始化）</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0,0（仍等待G）</td>
+<td>0,0（仍等待G）</td>
+<td>−1/2,0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>8,10</td>
+<td>4,5</td>
+<td>−1/2,5</td>
+</tr>
+</tbody></table></div>
+<p>最终三方法N(H2)=N(F1)=1；但m=1时TD已更新H2一次，MC还没有完整样本。H1/F2在这条记录中N=0、保持初始化，不能拿模型内−.75与8填成经验学得值。</p>
+<p>两个 η=.5 方案仍有完整目标与自举目标、等待和传播的差异；只控制了这个步长数值，不是只剩一个因素的万能消融。一次成功G=8不是旧策略长期价值4.65，也不能用这张表评判算法总体胜负、偏差方差或真实效果。</p>
+<h3 id="section-13">4.4 DP 独立参考：计算轮次不是环境步数</h3>
+<p>从全零表、完整模型和旧 πα 做同步评估，每轮只读上一整张表：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>DP轮数 k</th>
+<th align="right">H2</th>
+<th align="right">F1</th>
+<th align="right">全域最大改变量 Δ_k</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">不适用</td>
+</tr>
+<tr>
+<td>1</td>
+<td align="right">−.75</td>
+<td align="right">8</td>
+<td align="right">8</td>
+</tr>
+<tr>
+<td>2</td>
+<td align="right">4.65</td>
+<td align="right">8</td>
+<td align="right">5.4</td>
+</tr>
+<tr>
+<td>3：停止核查</td>
+<td align="right">4.65</td>
+<td align="right">8</td>
+<td align="right">0</td>
+</tr>
+</tbody></table></div>
+<p>全域包含H2/F2/H1/F1；F2在第一轮起为8，H1在第一轮起为−.75。第1轮H2只读old(F1)=0，第2轮才读上一轮8。本例最多两层未来影响，第2轮表已精确，第3轮才观测不变；不是所有DP两轮就精确。达到计算上限与观察到停止阈值不同，不能把未做的核查编出来。</p>
+<p>k计模型计算，m计已收到的经验转移，h计任务预算，N计某方法对某状态的更新。DP有完整模型、还可算未采到状态，信息与成本不等于两条经验；它是参考层，不放到同经验预算轴宣布胜出。一般折扣收缩有γ&lt;1等条件，有限h的分层结构是另一条理由，均不能无条件推广到任意持续任务或神经网络。</p>
+<h2 id="section-14">5. 本周资料索引与待自查薄弱点</h2>
+<p>本节既是第二周资料索引，也给出复习入口。以下“若不能说明”均为条件建议，不代表已经确认读者在该处薄弱。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>稳定资料</th>
+<th>本课解决的问题</th>
+<th>回查时抓住什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="../RL-008/">RL-008｜动态规划I：已知环境的策略评估</a></td>
+<td>已知核下固定π的计算</td>
+<td>同步old/new、k/h、停止原因与模型误差</td>
+</tr>
+<tr>
+<td><a href="../RL-009/">RL-009｜动态规划II：策略改进与价值迭代</a></td>
+<td>何时改变行为或目标</td>
+<td>Vπ与Qπ、π与π′、平均与max、精确/近似条件</td>
+</tr>
+<tr>
+<td><a href="../RL-010/">RL-010｜Monte Carlo：从完整轨迹估计价值</a></td>
+<td>从完整回报估计价值</td>
+<td>前向首次访问、G与均值、每状态N、完整终止</td>
+</tr>
+<tr>
+<td><a href="../RL-011/">RL-011｜TD(0)：不等任务结束也能更新</a></td>
+<td>一步奖励与后继估计</td>
+<td>pre/post、自举、δ、η、终止与有效后继</td>
+</tr>
+<tr>
+<td><a href="../RL-012/">RL-012｜MC与TD：偏差、方差与学习曲线</a></td>
+<td>比较哪个统计对象</td>
+<td>目标/估计器、冻结/随机历史、MSE与条件</td>
+</tr>
+<tr>
+<td><a href="../RL-013/">RL-013｜应用：在小型任务里比较价值估计方法</a></td>
+<td>信息与预算如何落到记录</td>
+<td>因果前缀、环境步检查点、同η对照和固定fixture L</td>
+</tr>
+</tbody></table></div>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>若还不能独立说明</th>
+<th>建议的自查动作</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>已知模型与已知价值有什么不同</td>
+<td>用零初表解释DP为何仍用旧后继表；回008</td>
+</tr>
+<tr>
+<td>4.65和6.2为何不能混为同一个目标</td>
+<td>先分别写出πα与π′的行为；回009</td>
+</tr>
+<tr>
+<td>倒序G为什么不是bootstrap</td>
+<td>指出目标里是否用了估计V；前向标首次位置；回010</td>
+</tr>
+<tr>
+<td>F1变5后H2为什么仍为−.5</td>
+<td>按两次写入画出pre/post，不自动补做更新；回011</td>
+</tr>
+<tr>
+<td>一次误差、目标方差和估计器MSE怎样区别</td>
+<td>先写参照值与随机性，再检查取期望条件；回012</td>
+</tr>
+<tr>
+<td>同η、同更新次数为何还不能叫完全公平</td>
+<td>分开信息、时机、环境步、数据重用和成本；回013</td>
+</tr>
+</tbody></table></div>
+<p>可以先作第8节三题，再按无法解释的环节回查。材料齐备、答案可用和学习者能独立解释是不同事情；自查结果需由学习者表达或经认可的练习评估确认，不预设已经掌握或需要调整学习节奏。</p>
+<h2 id="section-15">6. 主要应用：真实 GUI 价值预测的十二项合同</h2>
+<p>本节为<strong>工程推断</strong>。模型可信时DP可作离线参考；经验可靠时MC/TD可作固定执行策略的价值预测。单次GUI理解或定位并不自动构成多步任务，也不因使用价值表就改变了执行行为。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>真实系统需要明确什么</th>
+<th>当前事实边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>观测与状态</td>
+<td>指令、截图、合法历史、预算和接口权限是否足够</td>
+<td>【待确认】截图不自动Markov，不合并不同h</td>
+</tr>
+<tr>
+<td>合法动作</td>
+<td>点击、输入、滚动、结束、参数与失败语义</td>
+<td>【待确认】真实动作接口及后果</td>
+</tr>
+<tr>
+<td>固定数据策略</td>
+<td>动作概率、屏蔽、回退、底层模型与执行器版本</td>
+<td>【待确认】不混版本假称同一策略</td>
+</tr>
+<tr>
+<td>奖励与单位</td>
+<td>收益、调用/操作/错误代价、γ和成本换算</td>
+<td>【待确认】教学10与−1不是业务奖励</td>
+</tr>
+<tr>
+<td>可信反馈</td>
+<td>独立持久状态或目标回读、逐步奖励和完整完成核查</td>
+<td>【待确认】定位命中、保存提示不等于完成</td>
+</tr>
+<tr>
+<td>后继与时间边界</td>
+<td>真终止、任务期限、外截断、末观测和reset</td>
+<td>【待确认】不把新任务初态接入旧转移</td>
+</tr>
+<tr>
+<td>初态与重置</td>
+<td>任务分布、初始配置、隔离与重复单位</td>
+<td>【待确认】值表保留与环境重置分开</td>
+</tr>
+<tr>
+<td>数据与覆盖</td>
+<td>有序经验、完整任务、失败/取消/缺失、N和版本</td>
+<td>【待确认】未访问仅初始化/未知，未选分支不编造</td>
+</tr>
+<tr>
+<td>评价指标</td>
+<td>独立预测损失、真实回报/成功率、覆盖和误差条</td>
+<td>【待确认】无真值时不称精确Vπ误差</td>
+</tr>
+<tr>
+<td>数据/训练与建模成本</td>
+<td>采样、重置、反馈核查、估计更新、调参与模型获取</td>
+<td>【待确认】DP模型信息不是免费经验</td>
+</tr>
+<tr>
+<td>推理/存储与执行成本</td>
+<td>表/模型/缓冲、计算、调用、等待、恢复与验证</td>
+<td>【待确认】相同环境步不等于相同端到端费用</td>
+</tr>
+<tr>
+<td>方法与非RL对照</td>
+<td>方法为MC/TD及DP模型参考；行为为固定流程、监督定位加流程、示范策略</td>
+<td>【待确认】匹配任务、输入、底层模型、预算和判据</td>
+</tr>
+</tbody></table></div>
+<p>比较固定流程、示范等行为时，数据策略已经可能改变，必须各自明确目标与评价，不能把不同日志合并后继续声称估同一个Vπα。预测误差小也不自动改善执行成功率。</p>
+<p>SR与模态路由只说明条件：普通单次重建先按监督质量指标比较，只有真实迭代、早停或计算分配才继续定义轨迹；独立单步路由先核真实输入、标签、合法分支、反馈与错误成本，未选分支结果保持未知。不为套用DP/MC/TD虚构多步结构或借教学概率填写业务标签。</p>
+<p>一个<strong>研究假设</strong>是：真实合同完备后，哪种机制更适合固定GUI执行器的风险预测？尚无真实验证，本周研究仍为<strong>未运行（NOT_RUN）</strong>。</p>
+<h2 id="section-16">7. 常见误解、失败条件和适用边界</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>误解或失败</th>
+<th>本周统一纠正</th>
+<th>复核动作</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DP不需要经验，所以没有成本</td>
+<td>模型获取与核验是额外信息工作</td>
+<td>费用与计算k单列，不伪装同数据预算比赛</td>
+</tr>
+<tr>
+<td>MC倒序G就是借后继估计</td>
+<td>G只累计完整真实奖励</td>
+<td>在式中找是否出现后继V</td>
+</tr>
+<tr>
+<td>TD更新快就已经准确</td>
+<td>后继也可能只是初始化</td>
+<td>δ小不是价值准确或任务成功证明</td>
+</tr>
+<tr>
+<td>所有数值0意义相同</td>
+<td>边界定义与未访初始化不同</td>
+<td>同时报N和状态含义</td>
+</tr>
+<tr>
+<td>外部停录等于真终止</td>
+<td>先确定原任务是否还有未来</td>
+<td>MC不补0；TD仅有效同任务后继可用</td>
+</tr>
+<tr>
+<td>reset初态可以填旧后继</td>
+<td>新旧任务已不同</td>
+<td>保留旧末观测，丢失则标缺失</td>
+</tr>
+<tr>
+<td>同η就只差bootstrap</td>
+<td>目标、时机与传播仍不同</td>
+<td>列出未排除的机制，不做总体排名</td>
+</tr>
+<tr>
+<td>指定fixture的L就是统计MSE</td>
+<td>固定记录误差没有随机数据期望</td>
+<td>不伪造曲线、误差条或无偏证据</td>
+</tr>
+<tr>
+<td>五个状态等于五次独立运行</td>
+<td>它们可能共享同一轨迹</td>
+<td>误差条按独立运行单位汇总</td>
+</tr>
+<tr>
+<td>材料按时发布就是本人学习通过</td>
+<td>交付状态与学习确认独立</td>
+<td>完成练习后自查，不推断个人状态</td>
+</tr>
+</tbody></table></div>
+<p>任务本身h=0可是真终止，进入终态奖励仍计；外部截断不自动意味着d=0或1。TD仅在原任务继续、真实未reset后继有效时使用续值；缺失或含混就暂存标记。MC未获完整后续就保留未完台账，不能补0或只留成功/齐全子集再声称代表全部任务。</p>
+<p>复习公平协议时记住四项：同一次运行内方法读取相同有序流形成配对，不同运行独立；主横轴用环境转移，另外报告更新、重用和成本；固定评价状态权重，每次先算RMSE再跨运行汇总，1SE不等于95%CI；参数只在验证数据选择，测试封存防止选参/改方案，固定在线方法仍可按已发生前缀学习，评价真值不能进入经验更新。</p>
+<p>RL-013 的20条流、200转移和检查点只是未执行预案，不是本周已有实验。真实Vπ未知时，独立测试回报损失还含回报噪声；模型近似时，DP也只是该模型内参考。本周没有经验曲线、随机研究训练、真实GUI、GPU或服务器实验。</p>
+<h2 id="section-17">8. 三道理解题：先独立作答</h2>
+<p>请先用约8分钟作答，数值使用第4节相同旧πα、零初值、γ=.9与两步E1；答案统一置于文末。</p>
+<p><strong>题1｜用信息表复述本周。</strong> DP、MC、TD各使用什么信息、何时更新、是否bootstrap？为什么MC倒序G不自举而已知模型DP仍可能自举？k、m、h、N各是什么？4.65与6.2能否作为同一固定策略的两个目标混用，为什么？</p>
+<p><strong>题2｜两步与模型参考。</strong> 复算m=1和m=2时三个经验方案的(H2,F1)及最终N，列出TD每步pre、目标、δ与post，解释F1变5后为何不重算H2。另核对DP从零表的k=1、2、3及Δ；这是否等价于三次环境交互？一次G=8或某个估计更接近4.65，能否证明无偏或总体更优？</p>
+<p><strong>题3｜证据与真实应用。</strong> 团队把未访问状态填成已学会0，外部中断后补零未来、用reset初态作后继；只留成功日志，将同fixture重放当独立运行，并把低δ与固定记录L当真实性能，再宣称“周总结完成，所以已经学会”。指出问题，补齐公平评价和真实GUI的反馈、数据、成本与非RL行为条件；选择两项需要回查的概念，给出资料编号与自查动作，但不要据此替别人诊断薄弱或已掌握。</p>
+<h2 id="section-18">9. 下一单元与待复习问题</h2>
+<p>下一单元是 <strong>RL-015｜SARSA：沿当前行为策略学习动作价值</strong>。这里只预告课程题名，不提前给出该算法目标、更新式或控制过程。</p>
+<p>本周先形成可以复述的信息地图，再用三题检验是否能独立解释。若某一步无法说明，按第5节相应入口复习，再带着具体计算或条件问题反馈。课程材料可用不代表学习者已经掌握；本页不把交付、个人阅读、理解确认或研究实验合并为同一种进度。</p>
+<h2 id="section-19">10. 可核查的参考来源与证据说明</h2>
+<ol>
+<li><strong>Sutton与Barto，第二版教材原稿。</strong><a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">CMU正式课程托管PDF</a>。2026-10-27实际复读缓存选页：§4.1册页74～75的固定策略期望、旧/新数组与原地说明；§4.2册页78～79的动作评分、策略改进及随机策略扩展；第5章开篇与§5.1册页91～93的完整经验、首次访问和均值条件；第6章/§6.1册页119～121的固定步长MC、自举、TD与δ；§6.2册页124～125的在线时机与特定随机游走比较。未复现原书二十一点、随机游走或其曲线，也未完整复读所有证明或后续章节。</li>
+<li><strong>实际访问范围。</strong>缓存43,634,706字节及SHA-256已核验，当日HEAD返回200且长度一致。网页全文因文件大小限制失败，正文实际来自上述缓存选页，没有重新下载全文；HEAD不代表全文阅读。原稿含排版占位，不声称核验最终出版排版。</li>
+<li><strong>本周材料与新增复核。</strong>第5节链接的是已存在的RL-008～013资料。本页从既有fixture只取E1两转移并重新声明初值/步长，所列数字由精确分数复算；没有把原书实验、此前计划或材料已交付改写为本次研究结果。</li>
+</ol>
+<p><strong>已发表知识：</strong>DP固定策略评估、策略改进与预测的区别、MC完整回报、TD一步自举及条件。<br><strong>工程推断：</strong>本周信息地图、评价与数据边界、真实GUI合同和条件自查入口。<br><strong>教学假设：</strong>既有GUI核、旧πα、γ、零初表、η=.5及E1指定两步。<br><strong>研究假设：</strong>真实条件明确后比较固定策略的风险预测机制，尚未验证。<br><strong>实际实验结果：</strong>无，<strong>未运行（NOT_RUN）</strong>。本页材料总结与算术正确性不代表算法实证、真实任务提升或个人学习通过。</p>
+<details class="answers" id="section-20"><summary>参考答案（练习完成后再看）</summary><p><strong>题1。</strong> DP读完整p与π，对所有结果求期望，模型给定后可计算；用旧后继表时仍自举，因为模型已知不等于价值已知。MC读真正完整轨迹，用G更新，不用后继估计V；倒序递推只汇总同轨迹已发生奖励。TD读有效一步转移、奖励和真实后继，未终止时用当前V构目标，因此是采样加自举。同步DP整轮读old，TD每条转移读本次pre；MC等G可用。k为DP轮次、m为环境转移、h为剩余动作、N为方法/状态的更新数。旧παH2目标4.65，改进π′目标6.2，策略不同不能混用，也不是真实改善。</p>
+<p><strong>题2。</strong> m=1时两个MC都为(0,0)、N仍0；TD preH=0/preF=0，y=−1、δ=−1、postH=−1/2，F仍0。m=2时完整G_H=−1+.9×10=8、G_F=10；MC1/N首次权重1得到(8,10)，MC.5得到(4,5)。TD该步preF=0，真终止y=10、δ=10、postF=5，H仍−1/2，所以TD为(−1/2,5)。最终三方法N(H2)=N(F1)=1；后继更新不自动补做前驱更新，H1/F2仍N=0初始化。</p>
+<p>DP k=1的H2/F1为(−.75,8)，k=2为(4.65,8)，k=3不变；全域Δ依次8、5.4、0，H1/F2从第一轮起为−.75/8。第一轮不能用本轮new(F1)=8；第二轮表在有限两层模型中已精确，第三轮只是停止核查，不是环境动作。DP完整模型与经验层信息不匹配，不能按同m排名。E1一次G=8或数值远近不证明bias、variance、收敛或总体效果；统计结论须声明随机分布、条件和评价对象，同η仍有目标和时机差异。</p>
+<p><strong>题3。</strong> 未访0只是初始化，须保留N=0与未知含义；真终止零边界是另一回事。外中断不能随便补完整G或掩掉未来；TD需原任务继续且真实后继有效，不能接reset新初态。失败、取消、截断和缺失都留台账，完成子集不自动代表全任务。重复同fixture是重用，不是独立随机实验；δ是目标差，固定L不是统计MSE，周总结存在不证明个人已读、理解或通过。</p>
+<p>统一策略/版本、输入、完整状态、奖励/γ、初值、环境转移预算与检查点；同运行方法配对、不同运行独立，预定评价状态与权重，报告覆盖和成本。验证选参、测试防选参/改方案但允许固定方法按已发生前缀更新，评价真值不入训练；明确RMSE、运行单位和SD/SE/CI。无Vπ真值时独立回报预测损失含噪声，模型参考成本与真实性另列。GUI需第6节12项真实合同与独立持久反馈，方法对照和固定流程/监督定位加流程/示范策略等非RL行为基线分开。可选自查如“first-visit前向位置→010，手标首次再倒算G”“冻结目标与估计器统计→012，写参照值和随机性”；这是条件复习建议，不是个人诊断。真实研究仍NOT_RUN。</p>
+</details></article></div><section class="pdf-preview wrap" aria-labelledby="pdf-preview-title"><h2 id="pdf-preview-title">同内容伴随 PDF · 阅读版</h2><p>本课 PDF 使用与 PPT 相同的源内容，经独立排版用于阅读，非 PowerPoint 原生导出；可编辑汇报请使用 PPT。手机或浏览器未显示时，可<a href="./RL-014.pdf" style="text-decoration:underline">直接打开 PDF 阅读版</a>。</p><iframe src="./RL-014.pdf#toolbar=1" title="RL-014 同内容伴随 PDF 阅读版" loading="lazy"></iframe></section><div class="lesson-navigation wrap"><a href="../RL-013/"><span>← 上一单元 · RL-013</span><strong>应用：在小型任务里比较价值估计方法</strong></a><a class="next" href="../RL-015/"><span>下一单元 · RL-015 →</span><strong>SARSA：沿当前行为策略学习动作价值</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>

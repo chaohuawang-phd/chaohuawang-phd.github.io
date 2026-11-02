@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151a17"><meta name="description" content="写出策略评估更新，并连接本阶段的前置概念。"><meta name="color-scheme" content="light"><title>RL-008｜动态规划I：已知环境的策略评估 · 王超华</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%23151a17'/%3E%3Cpath d='M31 14a13 13 0 1 0 0 20' fill='none' stroke='%23c8f45b' stroke-width='5'/%3E%3Ccircle cx='32' cy='24' r='3' fill='%23c8f45b'/%3E%3C/svg%3E"><link rel="stylesheet" href="../../styles.css"><link rel="stylesheet" href="../../assets/katex/katex.min.css"><script src="../../script.js" defer></script></head>
+<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-008</span></div><section class="lesson-hero"><p class="eyebrow">RL-008 · WEEK 02 · 新知识</p><h1>动态规划I：已知环境的策略评估</h1><p class="lesson-summary">写出策略评估更新，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">价值学习</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>讲义 · PPT 可用</span></div><div class="button-row"><a class="button small" href="./lecture.md" download>讲义下载 · MD</a><a class="button small" href="./RL-008.pptx" download>PPT 下载</a><a class="button small" href="./RL-008.pdf">PDF 阅读版</a></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="本课目录"><h2>本课目录</h2><ol><li><a href="#section-1">1. 今天解决什么问题，与前面哪些单元有关</a></li><li><a href="#section-2">2. 学习目标</a></li><li><a href="#section-3">3. 直觉、定义和必要公式</a></li><li><a href="#section-9">4. 手算与伪代码：同一 GUI 的同步策略评估</a></li><li><a href="#section-14">5. 与前一种方法或概念的关系</a></li><li><a href="#section-15">6. 主要应用：可信 GUI 模型上的固定策略离线评估</a></li><li><a href="#section-16">7. 常见误解、失败条件和适用边界</a></li><li><a href="#section-17">8. 三道理解题：先独立作答</a></li><li><a href="#section-18">9. 下一单元预告与自查提示</a></li><li><a href="#section-19">10. 可核查的参考来源与证据说明</a></li><li><a href="#section-20">参考答案（练习完成后再看）</a></li></ol></aside><article class="lecture"><p>课程：强化学习学习与应用 · 第 2 周 / 单元 8（第 2 周第 1 个单元）<br>课程版本：1.0.0 · 内容版本：1.0.0 · 教学日期：2026-10-21（Asia/Shanghai）<br>预计学习：35～45 分钟 · 汇报：10～15 分钟<br>前置：<a href="../RL-007/">RL-007｜第一周复习</a>，需要 <a href="../RL-004/">RL-004｜价值函数</a> 与 <a href="../RL-005/">RL-005｜Bellman 方程</a>中的策略条件、有限预算与终止约定。<br>证据状态：标准计算方法与工程分析；GUI 数字均为既有<strong>教学假设</strong>；真实研究实验<strong>未运行（NOT_RUN）</strong>。</p>
+<p>建议节奏：问题与更新公式 10 分钟 → 两轮表格和停止核查 12 分钟 → 同步伪代码与收敛边界 8 分钟 → 应用与三题自测 12 分钟。</p>
+<h2 id="section-1">1. 今天解决什么问题，与前面哪些单元有关</h2>
+<p>第一周已经明确 Vπ 的含义，并用完整轨迹或 Bellman 关系求出给定 GUI 策略的价值。今天开始问计算问题：<strong>如果一开始不知道价值表，只知道环境模型与固定策略，怎样逐轮算出它？</strong></p>
+<p>动态规划（Dynamic Programming，DP）中的策略评估（policy evaluation，也称 prediction）回答“这个指定策略继续执行，期望回报怎样”。本课不改变策略，不学习转移模型，也不寻找最优动作。</p>
+<p>迭代策略评估（iterative policy evaluation）从一个初始近似表出发，把旧表的后续价值代入 Bellman 右侧，生成一张新表，再重复。它使用模型中各可能结果的期望，不是实际采样一条轨迹来训练。</p>
+<p>本课沿用前课同一个有限预算 GUI 教学环境，只把“已知的精确答案”变成“从零表计算并核对的目标”。要分清两种计数：h 是任务里还剩多少真实动作；k 是电脑已经对价值表做了多少轮计算。多算一轮不会给真实任务多送一步预算。</p>
+<h2 id="section-2">2. 学习目标</h2>
+<p>学完后，应当能够：</p>
+<ol>
+<li>写出已知环境、固定策略下的同步策略评估更新，说明近似表 v_k 与目标 Vπ、迭代次数 k 与任务预算 h 的区别。</li>
+<li>用 old/new 两张表手算两轮，检查全表改变量并解释第三轮停止核查；识别把本轮新值过早用于同轮更新的情况。</li>
+<li>说明收敛直觉所需的有限表格、固定模型/策略和折扣条件，以及模型错误、计算成本和未知真实 GUI 条件的限制。</li>
+</ol>
+<h2 id="section-3">3. 直觉、定义和必要公式</h2>
+<h3 id="section-4">3.1 输入是模型与策略，输出是该策略的价值</h3>
+<p>本课已知：合法动作集合、奖励与下一状态的联合概率 p、固定策略 π、折扣 γ，以及真实终止和任务预算。未知、需要计算的是策略价值表。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>对象</th>
+<th>本课含义</th>
+<th>不要混淆</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>π</td>
+<td>被评价的固定行为规则</td>
+<td>评估过程中不做动作最大化或策略改进</td>
+</tr>
+<tr>
+<td>p(s′,r｜s,a)</td>
+<td>做指定动作后的下一页面与奖励联合概率</td>
+<td>不是采样得到的一条结果，也不是模型置信分数</td>
+</tr>
+<tr>
+<td>Vπ(s,h)</td>
+<td>该模型、策略与预算下真正的期望回报</td>
+<td>目标量，不等于每轮近似表</td>
+</tr>
+<tr>
+<td>v_k(s,h)</td>
+<td>完成第 k 轮计算后的价值近似</td>
+<td>小写 v 表示当前计算结果</td>
+</tr>
+<tr>
+<td>h</td>
+<td>剩余真实动作数，完整状态包括 (s,h)</td>
+<td>不是迭代编号或训练轮数</td>
+</tr>
+<tr>
+<td>k</td>
+<td>已完成的全表计算轮数</td>
+<td>增加 k 不改变任何任务的 h</td>
+</tr>
+</tbody></table></div>
+<p>“模型已知”是计算条件：每个合法动作的可能结果和概率可供求和。真实模型可以由另外的数据工作得到，但那是独立环节；本课不会因为使用 p 就声称已经从未知环境学会了它。若输入的是近似模型，计算目标首先也是这个近似模型下的价值。</p>
+<h3 id="section-5">3.2 把 Bellman 关系变成同步更新</h3>
+<p>为连接有限预算例子，假设每个真实动作都消耗一步，页面转移/奖励在 h&gt;0 时相同，预算另行减 1。对非终止、h≥1 的状态：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>v</mi><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>h</mi><mo stretchy="false">)</mo><mo>=</mo><munder><mo>∑</mo><mrow><mi>a</mi><mo>∈</mo><msub><mi>A</mi><mi>h</mi></msub><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo></mrow></munder><mi>π</mi><mo stretchy="false">(</mo><mi>a</mi><mo>∣</mo><mi>s</mi><mo separator="true">,</mo><mi>h</mi><mo stretchy="false">)</mo><munder><mo>∑</mo><mrow><msup><mi>s</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>r</mi></mrow></munder><mi>p</mi><mo stretchy="false">(</mo><msup><mi>s</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>r</mi><mo>∣</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mrow><mo fence="true">[</mo><mi>r</mi><mo>+</mo><mi>γ</mi><msub><mi>v</mi><mi>k</mi></msub><mo stretchy="false">(</mo><msup><mi>s</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>h</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo fence="true">]</mo></mrow></mrow><annotation encoding="application/x-tex">v_{k+1}(s,h)=
+\sum_{a\in A_h(s)}\pi(a\mid s,h)
+\sum_{s&#x27;,r}p(s&#x27;,r\mid s,a)
+\left[r+\gamma v_k(s&#x27;,h-1)\right]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">h</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.566em;vertical-align:-1.516em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.809em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">a</span><span class="mrel mtight">∈</span><span class="mord mtight"><span class="mord mathnormal mtight">A</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3448em;"><span style="top:-2.3488em;margin-left:0em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathnormal mtight">h</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1512em;"><span></span></span></span></span></span></span><span class="mopen mtight">(</span><span class="mord mathnormal mtight">s</span><span class="mclose mtight">)</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.516em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mopen">(</span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.4801em;vertical-align:-1.4301em;"></span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">h</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.856em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6828em;"><span style="top:-2.786em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.4301em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">p</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0519em;vertical-align:-0.25em;"></span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;">[</span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">h</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mclose delimcenter" style="top:0em;">]</span></span></span></span></span></span></div>
+<ul>
+<li>s、s′：当前与下一页面的取值；完整状态还包含剩余预算 h。</li>
+<li>A_h(s)：当前合法动作集合，a 是其中一个动作。</li>
+<li>π(a｜s,h)：当前固定策略选择该动作的概率。</li>
+<li>p(s′,r｜s,a)：给定当前页面与动作后，环境返回下一页面及奖励 r 的联合概率；两者不必独立。</li>
+<li>r：这一步奖励的可能取值；γ 是未来奖励的折扣因子。</li>
+<li>v_k(s′,h−1)：<strong>上一轮表</strong>中下一状态的价值；下一任务预算必须减 1。</li>
+<li>v_(k+1)：本轮生成的新表；k 从 0 开始，v₀ 是初始化。</li>
+</ul>
+<p>外层按策略选择动作取平均，内层按环境后果取平均。这里没有选择最优动作的 max，也没有学习率或随机采样项。即使 p 中某个结果概率很小，也应按给定概率纳入期望。</p>
+<p>本课取 v₀ 全零，只是方便演示的初始化，不是在断言所有状态真正的未来价值为零。边界在每轮都固定：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>v</mi><mi>k</mi></msub><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mn>0</mn><mo stretchy="false">)</mo><mo>=</mo><mn>0</mn><mo separator="true">,</mo><mspace width="2em"/><msub><mi>v</mi><mi>k</mi></msub><mo stretchy="false">(</mo><mi>z</mi><mo separator="true">,</mo><mi>h</mi><mo stretchy="false">)</mo><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">v_k(s,0)=0,\qquad v_k(z,h)=0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">h</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span></span></div>
+<p>z 为任务终态，h=0 表示本课真实任务预算耗尽。进入终态那一步的奖励仍计入 r；之后才没有新的奖励。外部采集截断则不能直接套用真实终止边界。</p>
+<p>上述有限预算写法等价于把 (s,h) 作为完整状态再应用策略评估；一般 MDP 不一定有这个单独的 h，若模型随时间变化或预算消耗不同，也必须把相应规律明确放进完整状态与转移，不能机械地套“减 1”。</p>
+<h3 id="section-6">3.3 同步：本轮所有状态只能读取同一张 old 表</h3>
+<p>同步更新（synchronous update）使用两份数组：old 保存 v_k，new 保存 v_(k+1)。即使先算出了 new(F,1)，本轮 new(H,2) 仍只能读取 old(F,1)。全部状态写完后，才把 new 整体设为下一轮的表。</p>
+<p>若直接原地覆盖并让后面的状态读取本轮刚算的新值，得到的是另一种原地更新（in-place update）。在适当条件下它也可以是有效算法，但结果传播速度会依赖顺序，不能把它产生的轮次表称为本课的同步表。今天固定两数组版本，便于独立复算。</p>
+<p>例如在有限表格、γ&lt;1 且适当遍历状态等条件下，原地策略评估也可以收敛。本例还可以从零边界向较大 h 逐层直接回代，那是有限时域的另一种计算安排，不等同于一次全表同步 sweep，也没有改变所求的 Vπ 目标。</p>
+<h3 id="section-7">3.4 用全表变化监测停止，别把计算轮次当环境步数</h3>
+<p>对 k≥1，定义本轮结束后的全表最大改变量：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi mathvariant="normal">Δ</mi><mi>k</mi></msub><mo>=</mo><munder><mrow><mi>max</mi><mo>⁡</mo></mrow><mrow><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>h</mi><mo stretchy="false">)</mo></mrow></munder><mrow><mo fence="true">∣</mo><msub><mi>v</mi><mi>k</mi></msub><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>h</mi><mo stretchy="false">)</mo><mo>−</mo><msub><mi>v</mi><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>h</mi><mo stretchy="false">)</mo><mo fence="true">∣</mo></mrow></mrow><annotation encoding="application/x-tex">\Delta_k=\max_{(s,h)}
+\left|v_k(s,h)-v_{k-1}(s,h)\right|</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord">Δ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.716em;vertical-align:-0.966em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.4306em;"><span style="top:-2.309em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mopen mtight">(</span><span class="mord mathnormal mtight">s</span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight">h</span><span class="mclose mtight">)</span></span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">max</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.966em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;">∣</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">h</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">h</span><span class="mclose">)</span><span class="mclose delimcenter" style="top:0em;">∣</span></span></span></span></span></span></div>
+<p>Δ_k 比较的是<strong>新表 v_k 与上一张表 v_(k−1)</strong>。max 在这里仅用于找出哪个状态的数值改动最大，不是在动作中求最优。边界始终为零，包含它们不会改变最大值。</p>
+<p>计算可以在 Δ_k 小于预先选定的正阈值 θ 时停止；θ 的单位是回报，不是学习率。也应设置计算上限 K_max，并明确返回“达到阈值”还是“达到轮数上限”。后者不能自动称为收敛。</p>
+<p>Δ 小表示在当前模型上的更新已变化不大，不等于真实环境模型正确，也不自动等于真实业务误差小。本课不使用一个未注明下标的误差界来把 Δ 直接当作 v_k 的全部误差。</p>
+<h3 id="section-8">3.5 为什么反复计算能靠近目标？</h3>
+<p>把“用同一模型与固定 π 做一轮期望更新”的操作记作 Tπ。对于有限状态/动作表格、有界奖励、固定模型与策略，0≤γ&lt;1 时，一轮更新对两张表差异的最大放大倍数不超过 γ：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mrow><mo fence="true">∥</mo><msup><mi>T</mi><mi>π</mi></msup><mi>u</mi><mo>−</mo><msup><mi>T</mi><mi>π</mi></msup><mi>w</mi><mo fence="true">∥</mo></mrow><mi mathvariant="normal">∞</mi></msub><mo>≤</mo><mi>γ</mi><msub><mrow><mo fence="true">∥</mo><mi>u</mi><mo>−</mo><mi>w</mi><mo fence="true">∥</mo></mrow><mi mathvariant="normal">∞</mi></msub></mrow><annotation encoding="application/x-tex">\left\|T^\pi u-T^\pi w\right\|_\infty
+\le\gamma\left\|u-w\right\|_\infty</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0497em;vertical-align:-0.2997em;"></span><span class="minner"><span class="minner"><span class="mopen delimcenter" style="top:0em;">∥</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span></span></span></span></span><span class="mord mathnormal">u</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.02691em;">w</span><span class="mclose delimcenter" style="top:0em;">∥</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.0017em;"><span style="top:-2.4003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">∞</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0497em;vertical-align:-0.2997em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="minner"><span class="mopen delimcenter" style="top:0em;">∥</span><span class="mord mathnormal">u</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.02691em;">w</span><span class="mclose delimcenter" style="top:0em;">∥</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.0017em;"><span style="top:-2.4003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">∞</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span></span></span></span></span></div>
+<p>u、w 是两张候选价值表；Tπ 是同一个期望更新操作；无穷范数表示全表绝对值的最大值。两次更新使用相同的即时奖励，所以差异只来自后续表；先按概率平均，不会超过最大差异，再乘 γ。真价值 Vπ 满足同一 Bellman 关系，是这个操作的固定点，因此这种收缩解释了折扣条件下迭代靠近它的直觉。</p>
+<p>γ 接近 1 时，收缩可能很慢。γ=1 时这个不等式不再提供严格收缩，不能直接推广成一般任务的无条件收敛保证；还需要任务终止等其他条件。当前教学例有真正有限的两步预算，即使不依赖严格折扣收缩，也可从零边界逐层传播。但“本例两轮得到精确值”来自它的有限深度，<strong>不是一般策略评估都只需两轮</strong>。</p>
+<p>本节更新与两数组说明可核对 <a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">Sutton 与 Barto 第二版原稿第 4.1 节</a>，重点是册页 74 的式 (4.5) 与册页 75 的同步/原地更新区别。</p>
+<h2 id="section-9">4. 手算与伪代码：同一 GUI 的同步策略评估</h2>
+<h3 id="section-10">4.1 完整模型与固定策略</h3>
+<p><strong>以下精确数字全部是教学假设，没有运行真实 GUI 研究实验。</strong>沿用 RL-004～007 的新模型，不更换奖励或另设新的失败成本。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>页面与合法动作</th>
+<th>下一页面</th>
+<th align="right">即时奖励 r</th>
+<th align="right">环境概率</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>H, open</td>
+<td>F</td>
+<td align="right">−1</td>
+<td align="right">1.00</td>
+</tr>
+<tr>
+<td>H, stop</td>
+<td>z</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+</tr>
+<tr>
+<td>F, save</td>
+<td>z，成功</td>
+<td align="right">10</td>
+<td align="right">0.80</td>
+</tr>
+<tr>
+<td>F, save</td>
+<td>z，失败</td>
+<td align="right">0</td>
+<td align="right">0.20</td>
+</tr>
+<tr>
+<td>F, cancel</td>
+<td>z</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+</tr>
+</tbody></table></div>
+<p>每个页面—动作组的概率分别归一。每个真实动作 h 减 1；save 不另扣成本，h=0 或进入 z 后真正结束，无额外期限罚分或补发收益。γ=0.9，初态固定 (H,2)。本教学模型理想地假设页面与预算足够描述后果，不证明真实截图是完整状态。</p>
+<p>主例固定采用 πα：H 的 open/stop 概率为 0.75/0.25，F 的 save/cancel 为 1/0。h&gt;0 时这些概率保持不变，评估过程中不作策略改进。</p>
+<p>为展示 h≤2 的完整表，列出 (H,2)、(F,2)、(H,1)、(F,1)，所有 h=0 和 z 为零边界。(F,2) 不从当前初态 (H,2) 到达，但在同一预算模型里合法，可以一并计算；只关注当前初态的可达子图时也可以省去它，不改变模型或初态价值。</p>
+<h3 id="section-11">4.2 第一轮：所有右侧都读取 v₀=0</h3>
+<p>先算任一 h&gt;0 的 F：save 后终止，所以新值为 0.8×10+0.2×0=8。对 H，open 得 −1、stop 得 0，而本轮右侧所有未来仍是 old 的零：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>v</mi><mn>1</mn></msub><mo stretchy="false">(</mo><mi>H</mi><mo separator="true">,</mo><mn>2</mn><mo stretchy="false">)</mo><mo>=</mo><mn>0.75</mn><mo stretchy="false">[</mo><mo>−</mo><mn>1</mn><mo>+</mo><mn>0.9</mn><msub><mi>v</mi><mn>0</mn></msub><mo stretchy="false">(</mo><mi>F</mi><mo separator="true">,</mo><mn>1</mn><mo stretchy="false">)</mo><mo stretchy="false">]</mo><mo>+</mo><mn>0.25</mn><mo stretchy="false">(</mo><mn>0</mn><mo stretchy="false">)</mo><mo>=</mo><mo>−</mo><mn>0.75</mn></mrow><annotation encoding="application/x-tex">v_1(H,2)=0.75[-1+0.9v_0(F,1)]+0.25(0)=-0.75</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">2</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.75</span><span class="mopen">[</span><span class="mord">−</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.9</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1</span><span class="mclose">)]</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.25</span><span class="mopen">(</span><span class="mord">0</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">−</span><span class="mord">0.75</span></span></span></span></span></div>
+<p>虽然本轮同时得到 v₁(F,1)=8，<strong>仍不能</strong>把 8 放进这条第一轮式子。v₁(H,1) 也为 −0.75，不过它引用的是始终为零的预算边界 v₀(F,0)。</p>
+<h3 id="section-12">4.3 第二轮：读取已经完成的 v₁</h3>
+<p>F 的两个预算层仍都是 8；H 的剩两步状态现在能读取旧表中的 F、剩一步价值：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>v</mi><mn>2</mn></msub><mo stretchy="false">(</mo><mi>H</mi><mo separator="true">,</mo><mn>2</mn><mo stretchy="false">)</mo><mo>=</mo><mn>0.75</mn><mo stretchy="false">[</mo><mo>−</mo><mn>1</mn><mo>+</mo><mn>0.9</mn><msub><mi>v</mi><mn>1</mn></msub><mo stretchy="false">(</mo><mi>F</mi><mo separator="true">,</mo><mn>1</mn><mo stretchy="false">)</mo><mo stretchy="false">]</mo><mo>+</mo><mn>0.25</mn><mo stretchy="false">(</mo><mn>0</mn><mo stretchy="false">)</mo><mo>=</mo><mn>0.75</mn><mo stretchy="false">[</mo><mo>−</mo><mn>1</mn><mo>+</mo><mn>0.9</mn><mo stretchy="false">(</mo><mn>8</mn><mo stretchy="false">)</mo><mo stretchy="false">]</mo><mo>=</mo><mn>4.65</mn></mrow><annotation encoding="application/x-tex">v_2(H,2)=0.75[-1+0.9v_1(F,1)]+0.25(0)
+=0.75[-1+0.9(8)]=4.65</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">2</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.75</span><span class="mopen">[</span><span class="mord">−</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.9</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1</span><span class="mclose">)]</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.25</span><span class="mopen">(</span><span class="mord">0</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.75</span><span class="mopen">[</span><span class="mord">−</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.9</span><span class="mopen">(</span><span class="mord">8</span><span class="mclose">)]</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">4.65</span></span></span></span></span></div>
+<p>H 的剩一步状态仍只能引用 h=0，因此 v₂(H,1)=−0.75。多一轮计算没有增加它的环境预算。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>价值表位置</th>
+<th align="right">v₀：初始化</th>
+<th align="right">v₁：第 1 轮</th>
+<th align="right">v₂：第 2 轮</th>
+<th align="right">v₃：停止核查</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>(H,2)</td>
+<td align="right">0</td>
+<td align="right">−0.75</td>
+<td align="right">4.65</td>
+<td align="right">4.65</td>
+</tr>
+<tr>
+<td>(F,2)</td>
+<td align="right">0</td>
+<td align="right">8</td>
+<td align="right">8</td>
+<td align="right">8</td>
+</tr>
+<tr>
+<td>(H,1)</td>
+<td align="right">0</td>
+<td align="right">−0.75</td>
+<td align="right">−0.75</td>
+<td align="right">−0.75</td>
+</tr>
+<tr>
+<td>(F,1)</td>
+<td align="right">0</td>
+<td align="right">8</td>
+<td align="right">8</td>
+<td align="right">8</td>
+</tr>
+<tr>
+<td>h=0 或 z</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+</tbody></table></div>
+<p>全表变化为 Δ₁=8、Δ₂=|4.65−(−0.75)|=5.4、Δ₃=0。第二轮的表在这个模型里已等于前课的精确 Vπα，但 Δ₂ 还不是零；第三轮读 v₂ 再算一遍，才观察到表完全不变。<strong>第三轮只是数值停止核查，不是新的一次 GUI 动作，也不是新增的模型步骤。</strong></p>
+<p>本例从零表开始，最多两层真实奖励的影响经过两轮传播后已经完整到达。更长预算或存在回路的一般模型，不能直接套“两轮精确”的说法；不同初始化还会改变中间表，轮次比较也必须说明初表。</p>
+<h3 id="section-13">4.4 简短伪代码：两数组、固定边界、清楚的停止原因</h3>
+<pre><code class="language-text">input: states, legal_actions, fixed_pi, model_p, gamma, theta, K_max
+v = zero_table(states)                 # v_0; terminal / h=0 also zero
+for k in 1..K_max:
+    old = copy(v)
+    new = zero_table(states)           # boundary entries stay zero
+    for each nonterminal (s, h) with h &gt;= 1:
+        new[s,h] = sum_a fixed_pi[a|s,h] *
+                   sum_(s_next,r) model_p[s_next,r|s,a] *
+                   (r + gamma * old[s_next,h-1])
+    delta = max_abs_difference(new, old)
+    v = new                           # commit only after the full sweep
+    if delta &lt; theta:
+        return v, k, delta, &quot;tolerance_reached&quot;
+return v, k, delta, &quot;iteration_limit&quot;
+</code></pre>
+<p>states 是本次计算域，包含所需后继与边界；legal_actions、fixed_pi、model_p 分别提供合法动作、固定行为概率与已知联合核。循环 sum_a 只遍历合法动作；终态或 h=0 由表的零边界读取。theta 是正停止阈值，K_max 是正的计算轮数上限，均与真实动作预算 h 不同。delta 对应刚算出的 Δ_k；返回的是 v_k。</p>
+<p>例如 θ=0.000001 且 K_max≥3，按本例精确算术在第三轮达到阈值。若 K_max=2，则返回的表恰好已经精确，但程序只应报告达到轮数上限，不能把尚未检查到的 Δ₃=0 编出来。实际浮点计算还需考虑数值精度。</p>
+<h2 id="section-14">5. 与前一种方法或概念的关系</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>前课已经知道什么</th>
+<th>本课新增的计算机制</th>
+<th>新条件或代价</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Vπ 满足 Bellman 期望关系</td>
+<td>把右侧旧值变成一轮更新，反复计算</td>
+<td>需要明确模型、策略、初始化与停止条件</td>
+</tr>
+<tr>
+<td>可以枚举完整轨迹求期望</td>
+<td>把后续回报压进价值表反复复用</td>
+<td>避免完整路径重复展开，但仍需访问模型结果</td>
+</tr>
+<tr>
+<td>h 描述真实任务期限</td>
+<td>k 描述价值计算的进展</td>
+<td>两种编号不能互换，同轮不能偷用新值</td>
+</tr>
+<tr>
+<td>给定策略与最优策略不同</td>
+<td>本课只计算固定 π 的 Vπ</td>
+<td>评估表数值准确也不等于策略已经最优</td>
+</tr>
+</tbody></table></div>
+<p>今天的 DP 是已知模型上的规划/评估计算，没有采集环境交互、没有梯度训练，也没有从未知数据学出转移概率。它可以作为 RL 的理论与算法基础，但不是必须采用 RL 才能做的事情。</p>
+<p>同一指定策略的价值还可用完整路径枚举或 Bellman 线性方程精确求解。它们是本课计算结果的核对方法，也是不应忽略的对照；计算方法与策略本身的质量是两层问题。</p>
+<h2 id="section-15">6. 主要应用：可信 GUI 模型上的固定策略离线评估</h2>
+<p>本节属于<strong>工程推断</strong>。拟议用途是：若已经有可信、可计算的 GUI 转移/奖励模型，固定一个执行策略，先计算它在该模型里的期望表现。这不是用未知真实日志自动学出模型，也不等于模型中的评价就已经是实际任务结果。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>实际需要明确什么</th>
+<th>当前边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>观测与状态</td>
+<td>指令、截图、合法历史及可用接口；哪些变量足以描述后果</td>
+<td>【待确认】真实输入与权限，不能默认截图 Markov</td>
+</tr>
+<tr>
+<td>合法动作</td>
+<td>点击、输入、滚动、取消、结束及参数与执行反馈</td>
+<td>【待确认】实际动作接口；固定策略必须遵守它</td>
+</tr>
+<tr>
+<td>固定策略</td>
+<td>行为概率、动作屏蔽、回退规则、后续执行器版本</td>
+<td>【待确认】实际策略，不把 πα 当业务行为</td>
+</tr>
+<tr>
+<td>模型与多步</td>
+<td>p 的来源、状态覆盖、异步/失败建模、每步预算消耗</td>
+<td>【待确认】真实转移；教学 .8 不是实测成功率</td>
+</tr>
+<tr>
+<td>奖励与单位</td>
+<td>独立完成收益、过程/调用/错误代价、γ 与成本换算</td>
+<td>【待确认】业务目标；不移植收益 10 或成本 1</td>
+</tr>
+<tr>
+<td>反馈来源</td>
+<td>持久状态或目标值回读，必要时人工复核</td>
+<td>【待确认】验证接口；保存提示不等于实际持久成功</td>
+</tr>
+<tr>
+<td>初态与起止</td>
+<td>任务分布、重置、真正终止、任务内期限和外部截断</td>
+<td>【待确认】初态与预算；截断不自动置零未来</td>
+</tr>
+<tr>
+<td>数据与模型核查</td>
+<td>状态—动作—后果记录、失败/取消、策略/模型版本、独立留出验证</td>
+<td>【待确认】覆盖与偏差；未观测后果不能编造</td>
+</tr>
+<tr>
+<td>评价指标</td>
+<td>模型内 Vπ、计算残差、独立真实成功率/回报、步骤与成本</td>
+<td>【待确认】真实评价协议，不能只报告 Δ 小</td>
+</tr>
+<tr>
+<td>建模/训练成本</td>
+<td>数据采集、标注、模型估计及验证；若模型已给定，本轮无需再训练</td>
+<td>【待确认】建模预算，和 DP 计算分开统计</td>
+</tr>
+<tr>
+<td>计算/推理成本</td>
+<td>每轮遍历的状态、动作、结果数，两数组内存、轮数；实际执行另计调用与等待</td>
+<td>【待确认】规模与资源，DP 不天然便宜</td>
+</tr>
+<tr>
+<td>非 RL 基线</td>
+<td>同模型同策略的精确枚举/线性方程；规则、监督定位与示范策略作为候选行为</td>
+<td>【待确认】实现与匹配输入、预算和底层模型</td>
+</tr>
+</tbody></table></div>
+<p>两张价值表的内存随表大小增长，每一轮还需要对所列状态、合法动作和环境结果求和；状态或结果很多时，代价可能很大。模型建立本身的交互、标注和计算成本不能藏在“已知模型”四个字里。</p>
+<p>首先应区分两个检验：<strong>计算是否正确求出了这个模型下的 Vπ</strong>，以及<strong>这个模型是否足以代表真实任务</strong>。前者可与同模型的枚举或线性方程比较；后者需要独立结果验证、覆盖检查与真实任务评价。若只是在错误模型上把 Δ 算到接近零，不能据此声称真实 GUI 成功率提高。</p>
+<p>可提出一个<strong>研究假设</strong>：在真实输入权限、奖励、模型覆盖和成本明确后，模型内的固定策略评价能否帮助发现执行策略的薄弱状态？其可信度和实际价值仍需实验；本课研究状态为 <strong>未运行（NOT_RUN）</strong>。</p>
+<p>SR 与模态路由只作边界联系：普通一次重建、独立单步路由不因本课出现 DP 就需要多步方法。SR 若有真实早停/计算分配，或路由若有获取信息后继续决定，再确认状态、合法动作、模型与代价。实际路由输入、标签定义和业务成本仍为【待确认】，不借其他任务合同。</p>
+<h2 id="section-16">7. 常见误解、失败条件和适用边界</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>误解或失败</th>
+<th>本课纠正</th>
+<th>复算或工程检查</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>k 增加就代表任务还有更多步</td>
+<td>k 是计算轮数，h 是任务预算</td>
+<td>检查下一任务层始终是 h−1</td>
+</tr>
+<tr>
+<td>第一轮 F 已算成 8，H 同轮也可用 8</td>
+<td>那变成原地读取新值</td>
+<td>同步表 H 的首轮必须读 old(F,1)=0</td>
+</tr>
+<tr>
+<td>原地更新都是错误算法</td>
+<td>它与同步是不同计算安排</td>
+<td>不把不同安排的轮次表混着解释</td>
+</tr>
+<tr>
+<td>评估中选最大动作就更好</td>
+<td>这样改变了被评估的策略与目标</td>
+<td>固定 π 权重保持不变，策略改进留下一课</td>
+</tr>
+<tr>
+<td>v₀ 全零说明所有状态真价值为零</td>
+<td>这只是初始化</td>
+<td>与边界强制为零区分</td>
+</tr>
+<tr>
+<td>本例两轮精确，所以所有 DP 都两轮</td>
+<td>本例只有两层未来影响</td>
+<td>回路、长时域或其他初始化要另分析</td>
+</tr>
+<tr>
+<td>Δ₂ 不为零，就说明 v₂ 必然不准</td>
+<td>Δ₂ 比较 v₂ 与 v₁</td>
+<td>本例 v₂ 已精确，下一轮才观察到 Δ₃=0</td>
+</tr>
+<tr>
+<td>Δ 很小就证明真实业务准确</td>
+<td>只检查当前模型上的数值变化</td>
+<td>另核实模型、反馈与完整任务结果</td>
+</tr>
+<tr>
+<td>γ=1 也一定有相同收缩结论</td>
+<td>严格折扣条件已改变</td>
+<td>检查终止等附加条件，不作无条件保证</td>
+</tr>
+<tr>
+<td>有 p 的符号就算学到了真实环境</td>
+<td>模型是本课输入</td>
+<td>明示来源与未知项，不把规划当模型学习</td>
+</tr>
+</tbody></table></div>
+<h2 id="section-17">8. 三道理解题：先独立作答</h2>
+<p>请先用约 8 分钟作答，再看文末答案。所有数值题均使用第 4.1 节同一教学模型。</p>
+<p><strong>题 1｜k、h 与同步读取。</strong> 为什么从零表开始，第一轮 v₁(F,1)=8 而 v₁(H,2)=−0.75，不是 4.65？若程序先覆盖 F，再让 H 读到 8，它是否仍在执行本课同步更新？多做一次计算会不会让 (H,1) 获得保存机会？</p>
+<p><strong>题 2｜两轮表格、停止检查与另一个固定策略。</strong> 对 πα 写出 v₀、v₁、v₂ 的完整表（H2、F2、H1、F1 和零边界），再核对 v₃ 与 Δ₁、Δ₂、Δ₃。若 θ=0.000001、K_max=2，该程序应返回什么停止原因？然后独立评估 πβ：仅 F 的 save/cancel 改为 0.5/0.5，H 仍为 0.75/0.25，重新从零表做两轮，F 和 H2 最终是多少？这是策略改进步骤还是另一次固定策略评估？</p>
+<p><strong>题 3｜模型内收敛是否等于真实任务有效？</strong> 某 GUI 团队把教学成功率 .8 直接写入模型，用出现保存提示作为成功反馈；固定策略评估的 Δ 已很小，但真实输入权限、转移覆盖与成本尚不清楚。它能否声称已从未知环境学到了模型或真实成功率已提高？应补哪些观测/状态、动作、奖励反馈、起止数据、成本与基线条件？γ=1 时能否直接照搬严格折扣收缩结论，计算得到 Vπ 是否等于求得最优策略？</p>
+<h2 id="section-18">9. 下一单元预告与自查提示</h2>
+<p>下一单元是 <strong>RL-009｜动态规划II：策略改进与价值迭代</strong>，再讨论“评价当前行为”与“改变行为”的关系。今天固定 π，更新的是价值表；下一课才具体学习策略改进和价值迭代，不在本课的期望更新里提前加入最优动作选择。</p>
+<p>衔接自查：能否在一条式子里圈出旧表下标 k 与下一预算 h−1；能否说明为什么第二轮已经精确、第三轮 Δ 才为零；能否把模型内评价准确与真实模型可信分开。价值含义不清时回 <a href="../RL-004/">RL-004</a>，一步关系不清时回 <a href="../RL-005/">RL-005</a>，任务与证据边界回 <a href="../RL-007/">RL-007</a>。</p>
+<h2 id="section-19">10. 可核查的参考来源与证据说明</h2>
+<ol>
+<li><strong>Sutton 与 Barto，第二版教材原稿第 4 章，重点第 4.1 节 Policy Evaluation。</strong><a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">CMU 正式课程托管 PDF</a>，标题为 <em>Reinforcement Learning: An Introduction, second edition</em>，版权页标 2018，548 页。2026-10-21 实际复读同源缓存册页 73～77，核心依据是册页 74 的式 (4.3)～(4.5)、册页 75 的期望更新、两数组/原地更新与停止检查说明；册页 76～77 的后续材料仅查看范围，不在本课教授策略改进。缓存长度 43,634,706 字节与 SHA-256 已核验；当日 HTTP HEAD 返回 200 且长度一致。本次没有重新下载全文，HEAD 不代表全文读取；该文件保留原稿排版占位，不能称为已核对最终出版排版。</li>
+<li><strong>官方基础概念入口：</strong><a href="https://spinningup.openai.com/en/latest/spinningup/rl_intro.html">OpenAI Spinning Up — Key Concepts in RL</a>。本次于 2026-10-21 两次网页读取尝试均返回 429，未声称当日读到正文；保留它作为前课已使用的官方基础入口。本课迭代策略评估更新与同步安排的本次实读依据为上面的教材第 4.1 节。</li>
+</ol>
+<p><strong>已发表知识：</strong>固定策略的 Bellman 期望更新、迭代策略评估、同步与原地的区别，以及有条件的收敛原理。<br><strong>工程推断：</strong>可信 GUI 模型上的离线评价、模型核查、成本与非 RL 对照要求。<br><strong>教学假设：</strong>原封不动复用前课 GUI 的页面、动作、概率、奖励、策略、预算、γ；零表和停止参数用于本课计算演示。<br><strong>研究假设：</strong>在真实条件明确后检验模型内评价对实际执行分析是否有帮助，尚未验证。<br><strong>实际实验结果：</strong>无，<strong>未运行（NOT_RUN）</strong>。表格与伪代码只说明教学计算过程，未采集或执行真实 GUI、未训练模型，也没有实际性能提升证据。</p>
+<details class="answers" id="section-20"><summary>参考答案（练习完成后再看）</summary><p><strong>题 1。</strong> F 的 save 立即终止，第一轮直接算出平均奖励 8；H 的同步新值必须读取旧表 v₀(F,1)=0，所以 v₁(H,2)=0.75×(−1)=−0.75。若先覆盖 F、随后 H 读到本轮新值，那是原地更新安排，不能称为本课两数组同步表；不等于所有原地算法无效。k 仅为计算轮次，(H,1) 执行 open 后仍只剩 h=0，没有保存机会，重复计算不会改变任务期限。</p>
+<p><strong>题 2。</strong> 按 H2、F2、H1、F1、零边界的顺序，v₀=(0,0,0,0,0)，v₁=(−0.75,8,−0.75,8,0)，v₂=(4.65,8,−0.75,8,0)，v₃ 与 v₂ 相同。Δ₁=8，Δ₂=5.4，Δ₃=0。K_max=2 时虽然本例 v₂ 恰好已经精确，程序仍未观察第三轮，应返回 iteration_limit，不虚构已满足 Δ₃ 检查。</p>
+<p>πβ 独立从零表开始：v₁=(−0.75,4,−0.75,4,0)，v₂=(1.95,4,−0.75,4,0)，因为 F 的期望是 0.5×8=4，H2 为 0.75×[−1+0.9×4]=1.95。其第一轮仍不能在 H 使用同轮新算出的 4。这里是更换输入策略后进行另一次固定策略评估，不是在 πα 的一次评估中偷偷改变策略，也没有证明 πβ 是改进策略。</p>
+<p><strong>题 3。</strong> 不能。教学 .8 不是真实模型测量，DP 使用给定模型计算 Vπ，没有自动学习未知转移。Δ 小只表示这个模型上的迭代变化小，不能证明模型可信或真实成功率提高。应确认输入来源/权限、状态充分性、合法动作及执行反馈、真实转移与覆盖、奖励和成本单位、独立持久状态回读、初态重置、任务期限与外部截断、完整失败/取消日志及策略/模型版本；统计建模/训练成本、DP计算成本和真实推理/执行成本。</p>
+<p>在同一模型同一固定策略下，先与完整枚举或线性方程核对计算；真实行为候选可包括固定规则、监督定位和示范策略，匹配任务、输入、底层模型与预算，另做独立真实评价。γ=1 不具有同样的严格折扣收缩保证，需要终止等附加条件；本例有限预算的传播特例不能替代一般证明。Vπ 是指定策略的价值，不等于最优策略已被找到；本课研究实验仍为 NOT_RUN。</p>
+</details></article></div><section class="pdf-preview wrap" aria-labelledby="pdf-preview-title"><h2 id="pdf-preview-title">同内容伴随 PDF · 阅读版</h2><p>本课 PDF 使用与 PPT 相同的源内容，经独立排版用于阅读，非 PowerPoint 原生导出；可编辑汇报请使用 PPT。手机或浏览器未显示时，可<a href="./RL-008.pdf" style="text-decoration:underline">直接打开 PDF 阅读版</a>。</p><iframe src="./RL-008.pdf#toolbar=1" title="RL-008 同内容伴随 PDF 阅读版" loading="lazy"></iframe></section><div class="lesson-navigation wrap"><a href="../RL-007/"><span>← 上一单元 · RL-007</span><strong>复习：从任务描述到MDP与回报</strong></a><a class="next" href="../RL-009/"><span>下一单元 · RL-009 →</span><strong>动态规划II：策略改进与价值迭代</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>
