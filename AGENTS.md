@@ -4,6 +4,14 @@
 
 `al-folio` v1.x is a **thin Jekyll starter, not a theme**. This repo owns starter wiring, example content, docs, and cross-plugin tests. All runtime — layouts, includes, Sass, Liquid tags, filters, feature JS — lives in versioned gems published under [`al-org-dev`](https://github.com/al-org-dev).
 
+## Reinforcement learning course publication
+
+The canonical course is `research/rl-learning/`, published at `https://chaohuawang-phd.github.io/research/rl-learning/`. Daily course updates publish to this GitHub repository; the former ChatGPT Site is no longer the course publication target.
+
+Preserve the standalone HTML/CSS/JS, bundled KaTeX fonts, 56-unit sequence, stable lesson URLs, and per-unit lecture/PPTX/PDF directories. Do not wrap course pages in the al-folio layout. Keep personal study progress, feedback, internal verification records, and credentials outside the public website.
+
+Before each update, fetch the latest `main` and reconcile existing changes. Update the same lesson and directory entries, keep the latest-updates list to three items, and preserve the homepage and research-page entry links. Push only the intended course changes to `main`; the deploy workflow restores the standalone source files after Jekyll optimization. Confirm the matching `Deploy site` run succeeds, then verify the live lesson, stylesheet, math fonts, and actual attachment downloads before marking the unit published. Record a failed publication separately from successful content generation.
+
 ## Route your change
 
 Find your change on the left; edit only what is on the right.

@@ -101,6 +101,10 @@ jobs:
         run: |
           npm install -g purgecss
           purgecss -c purgecss.config.js
+      - name: Preserve original RL course files
+        run: |
+          mkdir -p _site/research/rl-learning
+          cp -a research/rl-learning/. _site/research/rl-learning/
       - name: Deploy 🚀
         if: github.event_name != 'pull_request'
         uses: JamesIves/github-pages-deploy-action@v4
