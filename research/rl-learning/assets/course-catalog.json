@@ -1,1 +1,2430 @@
-{"course_id":"rl-learning-and-applications","title":"强化学习学习与应用","course_version":"1.0.0","language":"zh-CN","total_units":56,"estimated_weeks":8,"cadence":{"new_per_week":5,"application_per_week":1,"review_per_week":1},"units":[{"id":"RL-001","order":1,"week":1,"stage":"问题建模与RL基础","kind":"new","title":"从任务到决策：强化学习解决什么问题？","summary":"区分智能体、观测、动作与反馈，并连接本阶段的前置概念。","prerequisites":[],"core_concepts":["交互","策略","状态与观测","奖励","折扣回报"],"learning_objectives":["区分智能体、观测、动作与反馈","计算短轨迹的回报","判断监督学习、Bandit与多步RL的边界"],"tags":["RL基础","模态路由","GUI","SR"],"study_minutes":{"min":30,"max":45},"previous_unit":null,"next_unit":"RL-002","revision":"1.0.0","created_date":"2026-10-13","content_updated_date":"2026-10-13","url":"lessons/RL-001/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-002","order":2,"week":1,"stage":"问题建模与RL基础","kind":"new","title":"MDP：如何给状态、动作和转移一个严格定义？","summary":"写出一个有限MDP，并连接本阶段的前置概念。","prerequisites":["RL-001"],"core_concepts":["MDP","Markov性","转移","终止","时间索引"],"learning_objectives":["写出一个有限MDP","用反例检查Markov性","区分终止和超时截断"],"tags":["RL基础","GUI"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-001","next_unit":"RL-003","revision":"1.0.0","created_date":"2026-10-14","content_updated_date":"2026-10-14","url":"lessons/RL-002/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-003","order":3,"week":1,"stage":"问题建模与RL基础","kind":"new","title":"策略、轨迹与探索：数据从哪里来？","summary":"解释策略概率与环境概率，并连接本阶段的前置概念。","prerequisites":["RL-002"],"core_concepts":["随机策略","轨迹概率","episode","探索与利用"],"learning_objectives":["解释策略概率与环境概率","画出一次轨迹","说明探索为何改变数据分布"],"tags":["RL基础","模态路由"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-002","next_unit":"RL-004","revision":"1.0.0","created_date":"2026-10-15","content_updated_date":"2026-10-15","url":"lessons/RL-003/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-004","order":4,"week":1,"stage":"问题建模与RL基础","kind":"new","title":"价值函数：从一次结果到期望表现","summary":"区分状态价值与动作价值，并连接本阶段的前置概念。","prerequisites":["RL-003"],"core_concepts":["Vπ","Qπ","期望","策略条件","有限时域"],"learning_objectives":["区分状态价值与动作价值","手算小环境的期望","解释价值依赖策略与时域"],"tags":["RL基础"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-003","next_unit":"RL-005","revision":"1.0.0","created_date":"2026-10-16","content_updated_date":"2026-10-16","url":"lessons/RL-004/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-005","order":5,"week":1,"stage":"问题建模与RL基础","kind":"new","title":"Bellman方程：把长期回报拆成一步与未来","summary":"从回报递推得到Bellman关系，并连接本阶段的前置概念。","prerequisites":["RL-004"],"core_concepts":["Bellman期望方程","Bellman最优方程","递归"],"learning_objectives":["从回报递推得到Bellman关系","区分期望与最大化","核对小MDP方程"],"tags":["RL基础"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-004","next_unit":"RL-006","revision":"1.0.0","created_date":"2026-10-17","content_updated_date":"2026-10-17","url":"lessons/RL-005/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-006","order":6,"week":1,"stage":"问题建模与RL基础","kind":"application","title":"应用：为三类研究任务写决策说明","summary":"分别判断SR、模态路由、GUI是否存在决策，并连接本阶段的前置概念。","prerequisites":["RL-001","RL-002","RL-003","RL-004","RL-005"],"core_concepts":["任务建模","非RL基线","动作定义","反馈边界"],"learning_objectives":["分别判断SR、模态路由、GUI是否存在决策","选择一个主要问题","列出未知条件与非RL基线"],"tags":["SR","模态路由","GUI"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-005","next_unit":"RL-007","revision":"1.0.0","created_date":"2026-10-18","content_updated_date":"2026-10-18","url":"lessons/RL-006/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-007","order":7,"week":1,"stage":"问题建模与RL基础","kind":"review","title":"复习：从任务描述到MDP与回报","summary":"串联观测、策略、回报与价值，并连接本阶段的前置概念。","prerequisites":["RL-001","RL-002","RL-003","RL-004","RL-005","RL-006"],"core_concepts":["概念图","手算","建模反例","学习反馈"],"learning_objectives":["串联观测、策略、回报与价值","独立完成建模与手算","记录前置知识薄弱点"],"tags":["RL基础","复习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-006","next_unit":"RL-008","revision":"1.0.0","created_date":"2026-10-19","content_updated_date":"2026-10-19","url":"lessons/RL-007/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-008","order":8,"week":2,"stage":"价值估计与TD","kind":"new","title":"动态规划I：已知环境的策略评估","summary":"写出策略评估更新，并连接本阶段的前置概念。","prerequisites":["RL-007"],"core_concepts":["模型已知","迭代策略评估","收敛直觉"],"learning_objectives":["写出策略评估更新","完成两轮表格计算","解释环境模型的作用"],"tags":["价值学习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-007","next_unit":"RL-009","revision":"1.0.0","created_date":"2026-10-21","content_updated_date":"2026-10-21","url":"lessons/RL-008/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-009","order":9,"week":2,"stage":"价值估计与TD","kind":"new","title":"动态规划II：策略改进与价值迭代","summary":"比较评估与改进，并连接本阶段的前置概念。","prerequisites":["RL-008"],"core_concepts":["策略改进","策略迭代","价值迭代"],"learning_objectives":["比较评估与改进","手算一次贪心改进","解释已知模型的适用边界"],"tags":["价值学习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-008","next_unit":"RL-010","revision":"1.0.0","created_date":"2026-10-22","content_updated_date":"2026-10-22","url":"lessons/RL-009/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-010","order":10,"week":2,"stage":"价值估计与TD","kind":"new","title":"Monte Carlo：从完整轨迹估计价值","summary":"由轨迹估计价值，并连接本阶段的前置概念。","prerequisites":["RL-009"],"core_concepts":["采样回报","first-visit","增量均值","方差"],"learning_objectives":["由轨迹估计价值","区分样本回报与期望价值","解释完整任务采样的代价"],"tags":["价值学习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-009","next_unit":"RL-011","revision":"1.0.0","created_date":"2026-10-23","content_updated_date":"2026-10-23","url":"lessons/RL-010/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-011","order":11,"week":2,"stage":"价值估计与TD","kind":"new","title":"TD(0)：不等任务结束也能更新","summary":"手算一次TD更新，并连接本阶段的前置概念。","prerequisites":["RL-010"],"core_concepts":["TD目标","TD误差","bootstrap","学习率"],"learning_objectives":["手算一次TD更新","解释bootstrap信息来源","区分终止与截断目标"],"tags":["价值学习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-010","next_unit":"RL-012","revision":"1.0.0","created_date":"2026-10-24","content_updated_date":"2026-10-24","url":"lessons/RL-011/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-012","order":12,"week":2,"stage":"价值估计与TD","kind":"new","title":"MC与TD：偏差、方差与学习曲线","summary":"对照两类更新目标，并连接本阶段的前置概念。","prerequisites":["RL-011"],"core_concepts":["偏差方差","bootstrap","学习率","评价"],"learning_objectives":["对照两类更新目标","解释估计的偏差方差","设计统一评价的小实验"],"tags":["价值学习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-011","next_unit":"RL-013","revision":"1.0.0","created_date":"2026-10-25","content_updated_date":"2026-10-25","url":"lessons/RL-012/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-013","order":13,"week":2,"stage":"价值估计与TD","kind":"application","title":"应用：在小型任务里比较价值估计方法","summary":"固定小环境与数据预算，并连接本阶段的前置概念。","prerequisites":["RL-008","RL-009","RL-010","RL-011","RL-012"],"core_concepts":["已知模型","采样数据","控制变量","评估协议"],"learning_objectives":["固定小环境与数据预算","拟定DP、MC、TD比较","区分拟议实验与实际结果"],"tags":["GUI","实验设计"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-012","next_unit":"RL-014","revision":"1.0.0","created_date":"2026-10-26","content_updated_date":"2026-10-26","url":"lessons/RL-013/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-014","order":14,"week":2,"stage":"价值估计与TD","kind":"review","title":"复习：一张表看懂DP、MC与TD","summary":"复述三类方法的信息需求，并连接本阶段的前置概念。","prerequisites":["RL-008","RL-009","RL-010","RL-011","RL-012","RL-013"],"core_concepts":["方法比较","更新手算","采样要求"],"learning_objectives":["复述三类方法的信息需求","独立核对更新","整理薄弱点并调整后续节奏"],"tags":["价值学习","复习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-013","next_unit":"RL-015","revision":"1.0.0","created_date":"2026-10-27","content_updated_date":"2026-10-27","url":"lessons/RL-014/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-015","order":15,"week":3,"stage":"表格控制与探索","kind":"new","title":"SARSA：沿当前行为策略学习动作价值","summary":"写出SARSA目标，并连接本阶段的前置概念。","prerequisites":["RL-014"],"core_concepts":["SARSA","on-policy","ε-greedy","TD控制"],"learning_objectives":["写出SARSA目标","手算动作价值更新","解释下一动作来自当前策略"],"tags":["TD控制"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-014","next_unit":"RL-016","revision":"1.0.1","created_date":"2026-10-28","content_updated_date":"2026-10-28","url":"lessons/RL-015/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-016","order":16,"week":3,"stage":"表格控制与探索","kind":"new","title":"Q-learning：用贪心目标学习控制","summary":"写出Q-learning目标，并连接本阶段的前置概念。","prerequisites":["RL-015"],"core_concepts":["Q-learning","off-policy","最大化目标"],"learning_objectives":["写出Q-learning目标","比较SARSA下一步","说明行为策略与目标策略不同"],"tags":["TD控制"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-015","next_unit":"RL-017","revision":"1.0.0","created_date":"2026-10-31","content_updated_date":"2026-10-31","url":"lessons/RL-016/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-017","order":17,"week":3,"stage":"表格控制与探索","kind":"new","title":"探索策略：ε-greedy的代价与覆盖","summary":"分析ε变化如何影响采样，并连接本阶段的前置概念。","prerequisites":["RL-016"],"core_concepts":["探索","利用","退火","覆盖","业务代价"],"learning_objectives":["分析ε变化如何影响采样","识别缺失动作覆盖","将探索成本纳入评价"],"tags":["TD控制","模态路由","GUI"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-016","next_unit":"RL-018","revision":"1.0.0","created_date":"2026-11-01","content_updated_date":"2026-11-01","url":"lessons/RL-017/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-018","order":18,"week":3,"stage":"表格控制与探索","kind":"new","title":"Expected SARSA与Double Q：改进目标估计","summary":"计算Expected SARSA目标，并连接本阶段的前置概念。","prerequisites":["RL-017"],"core_concepts":["期望目标","最大化偏差","Double Q-learning"],"learning_objectives":["计算Expected SARSA目标","解释最大化偏差来源","区分双估计与重复训练"],"tags":["TD控制","GUI"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-017","next_unit":"RL-019","revision":"1.0.0","created_date":"2026-11-02","content_updated_date":"2026-11-02","url":"lessons/RL-018/","availability":{"lecture":true,"pptx":true,"pdf":true}},{"id":"RL-019","order":19,"week":3,"stage":"表格控制与探索","kind":"new","title":"表格控制的边界：收敛条件与数据覆盖","summary":"解释经典收敛条件的作用，并连接本阶段的前置概念。","prerequisites":["RL-018"],"core_concepts":["表格表示","步长","访问覆盖","分布偏移"],"learning_objectives":["解释经典收敛条件的作用","指出有限数据的限制","避免把表格结论直接套给深网"],"tags":["TD控制"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-018","next_unit":"RL-020","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-019/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-020","order":20,"week":3,"stage":"表格控制与探索","kind":"application","title":"应用：小型GUI导航中的安全探索与控制","summary":"构造可手算的多步导航，并连接本阶段的前置概念。","prerequisites":["RL-015","RL-016","RL-017","RL-018","RL-019"],"core_concepts":["离散导航","合法动作","重置","成功验证"],"learning_objectives":["构造可手算的多步导航","比较规则、SARSA和Q-learning的目标","定义重置与探索约束"],"tags":["GUI","实验设计"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-019","next_unit":"RL-021","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-020/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-021","order":21,"week":3,"stage":"表格控制与探索","kind":"review","title":"复习：SARSA与Q-learning到底差在哪？","summary":"用同一转移计算不同目标，并连接本阶段的前置概念。","prerequisites":["RL-015","RL-016","RL-017","RL-018","RL-019","RL-020"],"core_concepts":["on/off-policy","目标与行为","控制手算"],"learning_objectives":["用同一转移计算不同目标","独立解释策略区别","汇总探索与覆盖条件"],"tags":["TD控制","复习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-020","next_unit":"RL-022","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-021/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-022","order":22,"week":4,"stage":"DQN系列与稳定训练","kind":"new","title":"DQN：用神经网络近似动作价值","summary":"从表格Q过渡到Q网络，并连接本阶段的前置概念。","prerequisites":["RL-021"],"core_concepts":["Q网络","Bellman目标","离散动作","损失"],"learning_objectives":["从表格Q过渡到Q网络","解释TD回归目标","指出函数近似的新不稳定来源"],"tags":["深度价值学习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-021","next_unit":"RL-023","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-022/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-023","order":23,"week":4,"stage":"DQN系列与稳定训练","kind":"new","title":"经验回放：旧数据如何帮助训练","summary":"解释回放机制，并连接本阶段的前置概念。","prerequisites":["RL-022"],"core_concepts":["replay buffer","相关性","采样分布","覆盖"],"learning_objectives":["解释回放机制","分析均匀采样的局限","识别历史数据的偏移"],"tags":["深度价值学习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-022","next_unit":"RL-024","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-023/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-024","order":24,"week":4,"stage":"DQN系列与稳定训练","kind":"new","title":"目标网络：为什么不用自己追自己","summary":"解释移动目标问题，并连接本阶段的前置概念。","prerequisites":["RL-023"],"core_concepts":["target network","冻结目标","硬更新","软更新"],"learning_objectives":["解释移动目标问题","对照更新频率的影响","核对终止转移的目标"],"tags":["深度价值学习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-023","next_unit":"RL-025","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-024/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-025","order":25,"week":4,"stage":"DQN系列与稳定训练","kind":"new","title":"Double DQN：选择动作与评估动作分开","summary":"计算DQN与Double DQN目标，并连接本阶段的前置概念。","prerequisites":["RL-024"],"core_concepts":["Double DQN","选择评估分离","过估计"],"learning_objectives":["计算DQN与Double DQN目标","解释分离机制","提出公平对照和失败检查"],"tags":["深度价值学习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-024","next_unit":"RL-026","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-025/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-026","order":26,"week":4,"stage":"DQN系列与稳定训练","kind":"new","title":"Dueling DQN：状态价值与动作差异","summary":"解释两分支输出含义，并连接本阶段的前置概念。","prerequisites":["RL-025"],"core_concepts":["dueling","V分支","A分支","可辨识性"],"learning_objectives":["解释两分支输出含义","检查聚合公式","区分结构机制与保证收益"],"tags":["深度价值学习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-025","next_unit":"RL-027","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-026/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-027","order":27,"week":4,"stage":"DQN系列与稳定训练","kind":"application","title":"应用：是否值得把SR计算选择做成DQN","summary":"定义可执行的离散SR决策，并连接本阶段的前置概念。","prerequisites":["RL-022","RL-023","RL-024","RL-025","RL-026"],"core_concepts":["SR动作","预算","质量成本","固定预算基线"],"learning_objectives":["定义可执行的离散SR决策","判断是否有多步依赖","制定固定计算与简单策略基线"],"tags":["SR","实验设计"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-026","next_unit":"RL-028","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-027/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-028","order":28,"week":4,"stage":"DQN系列与稳定训练","kind":"review","title":"复习：DQN的稳定机制与失效诊断","summary":"对照各机制解决的问题，并连接本阶段的前置概念。","prerequisites":["RL-022","RL-023","RL-024","RL-025","RL-026","RL-027"],"core_concepts":["replay","target","Double","dueling","公平对照"],"learning_objectives":["对照各机制解决的问题","识别回报与TD损失不一致","整理训练诊断表"],"tags":["深度价值学习","复习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-027","next_unit":"RL-029","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-028/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-029","order":29,"week":5,"stage":"策略梯度与Actor-Critic","kind":"new","title":"策略梯度前置：log-derivative与采样期望","summary":"推导基础log-derivative恒等式，并连接本阶段的前置概念。","prerequisites":["RL-028"],"core_concepts":["log-derivative","期望梯度","概率","梯度"],"learning_objectives":["推导基础log-derivative恒等式","解释采样估计","明确何时能交换梯度与期望"],"tags":["策略梯度"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-028","next_unit":"RL-030","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-029/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-030","order":30,"week":5,"stage":"策略梯度与Actor-Critic","kind":"new","title":"REINFORCE：用回报调整动作概率","summary":"写出REINFORCE更新，并连接本阶段的前置概念。","prerequisites":["RL-029"],"core_concepts":["REINFORCE","蒙特卡洛梯度","reward-to-go"],"learning_objectives":["写出REINFORCE更新","解释提高或降低概率的条件","分析方差与采样成本"],"tags":["策略梯度"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-029","next_unit":"RL-031","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-030/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-031","order":31,"week":5,"stage":"策略梯度与Actor-Critic","kind":"new","title":"Baseline：降低方差而不改变期望梯度","summary":"说明动作无关基线的条件，并连接本阶段的前置概念。","prerequisites":["RL-030"],"core_concepts":["baseline","无偏条件","价值基线","方差"],"learning_objectives":["说明动作无关基线的条件","推导期望不变","对照基线估计误差"],"tags":["策略梯度"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-030","next_unit":"RL-032","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-031/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-032","order":32,"week":5,"stage":"策略梯度与Actor-Critic","kind":"new","title":"优势函数：动作比当前策略平均好多少","summary":"区分价值与优势，并连接本阶段的前置概念。","prerequisites":["RL-031"],"core_concepts":["advantage","Aπ=Qπ−Vπ","符号","估计"],"learning_objectives":["区分价值与优势","手算优势符号","解释相对改进和奖励尺度"],"tags":["策略梯度"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-031","next_unit":"RL-033","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-032/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-033","order":33,"week":5,"stage":"策略梯度与Actor-Critic","kind":"new","title":"Actor-Critic：策略和价值如何分工","summary":"画出两网络信息流，并连接本阶段的前置概念。","prerequisites":["RL-032"],"core_concepts":["actor","critic","TD优势","估计误差"],"learning_objectives":["画出两网络信息流","解释critic怎样辅助actor","检查估计偏差与耦合训练"],"tags":["策略梯度"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-032","next_unit":"RL-034","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-033/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-034","order":34,"week":5,"stage":"策略梯度与Actor-Critic","kind":"application","title":"应用：GUI轨迹里的奖励与长期归因","summary":"区分单步定位与任务成功，并连接本阶段的前置概念。","prerequisites":["RL-029","RL-030","RL-031","RL-032","RL-033"],"core_concepts":["终局成功","过程成本","归因","定位基线"],"learning_objectives":["区分单步定位与任务成功","给出可验证的奖励草案","比较监督初始策略与策略梯度方案"],"tags":["GUI","实验设计"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-033","next_unit":"RL-035","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-034/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-035","order":35,"week":5,"stage":"策略梯度与Actor-Critic","kind":"review","title":"复习：REINFORCE、Baseline与Actor-Critic","summary":"串联回报与优势估计，并连接本阶段的前置概念。","prerequisites":["RL-029","RL-030","RL-031","RL-032","RL-033","RL-034"],"core_concepts":["梯度","优势","方差","估计偏差"],"learning_objectives":["串联回报与优势估计","独立解释两类更新","核对奖励归因假设"],"tags":["策略梯度","复习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-034","next_unit":"RL-036","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-035/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-036","order":36,"week":6,"stage":"GAE、策略更新约束与PPO","kind":"new","title":"GAE：折扣TD误差如何估计优势","summary":"手算短轨迹GAE，并连接本阶段的前置概念。","prerequisites":["RL-035"],"core_concepts":["GAE","λ","TD残差","bias-variance","截断"],"learning_objectives":["手算短轨迹GAE","解释λ的作用","正确区分终止和截断bootstrap"],"tags":["PPO"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-035","next_unit":"RL-037","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-036/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-037","order":37,"week":6,"stage":"GAE、策略更新约束与PPO","kind":"new","title":"On-policy、Off-policy与重要性采样","summary":"解释两种策略的数据关系，并连接本阶段的前置概念。","prerequisites":["RL-036"],"core_concepts":["行为策略","目标策略","importance ratio","支持集"],"learning_objectives":["解释两种策略的数据关系","计算重要性比率","识别权重方差与支持集缺失"],"tags":["PPO","离线数据"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-036","next_unit":"RL-038","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-037/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-038","order":38,"week":6,"stage":"GAE、策略更新约束与PPO","kind":"new","title":"信赖域直觉：为什么限制策略更新","summary":"解释大幅更新的风险，并连接本阶段的前置概念。","prerequisites":["RL-037"],"core_concepts":["KL","trust region","TRPO直觉","更新幅度"],"learning_objectives":["解释大幅更新的风险","理解KL约束的角色","区分理论条件与工程近似"],"tags":["PPO"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-037","next_unit":"RL-039","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-038/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-039","order":39,"week":6,"stage":"GAE、策略更新约束与PPO","kind":"new","title":"PPO-Clip：逐项理解目标函数","summary":"计算不同优势符号的clip目标，并连接本阶段的前置概念。","prerequisites":["RL-038"],"core_concepts":["PPO ratio","clip","优势符号","surrogate"],"learning_objectives":["计算不同优势符号的clip目标","解释被截断的方向","区分clip与硬约束保证"],"tags":["PPO"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-038","next_unit":"RL-040","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-039/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-040","order":40,"week":6,"stage":"GAE、策略更新约束与PPO","kind":"new","title":"PPO训练循环：采样、优势与多轮更新","summary":"梳理完整训练循环，并连接本阶段的前置概念。","prerequisites":["RL-039"],"core_concepts":["rollout","mini-batch","epoch","entropy","value loss"],"learning_objectives":["梳理完整训练循环","解释旧策略与数据刷新","列出稳定性与成本检查"],"tags":["PPO"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-039","next_unit":"RL-041","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-040/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-041","order":41,"week":6,"stage":"GAE、策略更新约束与PPO","kind":"application","title":"应用：多步GUI的PPO最小试验设计","summary":"提出最小可归因对照，并连接本阶段的前置概念。","prerequisites":["RL-036","RL-037","RL-038","RL-039","RL-040"],"core_concepts":["SFT初始化","重置","任务奖励","验证门槛"],"learning_objectives":["提出最小可归因对照","固定验证与停止条件","区分设计、未运行和实际结果"],"tags":["GUI","实验设计"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-040","next_unit":"RL-042","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-041/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-042","order":42,"week":6,"stage":"GAE、策略更新约束与PPO","kind":"review","title":"复习：从优势估计走到PPO更新","summary":"完成一组GAE与clip手算，并连接本阶段的前置概念。","prerequisites":["RL-036","RL-037","RL-038","RL-039","RL-040","RL-041"],"core_concepts":["GAE","ratio","clip","rollout","诊断"],"learning_objectives":["完成一组GAE与clip手算","解释训练数据生命周期","识别常见错误"],"tags":["PPO","复习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-041","next_unit":"RL-043","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-042/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-043","order":43,"week":7,"stage":"Bandit、奖励设计与离线数据","kind":"new","title":"Contextual Bandit：单步反馈为什么不同","summary":"区分单步Bandit与MDP，并连接本阶段的前置概念。","prerequisites":["RL-042"],"core_concepts":["context","action","reward","bandit feedback","full information"],"learning_objectives":["区分单步Bandit与MDP","判断反馈是否覆盖所有动作","建立条件期望目标"],"tags":["Bandit","模态路由"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-042","next_unit":"RL-044","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-043/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-044","order":44,"week":7,"stage":"Bandit、奖励设计与离线数据","kind":"new","title":"Bandit探索：ε-greedy与UCB直觉","summary":"理解探索的长期代价，并连接本阶段的前置概念。","prerequisites":["RL-043"],"core_concepts":["探索利用","不确定性","UCB","regret"],"learning_objectives":["理解探索的长期代价","手算简化UCB选择","区分无上下文与上下文方法"],"tags":["Bandit","模态路由"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-043","next_unit":"RL-045","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-044/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-045","order":45,"week":7,"stage":"Bandit、奖励设计与离线数据","kind":"new","title":"奖励设计：业务收益、代理指标和约束","summary":"定义独立成功指标，并连接本阶段的前置概念。","prerequisites":["RL-044"],"core_concepts":["reward hacking","成本","稀疏奖励","约束"],"learning_objectives":["定义独立成功指标","识别代理奖励漏洞","选择成本和约束的表达方式"],"tags":["奖励设计","SR","模态路由","GUI"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-044","next_unit":"RL-046","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-045/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-046","order":46,"week":7,"stage":"Bandit、奖励设计与离线数据","kind":"new","title":"离线策略评估：反事实不能凭空补","summary":"解释IPS的假设与估计，并连接本阶段的前置概念。","prerequisites":["RL-045"],"core_concepts":["logged propensity","IPS","支持集","偏差方差"],"learning_objectives":["解释IPS的假设与估计","识别缺失选择概率和覆盖","设计可信的离线评价"],"tags":["离线数据","模态路由"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-045","next_unit":"RL-047","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-046/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-047","order":47,"week":7,"stage":"Bandit、奖励设计与离线数据","kind":"new","title":"离线RL概览：行为数据之外的风险","summary":"区分离线Bandit与离线RL，并连接本阶段的前置概念。","prerequisites":["RL-046"],"core_concepts":["offline RL","分布外动作","外推误差","保守性"],"learning_objectives":["区分离线Bandit与离线RL","解释外推误差","判断数据支持是否足够"],"tags":["离线数据","GUI"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-046","next_unit":"RL-048","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-047/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-048","order":48,"week":7,"stage":"Bandit、奖励设计与离线数据","kind":"application","title":"应用：按真实合同设计模态路由评估","summary":"先核实真实标签和动作，并连接本阶段的前置概念。","prerequisites":["RL-043","RL-044","RL-045","RL-046","RL-047"],"core_concepts":["标签语义","输入来源","成本","固定分支基线"],"learning_objectives":["先核实真实标签和动作","定义收益与错误成本","制定可审计的路由比较方案"],"tags":["模态路由","实验设计"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-047","next_unit":"RL-049","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-048/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-049","order":49,"week":7,"stage":"Bandit、奖励设计与离线数据","kind":"review","title":"复习：Bandit、奖励和离线评估的边界","summary":"对照三类反馈，并连接本阶段的前置概念。","prerequisites":["RL-043","RL-044","RL-045","RL-046","RL-047","RL-048"],"core_concepts":["反馈结构","探索","propensity","数据覆盖"],"learning_objectives":["对照三类反馈","检查评估假设","列出进入研究专题前的缺失资料"],"tags":["Bandit","离线数据","复习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-048","next_unit":"RL-050","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-049/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-050","order":50,"week":8,"stage":"SR、模态路由、GUI研究专题","kind":"new","title":"部分可观测GUI：截图、历史与动作合法性","summary":"构造部分可观测反例，并连接本阶段的前置概念。","prerequisites":["RL-049"],"core_concepts":["POMDP直觉","历史","记忆","合法动作","环境重置"],"learning_objectives":["构造部分可观测反例","选择需要保留的历史","定义可复现执行与重置"],"tags":["GUI"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-049","next_unit":"RL-051","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-050/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-051","order":51,"week":8,"stage":"SR、模态路由、GUI研究专题","kind":"new","title":"SFT到RL：示范学习和奖励优化如何衔接","summary":"区分示范目标与奖励目标，并连接本阶段的前置概念。","prerequisites":["RL-050"],"core_concepts":["behavior cloning","SFT","分布偏移","验证任务"],"learning_objectives":["区分示范目标与奖励目标","说明SFT初始化作用","制定同任务对照"],"tags":["GUI","策略优化"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-050","next_unit":"RL-052","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-051/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-052","order":52,"week":8,"stage":"SR、模态路由、GUI研究专题","kind":"new","title":"GRPO专题：组内相对反馈与使用条件","summary":"理解组内比较的条件，并连接本阶段的前置概念。","prerequisites":["RL-051"],"core_concepts":["group baseline","相对优势","reward variance","token与动作"],"learning_objectives":["理解组内比较的条件","检查奖励无方差问题","区分语言生成与可执行GUI轨迹"],"tags":["GUI","GRPO"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-051","next_unit":"RL-053","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-052/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-053","order":53,"week":8,"stage":"SR、模态路由、GUI研究专题","kind":"new","title":"SR专题：先确定决策与预算再讨论RL","summary":"选择一个明确的SR决策，并连接本阶段的前置概念。","prerequisites":["RL-052"],"core_concepts":["SR质量","计算分配","早停","基线","验证"],"learning_objectives":["选择一个明确的SR决策","解释质量和计算目标","写出最小对照与停止门槛"],"tags":["SR","实验设计"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-052","next_unit":"RL-054","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-053/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-054","order":54,"week":8,"stage":"SR、模态路由、GUI研究专题","kind":"new","title":"三方向的实验协议：基线、消融与证据状态","summary":"统一公平对照与数据分割，并连接本阶段的前置概念。","prerequisites":["RL-053"],"core_concepts":["归因","validation gate","泄漏","成本","NOT_RUN"],"learning_objectives":["统一公平对照与数据分割","定义失败与停止条件","规范事实、推断、假设与结果"],"tags":["SR","模态路由","GUI","实验设计"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-053","next_unit":"RL-055","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-054/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-055","order":55,"week":8,"stage":"SR、模态路由、GUI研究专题","kind":"application","title":"应用：选择一个研究方向形成最小方案","summary":"基于真实资料选一个主要问题，并连接本阶段的前置概念。","prerequisites":["RL-050","RL-051","RL-052","RL-053","RL-054"],"core_concepts":["问题选择","数据合同","算法选择","方案评审"],"learning_objectives":["基于真实资料选一个主要问题","完成最小实验方案","判断是否具备启动条件"],"tags":["SR","模态路由","GUI","实验设计"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-054","next_unit":"RL-056","revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-055/","availability":{"lecture":false,"pptx":false,"pdf":false}},{"id":"RL-056","order":56,"week":8,"stage":"SR、模态路由、GUI研究专题","kind":"review","title":"总复习：建立知识地图与下一阶段路线","summary":"串联56单元知识地图，并连接本阶段的前置概念。","prerequisites":["RL-050","RL-051","RL-052","RL-053","RL-054","RL-055"],"core_concepts":["概念依赖","算法选择","应用边界","学习反馈"],"learning_objectives":["串联56单元知识地图","独立为任务选择方法与基线","依据反馈提出下一阶段建议"],"tags":["RL基础","SR","模态路由","GUI","复习"],"study_minutes":{"min":30,"max":45},"previous_unit":"RL-055","next_unit":null,"revision":"1.0.0","created_date":null,"content_updated_date":null,"url":"lessons/RL-056/","availability":{"lecture":false,"pptx":false,"pdf":false}}],"note":"只包含公开课程计划与资料可用情况，不包含个人阅读、理解确认、练习、反馈或私有失败记录。"}
+{
+  "course_id": "rl-learning-and-applications",
+  "title": "强化学习学习与应用",
+  "course_version": "1.0.0",
+  "language": "zh-CN",
+  "total_units": 56,
+  "estimated_weeks": 8,
+  "cadence": {
+    "new_per_week": 5,
+    "application_per_week": 1,
+    "review_per_week": 1
+  },
+  "units": [
+    {
+      "id": "RL-001",
+      "order": 1,
+      "week": 1,
+      "stage": "问题建模与RL基础",
+      "kind": "new",
+      "title": "从任务到决策：强化学习解决什么问题？",
+      "summary": "区分智能体、观测、动作与反馈，并连接本阶段的前置概念。",
+      "prerequisites": [],
+      "core_concepts": [
+        "交互",
+        "策略",
+        "状态与观测",
+        "奖励",
+        "折扣回报"
+      ],
+      "learning_objectives": [
+        "区分智能体、观测、动作与反馈",
+        "计算短轨迹的回报",
+        "判断监督学习、Bandit与多步RL的边界"
+      ],
+      "tags": [
+        "RL基础",
+        "模态路由",
+        "GUI",
+        "SR"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": null,
+      "next_unit": "RL-002",
+      "revision": "1.0.0",
+      "created_date": "2026-10-13",
+      "content_updated_date": "2026-10-13",
+      "url": "lessons/RL-001/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-002",
+      "order": 2,
+      "week": 1,
+      "stage": "问题建模与RL基础",
+      "kind": "new",
+      "title": "MDP：如何给状态、动作和转移一个严格定义？",
+      "summary": "写出一个有限MDP，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-001"
+      ],
+      "core_concepts": [
+        "MDP",
+        "Markov性",
+        "转移",
+        "终止",
+        "时间索引"
+      ],
+      "learning_objectives": [
+        "写出一个有限MDP",
+        "用反例检查Markov性",
+        "区分终止和超时截断"
+      ],
+      "tags": [
+        "RL基础",
+        "GUI"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-001",
+      "next_unit": "RL-003",
+      "revision": "1.0.0",
+      "created_date": "2026-10-14",
+      "content_updated_date": "2026-10-14",
+      "url": "lessons/RL-002/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-003",
+      "order": 3,
+      "week": 1,
+      "stage": "问题建模与RL基础",
+      "kind": "new",
+      "title": "策略、轨迹与探索：数据从哪里来？",
+      "summary": "解释策略概率与环境概率，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-002"
+      ],
+      "core_concepts": [
+        "随机策略",
+        "轨迹概率",
+        "episode",
+        "探索与利用"
+      ],
+      "learning_objectives": [
+        "解释策略概率与环境概率",
+        "画出一次轨迹",
+        "说明探索为何改变数据分布"
+      ],
+      "tags": [
+        "RL基础",
+        "模态路由"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-002",
+      "next_unit": "RL-004",
+      "revision": "1.0.0",
+      "created_date": "2026-10-15",
+      "content_updated_date": "2026-10-15",
+      "url": "lessons/RL-003/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-004",
+      "order": 4,
+      "week": 1,
+      "stage": "问题建模与RL基础",
+      "kind": "new",
+      "title": "价值函数：从一次结果到期望表现",
+      "summary": "区分状态价值与动作价值，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-003"
+      ],
+      "core_concepts": [
+        "Vπ",
+        "Qπ",
+        "期望",
+        "策略条件",
+        "有限时域"
+      ],
+      "learning_objectives": [
+        "区分状态价值与动作价值",
+        "手算小环境的期望",
+        "解释价值依赖策略与时域"
+      ],
+      "tags": [
+        "RL基础"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-003",
+      "next_unit": "RL-005",
+      "revision": "1.0.0",
+      "created_date": "2026-10-16",
+      "content_updated_date": "2026-10-16",
+      "url": "lessons/RL-004/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-005",
+      "order": 5,
+      "week": 1,
+      "stage": "问题建模与RL基础",
+      "kind": "new",
+      "title": "Bellman方程：把长期回报拆成一步与未来",
+      "summary": "从回报递推得到Bellman关系，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-004"
+      ],
+      "core_concepts": [
+        "Bellman期望方程",
+        "Bellman最优方程",
+        "递归"
+      ],
+      "learning_objectives": [
+        "从回报递推得到Bellman关系",
+        "区分期望与最大化",
+        "核对小MDP方程"
+      ],
+      "tags": [
+        "RL基础"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-004",
+      "next_unit": "RL-006",
+      "revision": "1.0.0",
+      "created_date": "2026-10-17",
+      "content_updated_date": "2026-10-17",
+      "url": "lessons/RL-005/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-006",
+      "order": 6,
+      "week": 1,
+      "stage": "问题建模与RL基础",
+      "kind": "application",
+      "title": "应用：为三类研究任务写决策说明",
+      "summary": "分别判断SR、模态路由、GUI是否存在决策，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-001",
+        "RL-002",
+        "RL-003",
+        "RL-004",
+        "RL-005"
+      ],
+      "core_concepts": [
+        "任务建模",
+        "非RL基线",
+        "动作定义",
+        "反馈边界"
+      ],
+      "learning_objectives": [
+        "分别判断SR、模态路由、GUI是否存在决策",
+        "选择一个主要问题",
+        "列出未知条件与非RL基线"
+      ],
+      "tags": [
+        "SR",
+        "模态路由",
+        "GUI"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-005",
+      "next_unit": "RL-007",
+      "revision": "1.0.0",
+      "created_date": "2026-10-18",
+      "content_updated_date": "2026-10-18",
+      "url": "lessons/RL-006/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-007",
+      "order": 7,
+      "week": 1,
+      "stage": "问题建模与RL基础",
+      "kind": "review",
+      "title": "复习：从任务描述到MDP与回报",
+      "summary": "串联观测、策略、回报与价值，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-001",
+        "RL-002",
+        "RL-003",
+        "RL-004",
+        "RL-005",
+        "RL-006"
+      ],
+      "core_concepts": [
+        "概念图",
+        "手算",
+        "建模反例",
+        "学习反馈"
+      ],
+      "learning_objectives": [
+        "串联观测、策略、回报与价值",
+        "独立完成建模与手算",
+        "记录前置知识薄弱点"
+      ],
+      "tags": [
+        "RL基础",
+        "复习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-006",
+      "next_unit": "RL-008",
+      "revision": "1.0.0",
+      "created_date": "2026-10-19",
+      "content_updated_date": "2026-10-19",
+      "url": "lessons/RL-007/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-008",
+      "order": 8,
+      "week": 2,
+      "stage": "价值估计与TD",
+      "kind": "new",
+      "title": "动态规划I：已知环境的策略评估",
+      "summary": "写出策略评估更新，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-007"
+      ],
+      "core_concepts": [
+        "模型已知",
+        "迭代策略评估",
+        "收敛直觉"
+      ],
+      "learning_objectives": [
+        "写出策略评估更新",
+        "完成两轮表格计算",
+        "解释环境模型的作用"
+      ],
+      "tags": [
+        "价值学习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-007",
+      "next_unit": "RL-009",
+      "revision": "1.0.0",
+      "created_date": "2026-10-21",
+      "content_updated_date": "2026-10-21",
+      "url": "lessons/RL-008/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-009",
+      "order": 9,
+      "week": 2,
+      "stage": "价值估计与TD",
+      "kind": "new",
+      "title": "动态规划II：策略改进与价值迭代",
+      "summary": "比较评估与改进，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-008"
+      ],
+      "core_concepts": [
+        "策略改进",
+        "策略迭代",
+        "价值迭代"
+      ],
+      "learning_objectives": [
+        "比较评估与改进",
+        "手算一次贪心改进",
+        "解释已知模型的适用边界"
+      ],
+      "tags": [
+        "价值学习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-008",
+      "next_unit": "RL-010",
+      "revision": "1.0.0",
+      "created_date": "2026-10-22",
+      "content_updated_date": "2026-10-22",
+      "url": "lessons/RL-009/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-010",
+      "order": 10,
+      "week": 2,
+      "stage": "价值估计与TD",
+      "kind": "new",
+      "title": "Monte Carlo：从完整轨迹估计价值",
+      "summary": "由轨迹估计价值，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-009"
+      ],
+      "core_concepts": [
+        "采样回报",
+        "first-visit",
+        "增量均值",
+        "方差"
+      ],
+      "learning_objectives": [
+        "由轨迹估计价值",
+        "区分样本回报与期望价值",
+        "解释完整任务采样的代价"
+      ],
+      "tags": [
+        "价值学习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-009",
+      "next_unit": "RL-011",
+      "revision": "1.0.0",
+      "created_date": "2026-10-23",
+      "content_updated_date": "2026-10-23",
+      "url": "lessons/RL-010/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-011",
+      "order": 11,
+      "week": 2,
+      "stage": "价值估计与TD",
+      "kind": "new",
+      "title": "TD(0)：不等任务结束也能更新",
+      "summary": "手算一次TD更新，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-010"
+      ],
+      "core_concepts": [
+        "TD目标",
+        "TD误差",
+        "bootstrap",
+        "学习率"
+      ],
+      "learning_objectives": [
+        "手算一次TD更新",
+        "解释bootstrap信息来源",
+        "区分终止与截断目标"
+      ],
+      "tags": [
+        "价值学习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-010",
+      "next_unit": "RL-012",
+      "revision": "1.0.0",
+      "created_date": "2026-10-24",
+      "content_updated_date": "2026-10-24",
+      "url": "lessons/RL-011/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-012",
+      "order": 12,
+      "week": 2,
+      "stage": "价值估计与TD",
+      "kind": "new",
+      "title": "MC与TD：偏差、方差与学习曲线",
+      "summary": "对照两类更新目标，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-011"
+      ],
+      "core_concepts": [
+        "偏差方差",
+        "bootstrap",
+        "学习率",
+        "评价"
+      ],
+      "learning_objectives": [
+        "对照两类更新目标",
+        "解释估计的偏差方差",
+        "设计统一评价的小实验"
+      ],
+      "tags": [
+        "价值学习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-011",
+      "next_unit": "RL-013",
+      "revision": "1.0.0",
+      "created_date": "2026-10-25",
+      "content_updated_date": "2026-10-25",
+      "url": "lessons/RL-012/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-013",
+      "order": 13,
+      "week": 2,
+      "stage": "价值估计与TD",
+      "kind": "application",
+      "title": "应用：在小型任务里比较价值估计方法",
+      "summary": "固定小环境与数据预算，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-008",
+        "RL-009",
+        "RL-010",
+        "RL-011",
+        "RL-012"
+      ],
+      "core_concepts": [
+        "已知模型",
+        "采样数据",
+        "控制变量",
+        "评估协议"
+      ],
+      "learning_objectives": [
+        "固定小环境与数据预算",
+        "拟定DP、MC、TD比较",
+        "区分拟议实验与实际结果"
+      ],
+      "tags": [
+        "GUI",
+        "实验设计"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-012",
+      "next_unit": "RL-014",
+      "revision": "1.0.0",
+      "created_date": "2026-10-26",
+      "content_updated_date": "2026-10-26",
+      "url": "lessons/RL-013/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-014",
+      "order": 14,
+      "week": 2,
+      "stage": "价值估计与TD",
+      "kind": "review",
+      "title": "复习：一张表看懂DP、MC与TD",
+      "summary": "复述三类方法的信息需求，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-008",
+        "RL-009",
+        "RL-010",
+        "RL-011",
+        "RL-012",
+        "RL-013"
+      ],
+      "core_concepts": [
+        "方法比较",
+        "更新手算",
+        "采样要求"
+      ],
+      "learning_objectives": [
+        "复述三类方法的信息需求",
+        "独立核对更新",
+        "整理薄弱点并调整后续节奏"
+      ],
+      "tags": [
+        "价值学习",
+        "复习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-013",
+      "next_unit": "RL-015",
+      "revision": "1.0.0",
+      "created_date": "2026-10-27",
+      "content_updated_date": "2026-10-27",
+      "url": "lessons/RL-014/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-015",
+      "order": 15,
+      "week": 3,
+      "stage": "表格控制与探索",
+      "kind": "new",
+      "title": "SARSA：沿当前行为策略学习动作价值",
+      "summary": "写出SARSA目标，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-014"
+      ],
+      "core_concepts": [
+        "SARSA",
+        "on-policy",
+        "ε-greedy",
+        "TD控制"
+      ],
+      "learning_objectives": [
+        "写出SARSA目标",
+        "手算动作价值更新",
+        "解释下一动作来自当前策略"
+      ],
+      "tags": [
+        "TD控制"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-014",
+      "next_unit": "RL-016",
+      "revision": "1.0.1",
+      "created_date": "2026-10-28",
+      "content_updated_date": "2026-10-28",
+      "url": "lessons/RL-015/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-016",
+      "order": 16,
+      "week": 3,
+      "stage": "表格控制与探索",
+      "kind": "new",
+      "title": "Q-learning：用贪心目标学习控制",
+      "summary": "写出Q-learning目标，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-015"
+      ],
+      "core_concepts": [
+        "Q-learning",
+        "off-policy",
+        "最大化目标"
+      ],
+      "learning_objectives": [
+        "写出Q-learning目标",
+        "比较SARSA下一步",
+        "说明行为策略与目标策略不同"
+      ],
+      "tags": [
+        "TD控制"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-015",
+      "next_unit": "RL-017",
+      "revision": "1.0.0",
+      "created_date": "2026-10-31",
+      "content_updated_date": "2026-10-31",
+      "url": "lessons/RL-016/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-017",
+      "order": 17,
+      "week": 3,
+      "stage": "表格控制与探索",
+      "kind": "new",
+      "title": "探索策略：ε-greedy的代价与覆盖",
+      "summary": "分析ε变化如何影响采样，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-016"
+      ],
+      "core_concepts": [
+        "探索",
+        "利用",
+        "退火",
+        "覆盖",
+        "业务代价"
+      ],
+      "learning_objectives": [
+        "分析ε变化如何影响采样",
+        "识别缺失动作覆盖",
+        "将探索成本纳入评价"
+      ],
+      "tags": [
+        "TD控制",
+        "模态路由",
+        "GUI"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-016",
+      "next_unit": "RL-018",
+      "revision": "1.0.0",
+      "created_date": "2026-11-01",
+      "content_updated_date": "2026-11-01",
+      "url": "lessons/RL-017/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-018",
+      "order": 18,
+      "week": 3,
+      "stage": "表格控制与探索",
+      "kind": "new",
+      "title": "Expected SARSA与Double Q：改进目标估计",
+      "summary": "计算Expected SARSA目标，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-017"
+      ],
+      "core_concepts": [
+        "期望目标",
+        "最大化偏差",
+        "Double Q-learning"
+      ],
+      "learning_objectives": [
+        "计算Expected SARSA目标",
+        "解释最大化偏差来源",
+        "区分双估计与重复训练"
+      ],
+      "tags": [
+        "TD控制",
+        "GUI"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-017",
+      "next_unit": "RL-019",
+      "revision": "1.0.0",
+      "created_date": "2026-11-02",
+      "content_updated_date": "2026-11-02",
+      "url": "lessons/RL-018/",
+      "availability": {
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
+      }
+    },
+    {
+      "id": "RL-019",
+      "order": 19,
+      "week": 3,
+      "stage": "表格控制与探索",
+      "kind": "new",
+      "title": "表格控制的边界：收敛条件与数据覆盖",
+      "summary": "解释经典收敛条件的作用，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-018"
+      ],
+      "core_concepts": [
+        "表格表示",
+        "步长",
+        "访问覆盖",
+        "分布偏移"
+      ],
+      "learning_objectives": [
+        "解释经典收敛条件的作用",
+        "指出有限数据的限制",
+        "避免把表格结论直接套给深网"
+      ],
+      "tags": [
+        "TD控制"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-018",
+      "next_unit": "RL-020",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-019/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-020",
+      "order": 20,
+      "week": 3,
+      "stage": "表格控制与探索",
+      "kind": "application",
+      "title": "应用：小型GUI导航中的安全探索与控制",
+      "summary": "构造可手算的多步导航，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-015",
+        "RL-016",
+        "RL-017",
+        "RL-018",
+        "RL-019"
+      ],
+      "core_concepts": [
+        "离散导航",
+        "合法动作",
+        "重置",
+        "成功验证"
+      ],
+      "learning_objectives": [
+        "构造可手算的多步导航",
+        "比较规则、SARSA和Q-learning的目标",
+        "定义重置与探索约束"
+      ],
+      "tags": [
+        "GUI",
+        "实验设计"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-019",
+      "next_unit": "RL-021",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-020/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-021",
+      "order": 21,
+      "week": 3,
+      "stage": "表格控制与探索",
+      "kind": "review",
+      "title": "复习：SARSA与Q-learning到底差在哪？",
+      "summary": "用同一转移计算不同目标，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-015",
+        "RL-016",
+        "RL-017",
+        "RL-018",
+        "RL-019",
+        "RL-020"
+      ],
+      "core_concepts": [
+        "on/off-policy",
+        "目标与行为",
+        "控制手算"
+      ],
+      "learning_objectives": [
+        "用同一转移计算不同目标",
+        "独立解释策略区别",
+        "汇总探索与覆盖条件"
+      ],
+      "tags": [
+        "TD控制",
+        "复习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-020",
+      "next_unit": "RL-022",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-021/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-022",
+      "order": 22,
+      "week": 4,
+      "stage": "DQN系列与稳定训练",
+      "kind": "new",
+      "title": "DQN：用神经网络近似动作价值",
+      "summary": "从表格Q过渡到Q网络，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-021"
+      ],
+      "core_concepts": [
+        "Q网络",
+        "Bellman目标",
+        "离散动作",
+        "损失"
+      ],
+      "learning_objectives": [
+        "从表格Q过渡到Q网络",
+        "解释TD回归目标",
+        "指出函数近似的新不稳定来源"
+      ],
+      "tags": [
+        "深度价值学习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-021",
+      "next_unit": "RL-023",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-022/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-023",
+      "order": 23,
+      "week": 4,
+      "stage": "DQN系列与稳定训练",
+      "kind": "new",
+      "title": "经验回放：旧数据如何帮助训练",
+      "summary": "解释回放机制，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-022"
+      ],
+      "core_concepts": [
+        "replay buffer",
+        "相关性",
+        "采样分布",
+        "覆盖"
+      ],
+      "learning_objectives": [
+        "解释回放机制",
+        "分析均匀采样的局限",
+        "识别历史数据的偏移"
+      ],
+      "tags": [
+        "深度价值学习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-022",
+      "next_unit": "RL-024",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-023/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-024",
+      "order": 24,
+      "week": 4,
+      "stage": "DQN系列与稳定训练",
+      "kind": "new",
+      "title": "目标网络：为什么不用自己追自己",
+      "summary": "解释移动目标问题，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-023"
+      ],
+      "core_concepts": [
+        "target network",
+        "冻结目标",
+        "硬更新",
+        "软更新"
+      ],
+      "learning_objectives": [
+        "解释移动目标问题",
+        "对照更新频率的影响",
+        "核对终止转移的目标"
+      ],
+      "tags": [
+        "深度价值学习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-023",
+      "next_unit": "RL-025",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-024/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-025",
+      "order": 25,
+      "week": 4,
+      "stage": "DQN系列与稳定训练",
+      "kind": "new",
+      "title": "Double DQN：选择动作与评估动作分开",
+      "summary": "计算DQN与Double DQN目标，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-024"
+      ],
+      "core_concepts": [
+        "Double DQN",
+        "选择评估分离",
+        "过估计"
+      ],
+      "learning_objectives": [
+        "计算DQN与Double DQN目标",
+        "解释分离机制",
+        "提出公平对照和失败检查"
+      ],
+      "tags": [
+        "深度价值学习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-024",
+      "next_unit": "RL-026",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-025/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-026",
+      "order": 26,
+      "week": 4,
+      "stage": "DQN系列与稳定训练",
+      "kind": "new",
+      "title": "Dueling DQN：状态价值与动作差异",
+      "summary": "解释两分支输出含义，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-025"
+      ],
+      "core_concepts": [
+        "dueling",
+        "V分支",
+        "A分支",
+        "可辨识性"
+      ],
+      "learning_objectives": [
+        "解释两分支输出含义",
+        "检查聚合公式",
+        "区分结构机制与保证收益"
+      ],
+      "tags": [
+        "深度价值学习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-025",
+      "next_unit": "RL-027",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-026/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-027",
+      "order": 27,
+      "week": 4,
+      "stage": "DQN系列与稳定训练",
+      "kind": "application",
+      "title": "应用：是否值得把SR计算选择做成DQN",
+      "summary": "定义可执行的离散SR决策，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-022",
+        "RL-023",
+        "RL-024",
+        "RL-025",
+        "RL-026"
+      ],
+      "core_concepts": [
+        "SR动作",
+        "预算",
+        "质量成本",
+        "固定预算基线"
+      ],
+      "learning_objectives": [
+        "定义可执行的离散SR决策",
+        "判断是否有多步依赖",
+        "制定固定计算与简单策略基线"
+      ],
+      "tags": [
+        "SR",
+        "实验设计"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-026",
+      "next_unit": "RL-028",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-027/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-028",
+      "order": 28,
+      "week": 4,
+      "stage": "DQN系列与稳定训练",
+      "kind": "review",
+      "title": "复习：DQN的稳定机制与失效诊断",
+      "summary": "对照各机制解决的问题，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-022",
+        "RL-023",
+        "RL-024",
+        "RL-025",
+        "RL-026",
+        "RL-027"
+      ],
+      "core_concepts": [
+        "replay",
+        "target",
+        "Double",
+        "dueling",
+        "公平对照"
+      ],
+      "learning_objectives": [
+        "对照各机制解决的问题",
+        "识别回报与TD损失不一致",
+        "整理训练诊断表"
+      ],
+      "tags": [
+        "深度价值学习",
+        "复习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-027",
+      "next_unit": "RL-029",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-028/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-029",
+      "order": 29,
+      "week": 5,
+      "stage": "策略梯度与Actor-Critic",
+      "kind": "new",
+      "title": "策略梯度前置：log-derivative与采样期望",
+      "summary": "推导基础log-derivative恒等式，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-028"
+      ],
+      "core_concepts": [
+        "log-derivative",
+        "期望梯度",
+        "概率",
+        "梯度"
+      ],
+      "learning_objectives": [
+        "推导基础log-derivative恒等式",
+        "解释采样估计",
+        "明确何时能交换梯度与期望"
+      ],
+      "tags": [
+        "策略梯度"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-028",
+      "next_unit": "RL-030",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-029/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-030",
+      "order": 30,
+      "week": 5,
+      "stage": "策略梯度与Actor-Critic",
+      "kind": "new",
+      "title": "REINFORCE：用回报调整动作概率",
+      "summary": "写出REINFORCE更新，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-029"
+      ],
+      "core_concepts": [
+        "REINFORCE",
+        "蒙特卡洛梯度",
+        "reward-to-go"
+      ],
+      "learning_objectives": [
+        "写出REINFORCE更新",
+        "解释提高或降低概率的条件",
+        "分析方差与采样成本"
+      ],
+      "tags": [
+        "策略梯度"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-029",
+      "next_unit": "RL-031",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-030/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-031",
+      "order": 31,
+      "week": 5,
+      "stage": "策略梯度与Actor-Critic",
+      "kind": "new",
+      "title": "Baseline：降低方差而不改变期望梯度",
+      "summary": "说明动作无关基线的条件，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-030"
+      ],
+      "core_concepts": [
+        "baseline",
+        "无偏条件",
+        "价值基线",
+        "方差"
+      ],
+      "learning_objectives": [
+        "说明动作无关基线的条件",
+        "推导期望不变",
+        "对照基线估计误差"
+      ],
+      "tags": [
+        "策略梯度"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-030",
+      "next_unit": "RL-032",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-031/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-032",
+      "order": 32,
+      "week": 5,
+      "stage": "策略梯度与Actor-Critic",
+      "kind": "new",
+      "title": "优势函数：动作比当前策略平均好多少",
+      "summary": "区分价值与优势，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-031"
+      ],
+      "core_concepts": [
+        "advantage",
+        "Aπ=Qπ−Vπ",
+        "符号",
+        "估计"
+      ],
+      "learning_objectives": [
+        "区分价值与优势",
+        "手算优势符号",
+        "解释相对改进和奖励尺度"
+      ],
+      "tags": [
+        "策略梯度"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-031",
+      "next_unit": "RL-033",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-032/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-033",
+      "order": 33,
+      "week": 5,
+      "stage": "策略梯度与Actor-Critic",
+      "kind": "new",
+      "title": "Actor-Critic：策略和价值如何分工",
+      "summary": "画出两网络信息流，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-032"
+      ],
+      "core_concepts": [
+        "actor",
+        "critic",
+        "TD优势",
+        "估计误差"
+      ],
+      "learning_objectives": [
+        "画出两网络信息流",
+        "解释critic怎样辅助actor",
+        "检查估计偏差与耦合训练"
+      ],
+      "tags": [
+        "策略梯度"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-032",
+      "next_unit": "RL-034",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-033/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-034",
+      "order": 34,
+      "week": 5,
+      "stage": "策略梯度与Actor-Critic",
+      "kind": "application",
+      "title": "应用：GUI轨迹里的奖励与长期归因",
+      "summary": "区分单步定位与任务成功，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-029",
+        "RL-030",
+        "RL-031",
+        "RL-032",
+        "RL-033"
+      ],
+      "core_concepts": [
+        "终局成功",
+        "过程成本",
+        "归因",
+        "定位基线"
+      ],
+      "learning_objectives": [
+        "区分单步定位与任务成功",
+        "给出可验证的奖励草案",
+        "比较监督初始策略与策略梯度方案"
+      ],
+      "tags": [
+        "GUI",
+        "实验设计"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-033",
+      "next_unit": "RL-035",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-034/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-035",
+      "order": 35,
+      "week": 5,
+      "stage": "策略梯度与Actor-Critic",
+      "kind": "review",
+      "title": "复习：REINFORCE、Baseline与Actor-Critic",
+      "summary": "串联回报与优势估计，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-029",
+        "RL-030",
+        "RL-031",
+        "RL-032",
+        "RL-033",
+        "RL-034"
+      ],
+      "core_concepts": [
+        "梯度",
+        "优势",
+        "方差",
+        "估计偏差"
+      ],
+      "learning_objectives": [
+        "串联回报与优势估计",
+        "独立解释两类更新",
+        "核对奖励归因假设"
+      ],
+      "tags": [
+        "策略梯度",
+        "复习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-034",
+      "next_unit": "RL-036",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-035/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-036",
+      "order": 36,
+      "week": 6,
+      "stage": "GAE、策略更新约束与PPO",
+      "kind": "new",
+      "title": "GAE：折扣TD误差如何估计优势",
+      "summary": "手算短轨迹GAE，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-035"
+      ],
+      "core_concepts": [
+        "GAE",
+        "λ",
+        "TD残差",
+        "bias-variance",
+        "截断"
+      ],
+      "learning_objectives": [
+        "手算短轨迹GAE",
+        "解释λ的作用",
+        "正确区分终止和截断bootstrap"
+      ],
+      "tags": [
+        "PPO"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-035",
+      "next_unit": "RL-037",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-036/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-037",
+      "order": 37,
+      "week": 6,
+      "stage": "GAE、策略更新约束与PPO",
+      "kind": "new",
+      "title": "On-policy、Off-policy与重要性采样",
+      "summary": "解释两种策略的数据关系，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-036"
+      ],
+      "core_concepts": [
+        "行为策略",
+        "目标策略",
+        "importance ratio",
+        "支持集"
+      ],
+      "learning_objectives": [
+        "解释两种策略的数据关系",
+        "计算重要性比率",
+        "识别权重方差与支持集缺失"
+      ],
+      "tags": [
+        "PPO",
+        "离线数据"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-036",
+      "next_unit": "RL-038",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-037/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-038",
+      "order": 38,
+      "week": 6,
+      "stage": "GAE、策略更新约束与PPO",
+      "kind": "new",
+      "title": "信赖域直觉：为什么限制策略更新",
+      "summary": "解释大幅更新的风险，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-037"
+      ],
+      "core_concepts": [
+        "KL",
+        "trust region",
+        "TRPO直觉",
+        "更新幅度"
+      ],
+      "learning_objectives": [
+        "解释大幅更新的风险",
+        "理解KL约束的角色",
+        "区分理论条件与工程近似"
+      ],
+      "tags": [
+        "PPO"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-037",
+      "next_unit": "RL-039",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-038/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-039",
+      "order": 39,
+      "week": 6,
+      "stage": "GAE、策略更新约束与PPO",
+      "kind": "new",
+      "title": "PPO-Clip：逐项理解目标函数",
+      "summary": "计算不同优势符号的clip目标，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-038"
+      ],
+      "core_concepts": [
+        "PPO ratio",
+        "clip",
+        "优势符号",
+        "surrogate"
+      ],
+      "learning_objectives": [
+        "计算不同优势符号的clip目标",
+        "解释被截断的方向",
+        "区分clip与硬约束保证"
+      ],
+      "tags": [
+        "PPO"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-038",
+      "next_unit": "RL-040",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-039/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-040",
+      "order": 40,
+      "week": 6,
+      "stage": "GAE、策略更新约束与PPO",
+      "kind": "new",
+      "title": "PPO训练循环：采样、优势与多轮更新",
+      "summary": "梳理完整训练循环，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-039"
+      ],
+      "core_concepts": [
+        "rollout",
+        "mini-batch",
+        "epoch",
+        "entropy",
+        "value loss"
+      ],
+      "learning_objectives": [
+        "梳理完整训练循环",
+        "解释旧策略与数据刷新",
+        "列出稳定性与成本检查"
+      ],
+      "tags": [
+        "PPO"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-039",
+      "next_unit": "RL-041",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-040/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-041",
+      "order": 41,
+      "week": 6,
+      "stage": "GAE、策略更新约束与PPO",
+      "kind": "application",
+      "title": "应用：多步GUI的PPO最小试验设计",
+      "summary": "提出最小可归因对照，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-036",
+        "RL-037",
+        "RL-038",
+        "RL-039",
+        "RL-040"
+      ],
+      "core_concepts": [
+        "SFT初始化",
+        "重置",
+        "任务奖励",
+        "验证门槛"
+      ],
+      "learning_objectives": [
+        "提出最小可归因对照",
+        "固定验证与停止条件",
+        "区分设计、未运行和实际结果"
+      ],
+      "tags": [
+        "GUI",
+        "实验设计"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-040",
+      "next_unit": "RL-042",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-041/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-042",
+      "order": 42,
+      "week": 6,
+      "stage": "GAE、策略更新约束与PPO",
+      "kind": "review",
+      "title": "复习：从优势估计走到PPO更新",
+      "summary": "完成一组GAE与clip手算，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-036",
+        "RL-037",
+        "RL-038",
+        "RL-039",
+        "RL-040",
+        "RL-041"
+      ],
+      "core_concepts": [
+        "GAE",
+        "ratio",
+        "clip",
+        "rollout",
+        "诊断"
+      ],
+      "learning_objectives": [
+        "完成一组GAE与clip手算",
+        "解释训练数据生命周期",
+        "识别常见错误"
+      ],
+      "tags": [
+        "PPO",
+        "复习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-041",
+      "next_unit": "RL-043",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-042/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-043",
+      "order": 43,
+      "week": 7,
+      "stage": "Bandit、奖励设计与离线数据",
+      "kind": "new",
+      "title": "Contextual Bandit：单步反馈为什么不同",
+      "summary": "区分单步Bandit与MDP，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-042"
+      ],
+      "core_concepts": [
+        "context",
+        "action",
+        "reward",
+        "bandit feedback",
+        "full information"
+      ],
+      "learning_objectives": [
+        "区分单步Bandit与MDP",
+        "判断反馈是否覆盖所有动作",
+        "建立条件期望目标"
+      ],
+      "tags": [
+        "Bandit",
+        "模态路由"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-042",
+      "next_unit": "RL-044",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-043/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-044",
+      "order": 44,
+      "week": 7,
+      "stage": "Bandit、奖励设计与离线数据",
+      "kind": "new",
+      "title": "Bandit探索：ε-greedy与UCB直觉",
+      "summary": "理解探索的长期代价，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-043"
+      ],
+      "core_concepts": [
+        "探索利用",
+        "不确定性",
+        "UCB",
+        "regret"
+      ],
+      "learning_objectives": [
+        "理解探索的长期代价",
+        "手算简化UCB选择",
+        "区分无上下文与上下文方法"
+      ],
+      "tags": [
+        "Bandit",
+        "模态路由"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-043",
+      "next_unit": "RL-045",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-044/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-045",
+      "order": 45,
+      "week": 7,
+      "stage": "Bandit、奖励设计与离线数据",
+      "kind": "new",
+      "title": "奖励设计：业务收益、代理指标和约束",
+      "summary": "定义独立成功指标，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-044"
+      ],
+      "core_concepts": [
+        "reward hacking",
+        "成本",
+        "稀疏奖励",
+        "约束"
+      ],
+      "learning_objectives": [
+        "定义独立成功指标",
+        "识别代理奖励漏洞",
+        "选择成本和约束的表达方式"
+      ],
+      "tags": [
+        "奖励设计",
+        "SR",
+        "模态路由",
+        "GUI"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-044",
+      "next_unit": "RL-046",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-045/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-046",
+      "order": 46,
+      "week": 7,
+      "stage": "Bandit、奖励设计与离线数据",
+      "kind": "new",
+      "title": "离线策略评估：反事实不能凭空补",
+      "summary": "解释IPS的假设与估计，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-045"
+      ],
+      "core_concepts": [
+        "logged propensity",
+        "IPS",
+        "支持集",
+        "偏差方差"
+      ],
+      "learning_objectives": [
+        "解释IPS的假设与估计",
+        "识别缺失选择概率和覆盖",
+        "设计可信的离线评价"
+      ],
+      "tags": [
+        "离线数据",
+        "模态路由"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-045",
+      "next_unit": "RL-047",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-046/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-047",
+      "order": 47,
+      "week": 7,
+      "stage": "Bandit、奖励设计与离线数据",
+      "kind": "new",
+      "title": "离线RL概览：行为数据之外的风险",
+      "summary": "区分离线Bandit与离线RL，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-046"
+      ],
+      "core_concepts": [
+        "offline RL",
+        "分布外动作",
+        "外推误差",
+        "保守性"
+      ],
+      "learning_objectives": [
+        "区分离线Bandit与离线RL",
+        "解释外推误差",
+        "判断数据支持是否足够"
+      ],
+      "tags": [
+        "离线数据",
+        "GUI"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-046",
+      "next_unit": "RL-048",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-047/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-048",
+      "order": 48,
+      "week": 7,
+      "stage": "Bandit、奖励设计与离线数据",
+      "kind": "application",
+      "title": "应用：按真实合同设计模态路由评估",
+      "summary": "先核实真实标签和动作，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-043",
+        "RL-044",
+        "RL-045",
+        "RL-046",
+        "RL-047"
+      ],
+      "core_concepts": [
+        "标签语义",
+        "输入来源",
+        "成本",
+        "固定分支基线"
+      ],
+      "learning_objectives": [
+        "先核实真实标签和动作",
+        "定义收益与错误成本",
+        "制定可审计的路由比较方案"
+      ],
+      "tags": [
+        "模态路由",
+        "实验设计"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-047",
+      "next_unit": "RL-049",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-048/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-049",
+      "order": 49,
+      "week": 7,
+      "stage": "Bandit、奖励设计与离线数据",
+      "kind": "review",
+      "title": "复习：Bandit、奖励和离线评估的边界",
+      "summary": "对照三类反馈，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-043",
+        "RL-044",
+        "RL-045",
+        "RL-046",
+        "RL-047",
+        "RL-048"
+      ],
+      "core_concepts": [
+        "反馈结构",
+        "探索",
+        "propensity",
+        "数据覆盖"
+      ],
+      "learning_objectives": [
+        "对照三类反馈",
+        "检查评估假设",
+        "列出进入研究专题前的缺失资料"
+      ],
+      "tags": [
+        "Bandit",
+        "离线数据",
+        "复习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-048",
+      "next_unit": "RL-050",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-049/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-050",
+      "order": 50,
+      "week": 8,
+      "stage": "SR、模态路由、GUI研究专题",
+      "kind": "new",
+      "title": "部分可观测GUI：截图、历史与动作合法性",
+      "summary": "构造部分可观测反例，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-049"
+      ],
+      "core_concepts": [
+        "POMDP直觉",
+        "历史",
+        "记忆",
+        "合法动作",
+        "环境重置"
+      ],
+      "learning_objectives": [
+        "构造部分可观测反例",
+        "选择需要保留的历史",
+        "定义可复现执行与重置"
+      ],
+      "tags": [
+        "GUI"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-049",
+      "next_unit": "RL-051",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-050/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-051",
+      "order": 51,
+      "week": 8,
+      "stage": "SR、模态路由、GUI研究专题",
+      "kind": "new",
+      "title": "SFT到RL：示范学习和奖励优化如何衔接",
+      "summary": "区分示范目标与奖励目标，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-050"
+      ],
+      "core_concepts": [
+        "behavior cloning",
+        "SFT",
+        "分布偏移",
+        "验证任务"
+      ],
+      "learning_objectives": [
+        "区分示范目标与奖励目标",
+        "说明SFT初始化作用",
+        "制定同任务对照"
+      ],
+      "tags": [
+        "GUI",
+        "策略优化"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-050",
+      "next_unit": "RL-052",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-051/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-052",
+      "order": 52,
+      "week": 8,
+      "stage": "SR、模态路由、GUI研究专题",
+      "kind": "new",
+      "title": "GRPO专题：组内相对反馈与使用条件",
+      "summary": "理解组内比较的条件，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-051"
+      ],
+      "core_concepts": [
+        "group baseline",
+        "相对优势",
+        "reward variance",
+        "token与动作"
+      ],
+      "learning_objectives": [
+        "理解组内比较的条件",
+        "检查奖励无方差问题",
+        "区分语言生成与可执行GUI轨迹"
+      ],
+      "tags": [
+        "GUI",
+        "GRPO"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-051",
+      "next_unit": "RL-053",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-052/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-053",
+      "order": 53,
+      "week": 8,
+      "stage": "SR、模态路由、GUI研究专题",
+      "kind": "new",
+      "title": "SR专题：先确定决策与预算再讨论RL",
+      "summary": "选择一个明确的SR决策，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-052"
+      ],
+      "core_concepts": [
+        "SR质量",
+        "计算分配",
+        "早停",
+        "基线",
+        "验证"
+      ],
+      "learning_objectives": [
+        "选择一个明确的SR决策",
+        "解释质量和计算目标",
+        "写出最小对照与停止门槛"
+      ],
+      "tags": [
+        "SR",
+        "实验设计"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-052",
+      "next_unit": "RL-054",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-053/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-054",
+      "order": 54,
+      "week": 8,
+      "stage": "SR、模态路由、GUI研究专题",
+      "kind": "new",
+      "title": "三方向的实验协议：基线、消融与证据状态",
+      "summary": "统一公平对照与数据分割，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-053"
+      ],
+      "core_concepts": [
+        "归因",
+        "validation gate",
+        "泄漏",
+        "成本",
+        "NOT_RUN"
+      ],
+      "learning_objectives": [
+        "统一公平对照与数据分割",
+        "定义失败与停止条件",
+        "规范事实、推断、假设与结果"
+      ],
+      "tags": [
+        "SR",
+        "模态路由",
+        "GUI",
+        "实验设计"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-053",
+      "next_unit": "RL-055",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-054/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-055",
+      "order": 55,
+      "week": 8,
+      "stage": "SR、模态路由、GUI研究专题",
+      "kind": "application",
+      "title": "应用：选择一个研究方向形成最小方案",
+      "summary": "基于真实资料选一个主要问题，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-050",
+        "RL-051",
+        "RL-052",
+        "RL-053",
+        "RL-054"
+      ],
+      "core_concepts": [
+        "问题选择",
+        "数据合同",
+        "算法选择",
+        "方案评审"
+      ],
+      "learning_objectives": [
+        "基于真实资料选一个主要问题",
+        "完成最小实验方案",
+        "判断是否具备启动条件"
+      ],
+      "tags": [
+        "SR",
+        "模态路由",
+        "GUI",
+        "实验设计"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-054",
+      "next_unit": "RL-056",
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-055/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    },
+    {
+      "id": "RL-056",
+      "order": 56,
+      "week": 8,
+      "stage": "SR、模态路由、GUI研究专题",
+      "kind": "review",
+      "title": "总复习：建立知识地图与下一阶段路线",
+      "summary": "串联56单元知识地图，并连接本阶段的前置概念。",
+      "prerequisites": [
+        "RL-050",
+        "RL-051",
+        "RL-052",
+        "RL-053",
+        "RL-054",
+        "RL-055"
+      ],
+      "core_concepts": [
+        "概念依赖",
+        "算法选择",
+        "应用边界",
+        "学习反馈"
+      ],
+      "learning_objectives": [
+        "串联56单元知识地图",
+        "独立为任务选择方法与基线",
+        "依据反馈提出下一阶段建议"
+      ],
+      "tags": [
+        "RL基础",
+        "SR",
+        "模态路由",
+        "GUI",
+        "复习"
+      ],
+      "study_minutes": {
+        "min": 30,
+        "max": 45
+      },
+      "previous_unit": "RL-055",
+      "next_unit": null,
+      "revision": "1.0.0",
+      "created_date": null,
+      "content_updated_date": null,
+      "url": "lessons/RL-056/",
+      "availability": {
+        "lecture": false,
+        "pptx": false,
+        "pdf": false
+      }
+    }
+  ],
+  "note": "只包含公开课程计划与资料可用情况，不包含个人阅读、理解确认、练习、反馈或私有失败记录。"
+}
