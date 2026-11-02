@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151a17"><meta name="description" content="区分状态价值与动作价值，并连接本阶段的前置概念。"><meta name="color-scheme" content="light"><title>RL-004｜价值函数：从一次结果到期望表现 · 王超华</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%23151a17'/%3E%3Cpath d='M31 14a13 13 0 1 0 0 20' fill='none' stroke='%23c8f45b' stroke-width='5'/%3E%3Ccircle cx='32' cy='24' r='3' fill='%23c8f45b'/%3E%3C/svg%3E"><link rel="stylesheet" href="../../styles.css"><link rel="stylesheet" href="../../assets/katex/katex.min.css"><script src="../../script.js" defer></script></head>
+<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-004</span></div><section class="lesson-hero"><p class="eyebrow">RL-004 · WEEK 01 · 新知识</p><h1>价值函数：从一次结果到期望表现</h1><p class="lesson-summary">区分状态价值与动作价值，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">RL基础</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>讲义 · PPT 可用</span></div><div class="button-row"><a class="button small" href="./lecture.md" download>讲义下载 · MD</a><a class="button small" href="./RL-004.pptx" download>PPT 下载</a><a class="button small" href="./RL-004.pdf">PDF 阅读版</a></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="本课目录"><h2>本课目录</h2><ol><li><a href="#section-1">1. 今天解决什么问题，与前面哪些单元有关</a></li><li><a href="#section-2">2. 学习目标</a></li><li><a href="#section-3">3. 直觉、定义和必要公式</a></li><li><a href="#section-9">4. 手算例子：从单步路由走到两步 GUI</a></li><li><a href="#section-14">5. 与前一种方法或概念的关系</a></li><li><a href="#section-15">6. 主要应用：多步 GUI 应该评价哪个价值？</a></li><li><a href="#section-16">7. 常见误解、失败条件和适用边界</a></li><li><a href="#section-17">8. 三道理解题：先独立作答</a></li><li><a href="#section-18">9. 下一单元预告与自查提示</a></li><li><a href="#section-19">10. 可核查的参考来源与证据说明</a></li><li><a href="#section-20">参考答案（练习完成后再看）</a></li></ol></aside><article class="lecture"><p>课程：强化学习学习与应用 · 第 1 周 / 单元 4<br>课程版本：1.0.0 · 内容版本：1.0.0 · 教学日期：2026-10-16（Asia/Shanghai）<br>预计学习：35～45 分钟 · 汇报：10～15 分钟<br>前置：<a href="../RL-001/">RL-001｜回报的含义</a>、<a href="../RL-002/">RL-002｜MDP 与终止</a>、<a href="../RL-003/">RL-003｜策略与轨迹分布</a>；需要条件概率与期望的基础。<br>证据状态：标准定义与工程分析；所有算例均为<strong>教学假设</strong>；真实研究实验<strong>未运行（NOT_RUN）</strong>。</p>
+<p>建议节奏：概念与定义 12 分钟 → 两组手算 12 分钟 → 应用与误解 10 分钟 → 三题自测及核对 8 分钟。</p>
+<h2 id="section-1">1. 今天解决什么问题，与前面哪些单元有关</h2>
+<p>RL-003 已经计算出一个给定路由策略的总体期望净收益 J(πA)=7.22。这个数把不同请求、不同动作和不同结果混合起来。现在想进一步问：如果当前已经处在某个具体状态，继续按这个策略执行，预期表现怎样？如果先指定某个动作，再让策略接着执行，又会怎样？</p>
+<p>这两个问题分别由状态价值 Vπ 和动作价值 Qπ 回答。它们都在评价<strong>从当前位置往后的期望回报</strong>，而不是给一次已经发生的结果重新命名。</p>
+<p>例如，某次文本分支答错，净奖励为 −0.5，不说明这个分支在同类请求上的期望价值就是 −0.5。一次 GUI 点击顺利完成，也不足以说明之后的策略能够完成整个任务。</p>
+<p>本课先复用上一课的单步路由，建立 V、Q 和总体 J 的关系；再用一个新的两步 GUI 环境说明后续策略与剩余时域为什么重要。我们只按给定分支计算期望，不推导完整 Bellman 方程或价值更新算法；那是下一课的内容。</p>
+<h2 id="section-2">2. 学习目标</h2>
+<p>学完后，应当能够：</p>
+<ol>
+<li>区分即时奖励、一次回报、状态价值 Vπ、动作价值 Qπ 与总体期望 J(π)，正确说明 Q 的首个动作由谁决定。</li>
+<li>在给定环境和策略的情况下，手算状态价值、动作价值及初始分布加权的整体表现。</li>
+<li>解释价值为什么依赖后续策略、奖励定义和剩余时域，并指出从实际日志估计价值时缺少的条件。</li>
+</ol>
+<h2 id="section-3">3. 直觉、定义和必要公式</h2>
+<h3 id="section-4">3.1 奖励、回报和期望是三个层次</h3>
+<p>沿用前课的下标：在时刻 t 执行动作 a_t，随后收到 r_(t+1)。一次终止于 T 的轨迹，其剩余折扣回报为：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>G</mi><mi>t</mi></msub><mo>=</mo><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>T</mi><mo>−</mo><mi>t</mi><mo>−</mo><mn>1</mn></mrow></munderover><msup><mi>γ</mi><mi>k</mi></msup><msub><mi>r</mi><mrow><mi>t</mi><mo>+</mo><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">G_t=\sum_{k=0}^{T-t-1}\gamma^k r_{t+k+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">G</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:3.1304em;vertical-align:-1.3021em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.8283em;"><span style="top:-1.8479em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span><span class="mrel mtight">=</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.13889em;">T</span><span class="mbin mtight">−</span><span class="mord mathnormal mtight">t</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.3021em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8991em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span></span></span></span></span></div>
+<ul>
+<li>r_(t+k+1)：对应一步实际获得的奖励。</li>
+<li>G_t：这条轨迹从 t 开始的总回报，通常是随机量。</li>
+<li>γ：折扣因子；当前一步奖励不折扣，之后按 γ 的幂加权。</li>
+<li>T：任务的终止时间，不是某个动作名称；k 是向后数的步数。</li>
+</ul>
+<p>价值是对可能回报取期望。下面讨论完整可见的 Markov 状态、给定环境与策略；任务按定义在有限步内结束，回报期望存在。若有任务内剩余预算，它必须进入状态或在符号中明确写出。</p>
+<h3 id="section-5">3.2 状态价值 Vπ：从这里开始，全部按 π 执行</h3>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msup><mi>V</mi><mi>π</mi></msup><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi mathvariant="double-struck">E</mi><mi>π</mi></msub><mo stretchy="false">[</mo><msub><mi>G</mi><mi>t</mi></msub><mo>∣</mo><msub><mi>S</mi><mi>t</mi></msub><mo>=</mo><mi>s</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">V^\pi(s)=\mathbb E_\pi[G_t\mid S_t=s]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathbb">E</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">[</span><span class="mord"><span class="mord mathnormal">G</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">s</span><span class="mclose">]</span></span></span></span></span></div>
+<ul>
+<li>s：当前完整状态。</li>
+<li>π：之后一直采用的指定策略，包括当前这一步的动作选择。</li>
+<li>Eπ：对策略采样和环境随机结果产生的回报取期望。</li>
+<li>上标 π：强调这是<strong>这个策略</strong>下的价值，不自动等于最优价值。</li>
+</ul>
+<p>Vπ(s) 回答：“已经在 s，接下来按 π 做，预期还能获得多少回报？”它不是整个任务从任意起点开始的平均，也不是“这个状态本身有多好”的不带条件评分。</p>
+<h3 id="section-6">3.3 动作价值 Qπ：先强制做 a，再按 π 继续</h3>
+<p>常见教材记号写为：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msup><mi>Q</mi><mi>π</mi></msup><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi mathvariant="double-struck">E</mi><mi>π</mi></msub><mo stretchy="false">[</mo><msub><mi>G</mi><mi>t</mi></msub><mo>∣</mo><msub><mi>S</mi><mi>t</mi></msub><mo>=</mo><mi>s</mi><mo separator="true">,</mo><msub><mi>A</mi><mi>t</mi></msub><mo>=</mo><mi>a</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">Q^\pi(s,a)=\mathbb E_\pi[G_t\mid S_t=s,A_t=a]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathbb">E</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">[</span><span class="mord"><span class="mord mathnormal">G</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">A</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">a</span><span class="mclose">]</span></span></span></span></span></div>
+<p>必须把这一定义理解为：<strong>先从 s 强制执行一个合法动作 a，后续动作再按 π 选择。</strong>当前这个 a 不是重新从 π 中抽一次，也不再乘一次 π(a｜s)。环境仍然按照执行 a 后的结果规律返回反馈。</p>
+<p>如果 π(a｜s)=0，不能用原策略日志对这个零概率事件硬取条件平均。动作价值的模型定义仍可由“先执行 a、后续按 π”的过程给出；只是当前日志可能没有这类数据，无法直接估出它。这个区分也提醒我们：<strong>量可以在模型中定义，不等于数据里已经知道。</strong></p>
+<p>Qπ(s,a) 不只是当前奖励的均值；只要任务还继续，它就包含该动作之后按 π 行动产生的回报。前课若用小写 q 表示某个正确概率，也不能把那个概率当作这里的 Q。</p>
+<p>上述 V、Q 定义可核对 <a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">Sutton 与 Barto 第二版教材原稿</a>册页 58、式 (3.12)～(3.13)，以及 <a href="https://spinningup.openai.com/en/latest/spinningup/rl_intro.html#value-functions">Spinning Up 官方 Value Functions</a>。</p>
+<h3 id="section-7">3.4 在同一状态，把不同首动作的 Q 按策略平均</h3>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msup><mi>V</mi><mi>π</mi></msup><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo><mo>=</mo><munder><mo>∑</mo><mrow><mi>a</mi><mo>∈</mo><mi>A</mi><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo></mrow></munder><mi>π</mi><mo stretchy="false">(</mo><mi>a</mi><mo>∣</mo><mi>s</mi><mo stretchy="false">)</mo><msup><mi>Q</mi><mi>π</mi></msup><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">V^\pi(s)=\sum_{a\in A(s)}\pi(a\mid s)Q^\pi(s,a)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.566em;vertical-align:-1.516em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.809em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">a</span><span class="mrel mtight">∈</span><span class="mord mathnormal mtight">A</span><span class="mopen mtight">(</span><span class="mord mathnormal mtight">s</span><span class="mclose mtight">)</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.516em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mopen">(</span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">s</span><span class="mclose">)</span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span></span></span></span></span></div>
+<p>因为 V 的第一个动作也由 π 选择，所以要按首动作的概率平均各个 Q；而 Q 已经指定第一个动作。这里的 A(s) 是合法动作集合。</p>
+<p>这个关系只是<strong>同一状态内的动作平均</strong>，还不是下一课跨状态展开的 Bellman 方程。也不能不经说明就把加权平均改成最大值，那相当于改变了所评价的行为。</p>
+<p>对给定初始分布，整体表现是起点价值的平均：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>J</mi><mo stretchy="false">(</mo><mi>π</mi><mo stretchy="false">)</mo><mo>=</mo><munder><mo>∑</mo><mi>s</mi></munder><msub><mi>ρ</mi><mn>0</mn></msub><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo><msup><mi>V</mi><mi>π</mi></msup><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">J(\pi)=\sum_s\rho_0(s)V^\pi(s)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.09618em;">J</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.3em;vertical-align:-1.25em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.9em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.25em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">ρ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mclose">)</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mclose">)</span></span></span></span></span></div>
+<p>ρ₀(s) 是从状态 s 开始的概率。一个具体状态的 V 与整体 J 不相同；只改变起点混合，也可能改变 J，而不改变某个固定状态下的 V。</p>
+<h3 id="section-8">3.5 有限时域要把剩余步数写清楚</h3>
+<p>令 h 表示还允许执行的真实动作数，不是前课表示交互历史的 h_t。若 s 只表示页面或物理状态分量，完整状态应是 (s,h)。本课写作：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msubsup><mi>V</mi><mi>h</mi><mi>π</mi></msubsup><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo><mo>=</mo><msup><mi>V</mi><mi>π</mi></msup><mo stretchy="false">(</mo><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>h</mi><mo stretchy="false">)</mo><mo stretchy="false">)</mo><mo separator="true">,</mo><mspace width="2em"/><msubsup><mi>Q</mi><mi>h</mi><mi>π</mi></msubsup><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><msup><mi>Q</mi><mi>π</mi></msup><mo stretchy="false">(</mo><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>h</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">V_h^\pi(s)=V^\pi((s,h)),\qquad
+Q_h^\pi(s,a)=Q^\pi((s,h),a)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-2.453em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">h</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.247em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span></span></span></span></span><span class="mopen">((</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">h</span><span class="mclose">))</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">h</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.247em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span></span></span></span></span><span class="mopen">((</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">h</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span></span></span></span></span></div>
+<p>策略也可以依赖 h，写为 π(a｜s,h)。剩两步与剩一步时，即使截图相同，能够得到的后续回报可能不同。另一种等价表达是使用时间下标 V_t、Q_t；本课统一使用剩余步数 h，避免混用。</p>
+<p>任务已终止或 h=0 时，未来没有真实动作，本课约定剩余状态价值为 0。此时不要求给不存在的合法动作定义 Q。外部采集被截断则是另一回事，不能仅因为日志结束就把真实后续价值设成 0。</p>
+<h2 id="section-9">4. 手算例子：从单步路由走到两步 GUI</h2>
+<h3 id="section-10">4.1 复用 RL-003：单步路由中的 V 与 Q</h3>
+<p>这里完全沿用 RL-003 的教学条件：上下文 u/v 在动作选择前可见，分布为 0.60/0.40；文本动作 T 成本 0.5，图像动作 I 成本 2；答对收益 10，答错收益 0。它们不是实际业务标签。表中的 T 是文本动作名，与第 3 节终止时间符号不同。</p>
+<p>单次调用后任务立即结束，本小节省略相同的 h=1 下标。因此：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msup><mi>Q</mi><mi>π</mi></msup><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><mi mathvariant="double-struck">E</mi><mo stretchy="false">[</mo><msub><mi>r</mi><mn>1</mn></msub><mo>∣</mo><mi>x</mi><mo separator="true">,</mo><mtext>先执行 </mtext><mi>a</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">Q^\pi(x,a)=\mathbb E[r_1\mid x,\text{先执行 }a]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathbb">E</span><span class="mopen">[</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord text"><span class="mord cjk_fallback">先执行</span><span class="mord"> </span></span><span class="mord mathnormal">a</span><span class="mclose">]</span></span></span></span></span></div>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>选择前的上下文</th>
+<th>动作</th>
+<th align="right">给定的正确概率</th>
+<th align="right">Qπ：该动作的期望净回报</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>u</td>
+<td>T：文本</td>
+<td align="right">0.90</td>
+<td align="right">10×0.90−0.5=8.5</td>
+</tr>
+<tr>
+<td>u</td>
+<td>I：图像</td>
+<td align="right">0.95</td>
+<td align="right">10×0.95−2=7.5</td>
+</tr>
+<tr>
+<td>v</td>
+<td>T：文本</td>
+<td align="right">0.40</td>
+<td align="right">10×0.40−0.5=3.5</td>
+</tr>
+<tr>
+<td>v</td>
+<td>I：图像</td>
+<td align="right">0.85</td>
+<td align="right">10×0.85−2=6.5</td>
+</tr>
+</tbody></table></div>
+<p>策略仍为 πA(T｜u)=0.80、πA(I｜u)=0.20；πA(T｜v)=0.30、πA(I｜v)=0.70。于是：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msup><mi>V</mi><msub><mi>π</mi><mi>A</mi></msub></msup><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo><mo>=</mo><mn>0.80</mn><mo>×</mo><mn>8.5</mn><mo>+</mo><mn>0.20</mn><mo>×</mo><mn>7.5</mn><mo>=</mo><mn>8.3</mn></mrow><annotation encoding="application/x-tex">V^{\pi_A}(u)=0.80\times8.5+0.20\times7.5=8.3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3448em;"><span style="top:-2.3567em;margin-left:-0.0359em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1433em;"><span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">u</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0.80</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">8.5</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0.20</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">7.5</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">8.3</span></span></span></span></span></div>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msup><mi>V</mi><msub><mi>π</mi><mi>A</mi></msub></msup><mo stretchy="false">(</mo><mi>v</mi><mo stretchy="false">)</mo><mo>=</mo><mn>0.30</mn><mo>×</mo><mn>3.5</mn><mo>+</mo><mn>0.70</mn><mo>×</mo><mn>6.5</mn><mo>=</mo><mn>5.6</mn></mrow><annotation encoding="application/x-tex">V^{\pi_A}(v)=0.30\times3.5+0.70\times6.5=5.6</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3448em;"><span style="top:-2.3567em;margin-left:-0.0359em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1433em;"><span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0.30</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">3.5</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0.70</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">6.5</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">5.6</span></span></span></span></span></div>
+<p>再按初始分布平均，J(πA)=0.60×8.3+0.40×5.6=7.22，与前课一致。</p>
+<p>这里的 Q 不依赖后续 π，是因为<strong>执行一次动作就终止，没有后续动作</strong>。它不能证明一般多步问题的 Q 都与 π 无关。即使在这个例子里，V 仍受当前策略的动作选择概率影响。</p>
+<p>若一次 u、T 调用答错，实际奖励及本次回报为 −0.5；但假设环境中的 Q(u,T) 仍是 8.5。一个是一次样本，一个是对可能结果的期望。</p>
+<h3 id="section-11">4.2 一个新的两步 GUI 教学环境</h3>
+<p><strong>以下是独立的新教学例子，不是对 RL-002 的转移或奖励修订。</strong>本例 open 的奖励为 −1；save 成功收益为 10、失败为 0，<strong>不另扣保存成本</strong>。不能把上一课其他环境的 0.75 成功率或 +9 净奖励混入这里。</p>
+<p>页面有 H（主页）、F（已准备好的表单）和 z（任务终态）。本教学模型假设页面与剩余预算 (s,h) 足以描述后果；这不证明现实中的 GUI 截图充分可见。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>页面及合法动作</th>
+<th>后果</th>
+<th align="right">即时奖励</th>
+<th align="right">概率</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>H, open</td>
+<td>到达 F，剩余预算减 1</td>
+<td align="right">−1</td>
+<td align="right">1.00</td>
+</tr>
+<tr>
+<td>H, stop</td>
+<td>进入终态 z</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+</tr>
+<tr>
+<td>F, save</td>
+<td>保存成功，进入 z</td>
+<td align="right">10</td>
+<td align="right">0.80</td>
+</tr>
+<tr>
+<td>F, save</td>
+<td>保存失败，进入 z</td>
+<td align="right">0</td>
+<td align="right">0.20</td>
+</tr>
+<tr>
+<td>F, cancel</td>
+<td>放弃并进入 z</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+</tr>
+</tbody></table></div>
+<p>每个当前页面—动作组分别归一，未列后果概率为 0。真实动作每执行一次，h 减 1；预算耗尽就结束，未完成任务没有额外失败罚分。进入 z 或预算为 0 后不再执行真实动作，吸收后的奖励为 0。</p>
+<p>初始状态为 (H,2)，γ=0.9。两种给定策略的选择规则如下；在 h&gt;0 的合法决策点采用这些概率，在 h=0 没有动作：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>策略</th>
+<th>H：open / stop</th>
+<th>F：save / cancel</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>πα</td>
+<td>0.75 / 0.25</td>
+<td>1.00 / 0.00</td>
+</tr>
+<tr>
+<td>πβ</td>
+<td>0.75 / 0.25</td>
+<td>0.50 / 0.50</td>
+</tr>
+</tbody></table></div>
+<p>两种策略只在后面的 F 不同。它们均不是“最优策略”的定义，而是我们要评价的指定行为。</p>
+<h3 id="section-12">4.3 先强制 open，后面策略不同，Q 就不同</h3>
+<p>从 (H,2) 强制执行 open，第一步得到 −1 并到达 (F,1)。接下来才由 πα 或 πβ 选择。在 F，保存成功时整条轨迹回报为 −1+0.9×10=8；保存失败或取消时回报为 −1。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>后续策略</th>
+<th>完整分支</th>
+<th align="right">条件概率：已强制 open</th>
+<th align="right">从 H 开始的 G₀</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>πα</td>
+<td>save，成功</td>
+<td align="right">1×0.80=0.80</td>
+<td align="right">8</td>
+</tr>
+<tr>
+<td>πα</td>
+<td>save，失败</td>
+<td align="right">1×0.20=0.20</td>
+<td align="right">−1</td>
+</tr>
+<tr>
+<td>πβ</td>
+<td>save，成功</td>
+<td align="right">0.50×0.80=0.40</td>
+<td align="right">8</td>
+</tr>
+<tr>
+<td>πβ</td>
+<td>save，失败</td>
+<td align="right">0.50×0.20=0.10</td>
+<td align="right">−1</td>
+</tr>
+<tr>
+<td>πβ</td>
+<td>cancel</td>
+<td align="right">0.50</td>
+<td align="right">−1</td>
+</tr>
+</tbody></table></div>
+<p>各后续策略的分支概率分别相加为 1。直接枚举完整分支：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msubsup><mi>Q</mi><mn>2</mn><msub><mi>π</mi><mi>α</mi></msub></msubsup><mo stretchy="false">(</mo><mi>H</mi><mo separator="true">,</mo><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">p</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">n</mi></mrow><mo stretchy="false">)</mo><mo>=</mo><mn>0.80</mn><mo stretchy="false">(</mo><mn>8</mn><mo stretchy="false">)</mo><mo>+</mo><mn>0.20</mn><mo stretchy="false">(</mo><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo>=</mo><mn>6.2</mn></mrow><annotation encoding="application/x-tex">Q_2^{\pi_\alpha}(H,\mathrm{open})=0.80(8)+0.20(-1)=6.2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0163em;vertical-align:-0.2663em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.7463em;"><span style="top:-2.4337em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span><span style="top:-3.1449em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1645em;"><span style="top:-2.357em;margin-left:-0.0359em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0037em;">α</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2663em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathrm">open</span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.80</span><span class="mopen">(</span><span class="mord">8</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.20</span><span class="mopen">(</span><span class="mord">−</span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">6.2</span></span></span></span></span></div>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msubsup><mi>Q</mi><mn>2</mn><msub><mi>π</mi><mi>β</mi></msub></msubsup><mo stretchy="false">(</mo><mi>H</mi><mo separator="true">,</mo><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">p</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">n</mi></mrow><mo stretchy="false">)</mo><mo>=</mo><mn>0.40</mn><mo stretchy="false">(</mo><mn>8</mn><mo stretchy="false">)</mo><mo>+</mo><mn>0.10</mn><mo stretchy="false">(</mo><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo>+</mo><mn>0.50</mn><mo stretchy="false">(</mo><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo>=</mo><mn>2.6</mn></mrow><annotation encoding="application/x-tex">Q_2^{\pi_\beta}(H,\mathrm{open})=0.40(8)+0.10(-1)+0.50(-1)=2.6</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.1156em;vertical-align:-0.2663em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8493em;"><span style="top:-2.4337em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span><span style="top:-3.2479em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3448em;"><span style="top:-2.3488em;margin-left:-0.0359em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05278em;">β</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2901em;"><span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2663em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathrm">open</span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.40</span><span class="mopen">(</span><span class="mord">8</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.10</span><span class="mopen">(</span><span class="mord">−</span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.50</span><span class="mopen">(</span><span class="mord">−</span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2.6</span></span></span></span></span></div>
+<p>当前状态、首动作和环境均未改变，仅后续策略不同，动作价值就不同。计算 Q 时<strong>不再乘 H 选择 open 的 0.75</strong>，因为这个首动作已经被指定。</p>
+<p>若计算状态价值 V，第一步也由策略决定；两种策略在 H 都以 0.75 选择 open、0.25 选择 stop，而 stop 的回报为 0。因此 V₂πα(H)=0.75×6.2=4.65，V₂πβ(H)=0.75×2.6=1.95。</p>
+<p>从 (F,1) 开始，πα 的状态价值为 0.80×10=8，πβ 为 0.50×0.80×10=4。这里的奖励、策略和时域都是价值定义的一部分。</p>
+<h3 id="section-13">4.4 同一页面，剩一步与剩两步</h3>
+<p>如果从 (H,1) 强制 open，唯一动作预算已经用完，任务结束。虽然页面到达 F，也不能继续执行 save，更不能再给一次保存成功收益。因此两种策略下的 Q₁(H,open)=−1；继续评价给定的 open/stop 概率时，V₁(H)=0.75×(−1)+0.25×0=−0.75。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>被评价的量</th>
+<th align="right">h=2</th>
+<th align="right">h=1</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Qπα(H,open)</td>
+<td align="right">6.2</td>
+<td align="right">−1</td>
+</tr>
+<tr>
+<td>Qπβ(H,open)</td>
+<td align="right">2.6</td>
+<td align="right">−1</td>
+</tr>
+<tr>
+<td>Vπα(H)</td>
+<td align="right">4.65</td>
+<td align="right">−0.75</td>
+</tr>
+<tr>
+<td>Vπβ(H)</td>
+<td align="right">1.95</td>
+<td align="right">−0.75</td>
+</tr>
+</tbody></table></div>
+<p>这是任务内期限不同带来的价值差异，不是公式前后矛盾。我们仍在评价原来给定的策略，没有因为某个动作看起来不划算就悄悄改变动作概率。</p>
+<p><strong>所有数字都来自已知教学模型和给定策略的枚举；没有训练价值网络，没有真实 GUI 测试或性能提升证据。</strong></p>
+<h2 id="section-14">5. 与前一种方法或概念的关系</h2>
+<p>本课没有加入训练算法，而是把前课对完整轨迹的计算，整理成可以从局部状态或动作开始询问的量。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>前课的量或概念</th>
+<th>本课增加的表达</th>
+<th>解决的问题及代价</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>一条轨迹的 G</td>
+<td>对可能轨迹回报取期望</td>
+<td>减少把单次结果当稳定表现的误读；需要覆盖或模型</td>
+</tr>
+<tr>
+<td>从初态分布开始的 J</td>
+<td>给定当前状态的 V</td>
+<td>能讨论“已经在这里”的未来；必须说清当前状态</td>
+</tr>
+<tr>
+<td>策略 π 的动作概率</td>
+<td>强制首动作再跟随 π 的 Q</td>
+<td>能比较某个指定首动作；日志可能没采过它</td>
+</tr>
+<tr>
+<td>固定任务起止规则</td>
+<td>显式剩余时域 h</td>
+<td>处理期限差异；需要记录预算或时间</td>
+</tr>
+</tbody></table></div>
+<p>Q、V、J 是不同条件下的期望，不能仅凭名字互换。它们还共同依赖环境、奖励单位、γ、终止与期限；比较实验时这些条件要对齐。</p>
+<p>模型已知时，小环境可以像本课一样枚举。真实任务需要估计，而数据少、只记录成功、只采过部分动作，或者日志的后续策略不同，都可能造成估计偏差。今天先明确估计目标是什么；具体怎样从数据学习，后续单元逐步展开。</p>
+<h2 id="section-15">6. 主要应用：多步 GUI 应该评价哪个价值？</h2>
+<p>这一节属于<strong>工程推断</strong>。现实 GUI 中，截图与预算未必足以成为完整状态；焦点、登录、异步加载、历史操作和隐藏应用状态都可能影响结果，需要分析可观察信息与历史表示。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>设计项目</th>
+<th>一个可检查的多步 GUI 方案</th>
+<th>必须核实的条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>观测或状态</td>
+<td>指令、截图、合法历史、必要的执行状态与剩余预算</td>
+<td>哪些变量真实可见，是否存在同图不同后果</td>
+</tr>
+<tr>
+<td>动作</td>
+<td>点击、输入、滚动、返回、取消、结束及参数</td>
+<td>合法动作与坐标/文本语义，失败如何返回</td>
+</tr>
+<tr>
+<td>奖励与回报</td>
+<td>独立任务成功收益减真实过程成本，固定 γ 与期限</td>
+<td>收益单位、操作/调用成本、任务内超时惩罚</td>
+</tr>
+<tr>
+<td>反馈来源</td>
+<td>应用结果、持久状态回读或可信人工核查</td>
+<td>保存提示是否等于目标真正完成</td>
+</tr>
+<tr>
+<td>时间结构</td>
+<td>当前动作改变后续界面、动作和完成机会</td>
+<td><code>terminated</code>、<code>truncated</code> 和预算分别记录</td>
+</tr>
+<tr>
+<td>价值目标</td>
+<td>Vπ 评价当前策略从这里继续；Qπ 评价先做指定动作再由它继续</td>
+<td>后续到底由哪个策略版本控制，是否有首动作覆盖</td>
+</tr>
+<tr>
+<td>数据</td>
+<td>决策前信息、动作、奖励、终止、预算、策略版本和完整后续轨迹</td>
+<td>保留失败和取消，不将不同策略后续混作同一目标</td>
+</tr>
+<tr>
+<td>评价指标</td>
+<td>固定任务分布下的完整成功率、回报、步骤、非法动作、超时和成本</td>
+<td>除预测误差外，还要核实实际任务结果</td>
+</tr>
+<tr>
+<td>训练成本</td>
+<td>采样执行、环境重置、结果验证和计算</td>
+<td>每个策略和预算条件需要多少有效反馈</td>
+</tr>
+<tr>
+<td>推理成本</td>
+<td>每步模型调用、价值估计、执行与等待</td>
+<td>额外价值模型调用是否抵消收益，端到端时延与费用</td>
+</tr>
+</tbody></table></div>
+<p><strong>非 RL 基线先行：</strong>固定流程或有限状态机、规则加监督控件定位、相同初始模型的示范学习执行策略；模型已知时可以比较枚举或搜索规划。使用相同任务、初态、输入权限、动作预算、成功验证和成本统计。</p>
+<p>如果只拿“成功演示中这个按钮后来都完成了任务”来估计 Q，会遗漏失败和取消；如果把多个后续执行器版本混合，却叫作一个固定 π 的价值，也改变了目标。没有数据的合法首动作可以在模型里定义 Q，但不能凭定义补出真实测量值。单次定位命中率仍有用，却不等于整段任务的价值。</p>
+<p><strong>路由与 SR 的边界：</strong>单步路由可以先用分支的成本敏感期望目标和监督/Bandit 反馈框架，不因出现 Q 这个符号就变成多步 RL；实际标签、输入来源与业务代价以真实合同为准。SR 若研究早停、迭代或计算分配，也要先定义状态、动作、质量—成本回报和固定预算基线，不能把重建指标直接称为已验证的长期价值。本课没有开展这些方向的研究实验。</p>
+<h2 id="section-16">7. 常见误解、失败条件和适用边界</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>误解或失败</th>
+<th>本课的纠正</th>
+<th>检查办法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>一次失败就说明 Q 很低</td>
+<td>样本回报不等于期望</td>
+<td>区分本次结果和模型/数据估计目标</td>
+</tr>
+<tr>
+<td>Q 是选择动作的概率</td>
+<td>Q 的单位是回报，可大于 1 或为负</td>
+<td>与 π 的概率单位分开</td>
+</tr>
+<tr>
+<td>算 Q 还要乘首动作概率</td>
+<td>首动作已被指定</td>
+<td>V 才对首动作选择作平均</td>
+</tr>
+<tr>
+<td>π 不选 a，Q 就等于 0</td>
+<td>未选不等于无效或失败</td>
+<td>定义与估计、支持与反馈分别讨论</td>
+</tr>
+<tr>
+<td>单步 Q 不依赖后续 π，所以多步也不依赖</td>
+<td>单步终止只是特例</td>
+<td>比较新 GUI 中相同 open 的两种后续</td>
+</tr>
+<tr>
+<td>截图相同，价值就应相同</td>
+<td>历史、隐藏变量或剩余时域可能不同</td>
+<td>检查完整状态与 h</td>
+</tr>
+<tr>
+<td>终止后仍反复给成功收益</td>
+<td>到达时的奖励与之后的零奖励不同</td>
+<td>明确成功只计一次</td>
+</tr>
+<tr>
+<td>采集停止意味着 V=0</td>
+<td>外部截断不等于任务终止</td>
+<td>保留停止原因与真实最后状态</td>
+</tr>
+<tr>
+<td>Vπ 就是最优价值</td>
+<td>上标 π 代表指定策略</td>
+<td>不未经说明改为最大化或贪心行为</td>
+</tr>
+</tbody></table></div>
+<p>如果没有明确后续策略、奖励定义或预算，先补齐价值目标。即使模型输出了一个数，也不能据此声称它是可信的 Q 或 V。</p>
+<h2 id="section-17">8. 三道理解题：先独立作答</h2>
+<p>请先用约 8 分钟回答，再看文末答案。</p>
+<p><strong>题 1｜单步路由与一次结果。</strong> 复用第 4.1 节的四个 Q 值、πA 动作概率和 0.60/0.40 初始分布，计算 VπA(u)、VπA(v) 和 J(πA)。如果一次 u、T 调用答错，得到 −0.5，能否说 QπA(u,T)=−0.5？为什么本例 Q 不依赖后续 π，却不能据此推广到多步任务？</p>
+<p><strong>题 2｜先做动作还是先抽动作？</strong> 按第 4.2 节新 GUI 规则，从 (H,2) 强制 open，后续分别采用 πα、πβ，列出各完整分支的概率与回报，求 Q₂πα(H,open) 和 Q₂πβ(H,open)。再按 H 上 open=0.75、stop=0.25 求两个 V₂(H)。为什么 Q 不乘 0.75，而 V 要乘？</p>
+<p><strong>题 3｜剩余一步、剩余两步与截断。</strong> 在同一 GUI 模型中，比较 (H,2) 与 (H,1) 的 Qπα(H,open) 和 Vπα(H)；h=0 时 V 为多少？为什么仅相同截图不够？如果只因为采集器提前停止，能否自动把真实后续价值设为 0？</p>
+<h2 id="section-18">9. 下一单元预告与自查提示</h2>
+<p>下一单元是 <strong>RL-005｜Bellman方程：把长期回报拆成一步与未来</strong>。我们会进一步解释价值之间的跨状态关系。今天先建立 V、Q 的含义与条件，分清同一状态内的动作平均和真正的跨状态递推。</p>
+<p>衔接自查：能否先说清谁决定首个动作，再选择 V 或 Q；能否列出后续策略与时域条件；能否把模型里可定义的量和数据里已验证的估计分开。</p>
+<h2 id="section-19">10. 可核查的参考来源与证据说明</h2>
+<ol>
+<li><strong>Sutton 与 Barto，第二版教材原稿。</strong><a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">CMU 正式课程托管 PDF</a>，标题为 <em>Reinforcement Learning: An Introduction, second edition</em>，版权页标 2018，548 页。本次于 2026-10-16 复读同源保存的原稿，核对册页 58 的状态/动作价值定义、式 (3.12)～(3.13)，以及册页 55、57 的回报与终态约定。当日 HTTP HEAD 返回 200，长度 43,634,706 字节，与保存文件一致；网页读取接口因大小限制未加载全文。原稿保留排版占位，不称为已核对的最终出版排版。本课不展开其后续 Bellman 推导或估计更新。</li>
+<li><strong>OpenAI Spinning Up 官方教程：</strong><a href="https://spinningup.openai.com/en/latest/spinningup/rl_intro.html#value-functions">Part 1 — Value Functions</a>。本次于 2026-10-16 实际读取，核对 V、Q 的定义、Q 的指定首动作语义、同状态 V 与 Q 的关系，以及有限时域需要时间参数的说明。该教程的奖励下标可能不同，本课保持 a_t 后收到 r_(t+1) 的约定。</li>
+</ol>
+<p><strong>已发表知识：</strong>状态价值、动作价值、指定策略下的期望及有限时域表示。<br><strong>工程推断：</strong>GUI 价值目标、轨迹版本、覆盖与基线要求；路由和 SR 的适用边界。<br><strong>教学假设：</strong>RL-003 单步路由参数，以及本课新增 H/F/z、两种后续策略、预算、奖励和 γ=0.9 的环境。<br><strong>研究假设：</strong>真实执行与评价条件明确后，可能检验价值估计是否有帮助；本课没有验证这种效果。<br><strong>实际实验结果：</strong>无，<strong>未运行（NOT_RUN）</strong>。已给数字来自完整分支的手算，不是训练或业务测量。</p>
+<details class="answers" id="section-20"><summary>参考答案（练习完成后再看）</summary><p><strong>题 1。</strong> VπA(u)=0.80×8.5+0.20×7.5=8.3，VπA(v)=0.30×3.5+0.70×6.5=5.6，J(πA)=0.60×8.3+0.40×5.6=7.22。一次错误的 −0.5 是样本回报，题目给定环境的 Q(u,T) 仍为 8.5。本例执行一个动作就终止，没有后续策略发挥作用；在一般多步任务里，Q 包含首动作之后按 π 继续产生的回报，因此通常依赖 π。</p>
+<p><strong>题 2。</strong> 强制 open 后，πα 的完整分支为成功概率 0.80、G₀=−1+0.9×10=8，失败概率 0.20、G₀=−1；所以 Q₂πα(H,open)=6.2。πβ 的分支为保存成功 0.40、G₀=8，保存失败 0.10、G₀=−1，取消 0.50、G₀=−1；所以 Q₂πβ(H,open)=2.6。两个 V₂(H) 分别为 0.75×6.2+0.25×0=4.65、0.75×2.6+0.25×0=1.95。Q 已指定首动作 open，不再乘选择它的概率；V 的首动作仍按策略采样，需要把 open 与 stop 两种情况平均。Q 的差异来自后续策略不同，不是环境表或首动作改变。</p>
+<p><strong>题 3。</strong> πα 下，h=2 时 Q₂(H,open)=6.2、V₂(H)=4.65；h=1 时 open 得到 −1 后预算耗尽，不再保存，因此 Q₁(H,open)=−1，V₁(H)=−0.75。h=0 时任务已结束，剩余 V₀=0，没有需要执行的真实动作。相同页面可能有不同预算，实际截图还可能遗漏焦点、登录等变量，所以需明确完整状态或时间条件。外部采集停止不自动终止真实任务，也不证明真实未来回报为 0；必须区别任务终止、任务内期限和外部截断。</p>
+</details></article></div><section class="pdf-preview wrap" aria-labelledby="pdf-preview-title"><h2 id="pdf-preview-title">同内容伴随 PDF · 阅读版</h2><p>本课 PDF 使用与 PPT 相同的源内容，经独立排版用于阅读，非 PowerPoint 原生导出；可编辑汇报请使用 PPT。手机或浏览器未显示时，可<a href="./RL-004.pdf" style="text-decoration:underline">直接打开 PDF 阅读版</a>。</p><iframe src="./RL-004.pdf#toolbar=1" title="RL-004 同内容伴随 PDF 阅读版" loading="lazy"></iframe></section><div class="lesson-navigation wrap"><a href="../RL-003/"><span>← 上一单元 · RL-003</span><strong>策略、轨迹与探索：数据从哪里来？</strong></a><a class="next" href="../RL-005/"><span>下一单元 · RL-005 →</span><strong>Bellman方程：把长期回报拆成一步与未来</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>

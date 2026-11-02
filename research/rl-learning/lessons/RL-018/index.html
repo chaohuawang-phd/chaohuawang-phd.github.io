@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151a17"><meta name="description" content="计算Expected SARSA目标，并连接本阶段的前置概念。"><meta name="color-scheme" content="light"><title>RL-018｜Expected SARSA与Double Q：改进目标估计 · 王超华</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%23151a17'/%3E%3Cpath d='M31 14a13 13 0 1 0 0 20' fill='none' stroke='%23c8f45b' stroke-width='5'/%3E%3Ccircle cx='32' cy='24' r='3' fill='%23c8f45b'/%3E%3C/svg%3E"><link rel="stylesheet" href="../../styles.css"><link rel="stylesheet" href="../../assets/katex/katex.min.css"><script src="../../script.js" defer></script></head>
+<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-018</span></div><section class="lesson-hero"><p class="eyebrow">RL-018 · WEEK 03 · 新知识</p><h1>Expected SARSA与Double Q：改进目标估计</h1><p class="lesson-summary">计算Expected SARSA目标，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">TD控制</span><span class="tag">GUI</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>讲义 · PPT 可用</span></div><div class="button-row"><a class="button small" href="./lecture.md" download>讲义下载 · MD</a><a class="button small" href="./RL-018.pptx" download>PPT 下载</a><a class="button small" href="./RL-018.pdf">PDF 阅读版</a></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="本课目录"><h2>本课目录</h2><ol><li><a href="#section-1">1. 今天解决什么问题，与前面哪些单元有关</a></li><li><a href="#section-2">2. 学习目标</a></li><li><a href="#section-3">3. 直觉、定义和必要公式</a></li><li><a href="#section-8">4. 手算例子或更新过程</a></li><li><a href="#section-15">5. 与前一种方法的关系</a></li><li><a href="#section-16">6. 一个主要研究应用</a></li><li><a href="#section-17">7. 常见误解、失败条件和适用边界</a></li><li><a href="#section-18">8. 三道理解题</a></li><li><a href="#section-19">9. 下一单元与待复习问题</a></li><li><a href="#section-20">10. 可核查的参考来源与证据说明</a></li><li><a href="#section-21">参考答案（练习完成后再看）</a></li></ol></aside><article class="lecture"><p>课程：强化学习学习与应用 · 第 3 周 / 单元 18<br>课程版本：1.0.0 · 内容版本：1.0.0 · 日期：2026-11-02（Asia/Shanghai）<br>预计学习：30～45 分钟 · 汇报：10～15 分钟<br>前置：<a href="../RL-017/">RL-017：探索策略：ε-greedy的代价与覆盖</a>，并需能区分 <a href="../RL-015/">RL-015</a> 的 SARSA 下一动作目标与 <a href="../RL-016/">RL-016</a> 的 Q-learning 最大值目标。<br>证据说明：机制依据原始教材与 van Hasselt 2010 论文；本课快照、轨迹和噪声分布均为<strong>教学假设与精确推导</strong>；真实应用为工程推断。随机采样、学习训练、GUI 执行及性能实验均<strong>未运行（NOT_RUN）</strong>。</p>
+<h2 id="section-1">1. 今天解决什么问题，与前面哪些单元有关</h2>
+<p>一步目标里有两种不同问题。第一种是：后继状态已经给定，但 SARSA 还要抽一次下一动作，目标会随它变化。第二种是：动作价值估计带噪声，用同一组估计既挑最大动作又评价它，可能偏向挑中被高估的值。</p>
+<p>Expected SARSA 对给定策略的下一动作做加权求和，处理第一种抽样噪声。Double Q-learning 分别维护两张估计表，用一张选动作、另一张评这个动作，处理第二种选择与评价的耦合。它们没有消除所有不确定性，也不自动解决前课的覆盖、反馈和行为成本问题。</p>
+<p>今天先用相同 pre 表独立比较三个单表目标，再另起两张表演示 Double Q，最后用一个独立噪声枚举解释最大化偏差。三组材料不能顺序串写，也不能把一个手算目标较小称为真实改进。</p>
+<p>建议用约 12 分钟学 Expected SARSA 与条件方差，约 12 分钟学 Double Q 与噪声例子，再用余下时间检查边界、应用与三题。完整收敛条件留给 RL-019。</p>
+<h2 id="section-2">2. 学习目标</h2>
+<ol>
+<li>能计算 Expected SARSA 的下一动作期望、目标与单项写入，并准确说明它消除的是哪一个条件下的动作抽样分量。</li>
+<li>能按 Double Q 的 A/B 两个对称更新支，区分选动作表、评价表与实际写入表，解释两张存储表为何不自动统计独立。</li>
+<li>能用有限噪声枚举区分无偏的单个估计与带偏的最大值，说明独立性、合法动作、终止和真实研究证据的限制。</li>
+</ol>
+<h2 id="section-3">3. 直觉、定义和必要公式</h2>
+<h3 id="section-4">3.1 Expected SARSA：已知后继上的动作期望</h3>
+<p>沿用完整状态 x=(page,h)。一次转移中，x 是动作前状态，a 是已执行合法动作，r 是即时奖励，x′ 是真实后继；A(x′) 是已知非空合法动作集合，u 是其中的候选动作。Q_pre 是当前写入前的估计表，π(u|x′) 是本次目标使用的策略概率，须合法、已知且在 A(x′) 上归一化。</p>
+<p>对非终止后继，Expected SARSA 先算：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mover accent="true"><mi>Q</mi><mo stretchy="true">‾</mo></mover><mi>π</mi></msub><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo><mo>=</mo><munder><mo>∑</mo><mrow><mi>u</mi><mo>∈</mo><mi>A</mi><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo></mrow></munder><mi>π</mi><mo stretchy="false">(</mo><mi>u</mi><mo>∣</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo><msub><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow></msub><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>u</mi><mo stretchy="false">)</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\overline Q_{\pi}(x&#x27;)=
+\sum_{u\in A(x&#x27;)}\pi(u\mid x&#x27;)Q_{\mathrm{pre}}(x&#x27;,u).</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.1333em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord overline"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">Q</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.0573em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.566em;vertical-align:-1.516em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.809em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">u</span><span class="mrel mtight">∈</span><span class="mord mathnormal mtight">A</span><span class="mopen mtight">(</span><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6828em;"><span style="top:-2.786em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose mtight">)</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.516em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mopen">(</span><span class="mord mathnormal">u</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.088em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">u</span><span class="mclose">)</span><span class="mord">.</span></span></span></span></span></div>
+<p>横线表示对<strong>下一动作</strong>求期望，竖线表示给定状态，不是在这里对所有后继和奖励求完整模型期望。令 d=1 表示原任务真终止，否则 d=0；γ 为折扣，本课 0.9；α 为步长，本课 0.5：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>y</mi><mrow><mi mathvariant="normal">E</mi><mi mathvariant="normal">S</mi></mrow></msub><mo>=</mo><mrow><mo fence="true">{</mo><mtable rowspacing="0.36em" columnalign="left left" columnspacing="1em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><mi>r</mi><mo separator="true">,</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><mi>d</mi><mo>=</mo><mn>1</mn><mo separator="true">,</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><mi>r</mi><mo>+</mo><mi>γ</mi><msub><mover accent="true"><mi>Q</mi><mo stretchy="true">‾</mo></mover><mi>π</mi></msub><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo><mo separator="true">,</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><mi>d</mi><mo>=</mo><mn>0</mn><mo separator="true">,</mo></mrow></mstyle></mtd></mtr></mtable></mrow><mspace width="1em"/><mi>δ</mi><mo>=</mo><msub><mi>y</mi><mrow><mi mathvariant="normal">E</mi><mi mathvariant="normal">S</mi></mrow></msub><mo>−</mo><msub><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow></msub><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><mspace width="1em"/><msub><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow></msub><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow></msub><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>+</mo><mi>α</mi><mi>δ</mi><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">y_{\mathrm{ES}}=
+\begin{cases}
+r,&amp;d=1,\\
+r+\gamma\overline Q_{\pi}(x&#x27;),&amp;d=0,
+\end{cases}
+\quad
+\delta=y_{\mathrm{ES}}-Q_{\mathrm{pre}}(x,a),
+\quad
+Q_{\mathrm{post}}(x,a)=Q_{\mathrm{pre}}(x,a)+\alpha\delta.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">ES</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:3em;vertical-align:-1.25em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size4">{</span></span><span class="mord"><span class="mtable"><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.69em;"><span style="top:-3.69em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mpunct">,</span></span></span><span style="top:-2.25em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mord"><span class="mord overline"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">Q</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.0573em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7519em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mpunct">,</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.19em;"><span></span></span></span></span></span><span class="arraycolsep" style="width:1em;"></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.69em;"><span style="top:-3.69em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord mathnormal">d</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">1</span><span class="mpunct">,</span></span></span><span style="top:-2.25em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord mathnormal">d</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">0</span><span class="mpunct">,</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.19em;"><span></span></span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03785em;">δ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">ES</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0361em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">post</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0361em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord mathnormal" style="margin-right:0.03785em;">δ</span><span class="mord">.</span></span></span></span></span></div>
+<p>ES 是 Expected SARSA 的缩写。pre/post 是本次写入前后，只改当前状态动作对；即使存在自转移，也先从 pre 表读完再写。α 控制改变量，不是本课的访问次数倒数。δ 是含估计量的目标差，不是真实价值误差。</p>
+<p>本例设目标策略 π 等于实际行为 b，二者均为当前快照的 ε-greedy，因此是 on-policy 用法。一般也可以指定与行为不同的目标 π；Expected SARSA 并非始终 on-policy。必须明说目标策略，不能把未知动作概率当作已知的精确期望。<a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">公式与一般策略用法见教材 §6.6，式 6.9。</a></p>
+<h3 id="section-5">3.2 条件方差减少的准确范围</h3>
+<p>把 r、x′、Q_pre、π 固定，仅令下一动作 A′ 按 π 抽取。SARSA 的随机目标为 r+γQ_pre(x′,A′)，Expected SARSA 的目标等于它在这些条件下的期望，不需再抽一个 A′ 来构造当前目标。</p>
+<p>因此减少的是<strong>给定后继与快照后的下一动作抽样噪声</strong>。若奖励和后继本身随机，不同运行的估计表或策略不同，Expected SARSA 仍会变化；Q 估错、策略概率估错或数据缺失也不会被求和自动修正。对全部目标方差、估计器偏差或实际性能，不能无条件宣布为零或更优。</p>
+<p>当前实际下一动作依然由行为策略执行。Expected SARSA 的当前目标不要求它先被抽出；不能把求和中的每个动作都当成已经执行，更不能编造未执行动作的奖励。</p>
+<h3 id="section-6">3.3 最大化偏差与 Double Q</h3>
+<p>Q-learning 用估计值的最大值构造后继项。即使每个动作估计单独无偏，最大值也未必是最大真实价值的无偏估计，因为选择更容易留下正误差。这里的 bias 是相对明确真值，在假设分布上对估计误差取期望；单张表里某个差值不能直接叫作统计偏差。</p>
+<p>Double Q 分别维护 Q^A、Q^B；上标 A、B 是表的名称，不是幂。通常每条有效转移使用一个与转移样本独立的公平随机分支选择，只更新 A 或 B 中的一个。教学演示会人为指定 A 支，不把它称为一次真实抛硬币。</p>
+<p>对非终止转移，A 支从 Q^A_pre 的合法最大集合中选定一个动作 a_A*，再用 Q^B_pre 评价<strong>同一个动作</strong>：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.25em" columnalign="right left" columnspacing="0em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><msubsup><mi>a</mi><mi>A</mi><mo>∗</mo></msubsup></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>∈</mo><mi>arg</mi><mo>⁡</mo><munder><mrow><mi>max</mi><mo>⁡</mo></mrow><mrow><mi>u</mi><mo>∈</mo><mi>A</mi><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo></mrow></munder><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow><mi>A</mi></msubsup><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>u</mi><mo stretchy="false">)</mo><mo separator="true">,</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><msub><mi>y</mi><mi>A</mi></msub></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mi>r</mi><mo>+</mo><mi>γ</mi><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow><mi>B</mi></msubsup><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><msubsup><mi>a</mi><mi>A</mi><mo>∗</mo></msubsup><mo stretchy="false">)</mo><mo separator="true">,</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow><mi>A</mi></msubsup><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow><mi>A</mi></msubsup><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>+</mo><mi>α</mi><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">[</mo><msub><mi>y</mi><mi>A</mi></msub><mo>−</mo><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow><mi>A</mi></msubsup><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">]</mo><mo separator="true">,</mo><mspace width="2em"/><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow><mi>B</mi></msubsup><mo>=</mo><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow><mi>B</mi></msubsup><mi mathvariant="normal">.</mi></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
+a_A^*&amp;\in\arg\max_{u\in A(x&#x27;)}Q^A_{\mathrm{pre}}(x&#x27;,u),\\
+y_A&amp;=r+\gamma Q^B_{\mathrm{pre}}(x&#x27;,a_A^*),\\
+Q^A_{\mathrm{post}}(x,a)
+&amp;=Q^A_{\mathrm{pre}}(x,a)+\alpha\big[y_A-Q^A_{\mathrm{pre}}(x,a)\big],
+\qquad Q^B_{\mathrm{post}}=Q^B_{\mathrm{pre}}.
+\end{aligned}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:5.3062em;vertical-align:-2.4031em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.9031em;"><span style="top:-5.0118em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.7387em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">∗</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.247em;"><span></span></span></span></span></span></span></span></span><span style="top:-2.8544em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-1.28em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">post</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.4031em;"><span></span></span></span></span></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.9031em;"><span style="top:-5.0118em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mop">ar<span style="margin-right:0.01389em;">g</span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.4306em;"><span style="top:-2.309em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">u</span><span class="mrel mtight">∈</span><span class="mord mathnormal mtight">A</span><span class="mopen mtight">(</span><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6828em;"><span style="top:-2.786em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose mtight">)</span></span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">max</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.966em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">u</span><span class="mclose">)</span><span class="mpunct">,</span></span></span><span style="top:-2.8544em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.7387em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">∗</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.247em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mpunct">,</span></span></span><span style="top:-1.28em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord"><span class="delimsizing size1">[</span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mord"><span class="delimsizing size1">]</span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">post</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mord">.</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.4031em;"><span></span></span></span></span></span></span></span></span></span></span></span></div>
+<p>对称的 B 支交换角色：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.25em" columnalign="right left" columnspacing="0em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><msubsup><mi>a</mi><mi>B</mi><mo>∗</mo></msubsup></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>∈</mo><mi>arg</mi><mo>⁡</mo><munder><mrow><mi>max</mi><mo>⁡</mo></mrow><mrow><mi>u</mi><mo>∈</mo><mi>A</mi><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo></mrow></munder><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow><mi>B</mi></msubsup><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>u</mi><mo stretchy="false">)</mo><mo separator="true">,</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><msub><mi>y</mi><mi>B</mi></msub></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mi>r</mi><mo>+</mo><mi>γ</mi><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow><mi>A</mi></msubsup><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><msubsup><mi>a</mi><mi>B</mi><mo>∗</mo></msubsup><mo stretchy="false">)</mo><mo separator="true">,</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow><mi>B</mi></msubsup><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow><mi>B</mi></msubsup><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>+</mo><mi>α</mi><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">[</mo><msub><mi>y</mi><mi>B</mi></msub><mo>−</mo><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow><mi>B</mi></msubsup><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">]</mo><mo separator="true">,</mo><mspace width="2em"/><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow><mi>A</mi></msubsup><mo>=</mo><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow><mi>A</mi></msubsup><mi mathvariant="normal">.</mi></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
+a_B^*&amp;\in\arg\max_{u\in A(x&#x27;)}Q^B_{\mathrm{pre}}(x&#x27;,u),\\
+y_B&amp;=r+\gamma Q^A_{\mathrm{pre}}(x&#x27;,a_B^*),\\
+Q^B_{\mathrm{post}}(x,a)
+&amp;=Q^B_{\mathrm{pre}}(x,a)+\alpha\big[y_B-Q^B_{\mathrm{pre}}(x,a)\big],
+\qquad Q^A_{\mathrm{post}}=Q^A_{\mathrm{pre}}.
+\end{aligned}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:5.3062em;vertical-align:-2.4031em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.9031em;"><span style="top:-5.0118em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.7387em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">∗</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.247em;"><span></span></span></span></span></span></span></span></span><span style="top:-2.8544em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-1.28em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">post</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.4031em;"><span></span></span></span></span></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.9031em;"><span style="top:-5.0118em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mop">ar<span style="margin-right:0.01389em;">g</span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.4306em;"><span style="top:-2.309em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">u</span><span class="mrel mtight">∈</span><span class="mord mathnormal mtight">A</span><span class="mopen mtight">(</span><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6828em;"><span style="top:-2.786em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose mtight">)</span></span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">max</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.966em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">u</span><span class="mclose">)</span><span class="mpunct">,</span></span></span><span style="top:-2.8544em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.7387em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">∗</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.247em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mpunct">,</span></span></span><span style="top:-1.28em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord"><span class="delimsizing size1">[</span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mord"><span class="delimsizing size1">]</span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">post</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mord">.</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.4031em;"><span></span></span></span></span></span></span></span></span></span></span></span></div>
+<p>argmax 表示取得最大值的动作集合；本课并列时在该集合中均匀选一个，并用另一表评价这一已选动作，不能在评价表里另取一个 max。星号标识本次被选动作，不证明它是真正最优动作。两支都使用本条转移写入前的快照；没有一次转移先 A 后 B 的隐含双更新。</p>
+<p>实际行为可以对 Q^A+Q^B 的合法动作值采用 ε-greedy。行为如何选动作、当前转移更新哪张表、后继目标如何构造，是三个应分别记录的选择。Double Q 不是把两个 max 平均，也不是重复训练两个完整模型再投票。<a href="https://proceedings.neurips.cc/paper_files/paper/2010/file/091d584fced301b442654dd8c23b3fc9-Paper.pdf">教材 §6.7 式 6.10 与原论文 Algorithm 1 给出了此结构。</a></p>
+<p>两张表可从相同初值开始，例如都为 0；问题不在于初值必须不同。它们要分别维护、按不同更新支获得经验，而不是每次同步复制。两表因共享任务、行为和自举而可能相关，<strong>分别存储不自动等于统计独立</strong>。独立评价的简化性质只在相应假设下成立，不能据此称实际 Double Q 总无偏、没有低估或必然提升。</p>
+<h3 id="section-7">3.4 终止、mask 与外部截断</h3>
+<p>真终止时，两种方法都直接取 y=r，保留进入终态的奖励；不做下一动作求和或 argmax，不读取终止空动作表。Double Q 仍只写选中的一张表。任务本身规定 h=0 结束，与采集器外部停止要分开。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>非终止当前目标所需条件</th>
+<th>Expected SARSA</th>
+<th>Double Q</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>原任务真实旧后继与合法 mask</td>
+<td>必须有效</td>
+<td>必须有效</td>
+</tr>
+<tr>
+<td>写入前估计</td>
+<td>同一 Q_pre，包含合法动作估计</td>
+<td>Q^A_pre 与 Q^B_pre，保持本次读取一致</td>
+</tr>
+<tr>
+<td>目标相关选择</td>
+<td>有效、已归一化的目标 π</td>
+<td>已声明的 A/B 更新支与合法平局规则</td>
+</tr>
+<tr>
+<td>是否需要已选下一行为动作或实际续接</td>
+<td>不需要</td>
+<td>不需要</td>
+</tr>
+</tbody></table></div>
+<p>外部截断但原任务按定义继续、上述资料有效时，可完成该一步目标，不要求未来真实续接。若后继、mask 或所需 π 缺失，保留原因并<strong>跳过本次 Q 和更新计数写入</strong>；不能把 reset 新图当旧后继，不能靠伪造终止或动作概率补算。失败、截断和缺失记录保留，不只挑成功完整样本再无条件声称对同一目标无偏。</p>
+<h2 id="section-8">4. 手算例子或更新过程</h2>
+<h3 id="section-9">4.1 沿用教学核，所有比较从明确初表开始</h3>
+<p>H 为主页、F 为表单页、z 为终止；完整状态 (page,h)，h≤2，每动作消耗一次预算，h=0 真终止。Hopen 奖励 −1，预算可继续则到 F；Hstop 为 0 并终止。Fsave 以 0.8 概率得 10、以 0.2 概率得 0，均终止；Fcancel 为 0 并终止。没有额外 F 操作成本或终止加分。</p>
+<p>以下是人工指定的教学转移与快照，没有随机采样或真实 GUI。γ=0.9、α=0.5。Expected SARSA 主表从 H2 的 open=1、stop=0，F1 的 save=4、cancel=−2 开始；这些是猜测，不继承前课最终表。ε=0.2、唯一贪心的全合法探索给 π(Fsave)=0.9、π(Fcancel)=0.1，π=b。本条观察为 H2 执行 open、r=−1 到 F1，尚未结束。</p>
+<h3 id="section-10">4.2 Expected SARSA 主例与独立目标对照</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>同一原始 pre 表上的量</th>
+<th align="right">Expected SARSA</th>
+<th align="right">Q-learning 独立对照</th>
+<th align="right">SARSA 独立对照，已选 cancel</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>后继项</td>
+<td align="right">0.9×4+0.1×(−2)=3.4</td>
+<td align="right">max(4,−2)=4</td>
+<td align="right">−2</td>
+</tr>
+<tr>
+<td>目标 y</td>
+<td align="right">−1+0.9×3.4=2.06</td>
+<td align="right">2.6</td>
+<td align="right">−2.8</td>
+</tr>
+<tr>
+<td>误差 δ，当前 pre=1</td>
+<td align="right">1.06</td>
+<td align="right">1.6</td>
+<td align="right">−3.8</td>
+</tr>
+<tr>
+<td>当前项 post，α=0.5</td>
+<td align="right">1.53</td>
+<td align="right">1.8</td>
+<td align="right">−0.9</td>
+</tr>
+</tbody></table></div>
+<p>三列用三份相同初表独立计算，不把 1.8、−0.9 接在 1.53 后继续写，也不按目标数值大小宣布算法排名。3.4 是策略加权的估计，2.06 是一步目标，1.53 是写入后估计；它们都不等于已知真实价值。</p>
+<p>继续 ES 主例，若人为指定下一实际行为为 cancel，得到 r=0 到 z，则目标为 0，Fcancel 从 −2 写为 −1，H2,open 不自动回写。最终 ES 表按 Hopen、Hstop、Fsave、Fcancel 顺序为 1.53、0、4、−1，两个被更新的对各写一次，其他仍为初值。实际奖励 −1、0 给完整 G_H2=−1、G_F1=0。ES 的当前目标不需要事先选定 cancel，这里也没有执行 save 或观察其奖励。</p>
+<h3 id="section-11">4.3 只随机下一动作时，究竟消除了多少方差</h3>
+<p>固定条件 C 为 r=−1、x′=F1、Q_pre(Fsave,Fcancel)=(4,−2)、π=(0.9,0.1)。仅重新抽下一动作，SARSA 的目标取 2.6 或 −2.8，概率分别 0.9、0.1；其条件均值为 2.06：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.25em" columnalign="right left" columnspacing="0em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>Y</mi><mrow><mi mathvariant="normal">S</mi><mi mathvariant="normal">A</mi><mi mathvariant="normal">R</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">A</mi></mrow></msub><mo>∣</mo><mi>C</mi><mo stretchy="false">)</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mn>0.9</mn><mo stretchy="false">(</mo><mn>2.6</mn><mo>−</mo><mn>2.06</mn><msup><mo stretchy="false">)</mo><mn>2</mn></msup><mo>+</mo><mn>0.1</mn><mo stretchy="false">(</mo><mo>−</mo><mn>2.8</mn><mo>−</mo><mn>2.06</mn><msup><mo stretchy="false">)</mo><mn>2</mn></msup><mo>=</mo><mn>2.6244</mn><mo separator="true">,</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>Y</mi><mrow><mi mathvariant="normal">E</mi><mi mathvariant="normal">S</mi></mrow></msub><mo>∣</mo><mi>C</mi><mo stretchy="false">)</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mn>0.</mn></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
+\operatorname{Var}(Y_{\mathrm{SARSA}}\mid C)
+&amp;=0.9(2.6-2.06)^2+0.1(-2.8-2.06)^2=2.6244,\\
+\operatorname{Var}(Y_{\mathrm{ES}}\mid C)&amp;=0.
+\end{aligned}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:3.0241em;vertical-align:-1.2621em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.7621em;"><span style="top:-3.8979em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mop"><span class="mord mathrm">Var</span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">Y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">SARSA</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="mclose">)</span></span></span><span style="top:-2.3979em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mop"><span class="mord mathrm">Var</span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">Y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">ES</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2621em;"><span></span></span></span></span></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.7621em;"><span style="top:-3.8979em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">0.9</span><span class="mopen">(</span><span class="mord">2.6</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">2.06</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">0.1</span><span class="mopen">(</span><span class="mord">−</span><span class="mord">2.8</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">2.06</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">2.6244</span><span class="mpunct">,</span></span></span><span style="top:-2.3979em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">0.</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2621em;"><span></span></span></span></span></span></span></span></span></span></span></span></div>
+<p>大写 Y 表示在这个假设随机机制中的目标随机变量，C 表示上述固定条件，Var 是围绕其条件均值的方差。这里没有把奖励或后继再次抽取，也没有让 Q 与 π 随训练改变。ES 对下一动作的精确求和是 SARSA 在这些条件下的平均方向；这个 0 不能改写成“所有训练目标方差为 0”或“真实价值估计无偏”。</p>
+<h3 id="section-12">4.4 Double Q 的另一对初表与 A 支</h3>
+<p>下面另起一对<strong>分别维护的教学表</strong>，不沿用 ES 的 1.53，也不声称这些给定数值来自两个统计独立训练过程：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>状态动作</th>
+<th align="right">Q^A_pre</th>
+<th align="right">Q^B_pre</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>H2,open</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>H2,stop</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>F1,save</td>
+<td align="right">4</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td>F1,cancel</td>
+<td align="right">−2</td>
+<td align="right">5</td>
+</tr>
+</tbody></table></div>
+<p>行为可用两表和的 ε-greedy：Fsave 的和为 5，Fcancel 为 3，ε=0.2 时概率为 0.9、0.1。它与 A/B 更新支选择分开。对同一条 H2 open、r=−1 到 F1 的观察，<strong>人为指定 A 支</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>A 支步骤</th>
+<th>计算</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>从 Q^A_pre 选后继动作</td>
+<td>save，因为 4&gt;−2</td>
+</tr>
+<tr>
+<td>用 Q^B_pre 评价这一动作</td>
+<td>Q^B_pre(F1,save)=1，不取其最大值 5</td>
+</tr>
+<tr>
+<td>目标 y_A</td>
+<td>−1+0.9×1=−0.1</td>
+</tr>
+<tr>
+<td>当前项误差</td>
+<td>−0.1−1=−1.1</td>
+</tr>
+<tr>
+<td>Q^A(H2,open) 的 post</td>
+<td>1+0.5×(−1.1)=0.45</td>
+</tr>
+<tr>
+<td>另一表及其他表项</td>
+<td>Q^B 全部不动；Q^A 其他项不动</td>
+</tr>
+</tbody></table></div>
+<p>主演示只更新这一个 A 表项，其更新计数增一次，B 表更新计数不增。没有把 0.45 当成任务成功、低偏差或更好的实际策略。</p>
+<p>作为<strong>独立的同原始 pre 对称支核对</strong>：如果本次选 B 支，先按 Q^B 选 cancel=5，再用 Q^A 的 cancel=−2 评价，得到 y_B=−2.8。当前 Q^B(Hopen)=0，所以 Q^B 的 post=0+0.5×(−2.8)=−1.4；Q^A 的 Hopen 仍为 1。这不接在 A 支的 0.45 之后，也不把两个支合并为本次实际双更新。</p>
+<h3 id="section-13">4.5 独立噪声枚举：无偏估计的 max 可以有偏</h3>
+<p>这是<strong>独立于 GUI 的估计量教学分布</strong>。两个动作真实价值均为 0。X1、X2 是各自的估计，彼此独立，均以概率 1/2 取 +1 或 −1，因此每个单独估计的期望为 0：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th align="right">X1</th>
+<th align="right">X2</th>
+<th align="right">联合概率</th>
+<th align="right">max(X1,X2)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1/4</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="right">1</td>
+<td align="right">−1</td>
+<td align="right">1/4</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="right">−1</td>
+<td align="right">1</td>
+<td align="right">1/4</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="right">−1</td>
+<td align="right">−1</td>
+<td align="right">1/4</td>
+<td align="right">−1</td>
+</tr>
+</tbody></table></div>
+<p>max 的期望为 (1+1+1−1)/4=0.5，最大真实价值为 0，因此该假设分布下的最大估计有 0.5 的正偏差。这个结果对整个枚举取期望，不是把某个一次出现的正误差命名为 bias。</p>
+<p>再引入另一组 Z1、Z2：整组 Z 与整组 X 独立，每个 Z 也按独立 ±1 各半、均值 0。按 X 的 argmax 选索引 I，并列时均匀选且选择随机性不使用 Z；再读 Z_I。给定由 X 选出的任何索引，Z_I 的条件均值仍为 0，所以其总期望为 0。完整的 X/Z 联合枚举有 4×4=16 种等概率组合；并列动作再按该规则计算条件平均，实际算法每次仍只选一个动作。</p>
+<p>如果改成同步复制 Z=X，所选评价又等于 max(X1,X2)，本例均值仍为 0.5。它说明独立性/相关性条件为什么重要，不能据“有两个数组”宣布无偏。这里真值相等且评估噪声独立是特定假设；真值不同、选择错动作、估计相关或自举时，Double Q 仍可有误差甚至低估。原论文也说明双估计并非普遍无偏的最大期望估计器。<a href="https://proceedings.neurips.cc/paper_files/paper/2010/file/091d584fced301b442654dd8c23b3fc9-Paper.pdf">机制讨论见 van Hasselt 2010，§2～3。</a></p>
+<h3 id="section-14">4.6 Double Q 单转移伪代码</h3>
+<p>输入为真实当前状态动作、奖励、真终止标志和两张 pre 表；非终止还需有效原任务后继与合法 mask。以下仅说明控制流，<strong>未运行（NOT_RUN）</strong>：</p>
+<pre><code class="language-text">核验当前 x、已执行 a、实际 r 与 true_terminal；任一必需输入无效则保存原因并立即返回
+若非真终止且旧 x_next 或 mask 缺失/无效：
+    保存待核日志与原因；立即返回，不写 Q 或更新计数
+J = 与该转移样本独立的公平分支选择，只取 A 或 B
+old = 本次所选 J 表的 pre[x,a]
+若真终止：target = r，不选后继动作
+否则若 J=A：
+    a_star = 从 QA_pre 的合法 argmax 中按规则选一个动作
+    target = r + gamma*QB_pre[x_next,a_star]
+否则：
+    b_star = 从 QB_pre 的合法 argmax 中按规则选一个动作
+    target = r + gamma*QA_pre[x_next,b_star]
+只写 J 表的当前项：old + alpha*(target-old)，只增该表更新计数
+另一张表与其他表项不动；记录 pre、分支、选中索引和评价值
+</code></pre>
+<p>真实终止优先决定直接奖励分支，缺少终止后的动作集合不影响它。Expected SARSA 的相应流程则检查目标 π，再求合法动作加权和；π 缺失或不合法时也立即跳过该次写入。两种流程都不能让 target 未定义却继续写 Q。</p>
+<h2 id="section-15">5. 与前一种方法的关系</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>方法或机制</th>
+<th>后继项如何构造</th>
+<th>本课重点与新增代价</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SARSA</td>
+<td>已选下一动作的 Q</td>
+<td>目标含下一动作抽样分量，需沿用该实际动作</td>
+</tr>
+<tr>
+<td>Q-learning</td>
+<td>合法 Q 最大值</td>
+<td>行为可探索，估计的最大化可能耦合选择与正误差</td>
+</tr>
+<tr>
+<td>Expected SARSA</td>
+<td>给定目标 π 的合法 Q 加权和</td>
+<td>去掉相应条件下的动作抽样分量，需已知动作概率并汇总合法动作</td>
+</tr>
+<tr>
+<td>Double Q</td>
+<td>一表 argmax，另一表评选中索引</td>
+<td>分离选择评价，每转移只更新一表，需两表与明确分支规则</td>
+</tr>
+</tbody></table></div>
+<p>Expected SARSA 没有求掉环境转移、奖励和估计误差，也不保证当前贪心策略建立在正确 Q 上。Double Q 没有把实际行为变成无成本探索，也不自动获得覆盖。两种目标调整分别处理不同问题，名称里的 Expected 和 Double 都不是效果保证。</p>
+<p>表格实现中，Expected SARSA 需要对合法动作求和；Double Q 通常存储两张表，并扫描所选表的合法动作、查询另一表的选中项，每转移仍只写一项。两表可以相同初始化，但不持续同步复制。动作候选很多、视觉编码昂贵或环境反馈缓慢时，真实训练与推理成本还包括采集、核验、模型前向、执行和恢复，不能从表格操作量推断业务时延或数据效率必然改善。</p>
+<h2 id="section-16">6. 一个主要研究应用</h2>
+<p>主应用选择<strong>具有多步后果和可核验结果的 GUI 控制</strong>。研究前应先判断：误差主要来自下一动作抽样、环境随机性、价值估计、动作合法性还是反馈缺失？本课未读取真实运行数据，不能替业务诊断哪一项占主导。若只是截图上的独立定位，先用监督定位或固定流程，不人为制造多步目标。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>真实合同</th>
+<th>研究前需要补齐的内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1. 观测与完整状态</td>
+<td>【待确认】指令、画面、结构信息、历史和预算，隐藏状态是否影响操作后果</td>
+</tr>
+<tr>
+<td>2. 合法动作与 mask</td>
+<td>【待确认】动作粒度、允许范围、mask 的依据/版本、空和未知集合的处理</td>
+</tr>
+<tr>
+<td>3. 行为、目标与分支</td>
+<td>【待确认】行为 b、目标 π、ε/平局、估计快照；Double 的 A/B 分支及两表更新日志</td>
+</tr>
+<tr>
+<td>4. 奖励与折扣</td>
+<td>【待确认】成功失败、取消、步骤时间及错误操作代价的单位和权重，γ，不照搬教学数字</td>
+</tr>
+<tr>
+<td>5. 反馈来源</td>
+<td>【待确认】谁、何时核验任务结果，延迟/噪声/缺失；按钮命中或提示是否证明业务成功</td>
+</tr>
+<tr>
+<td>6. 时间与结束规则</td>
+<td>【待确认】真终止、预算耗尽、外部截断和 reset 的独立标志及有效原后继</td>
+</tr>
+<tr>
+<td>7. 初态与采集范围</td>
+<td>【待确认】任务分布、重置成本、可达性与允许的探索范围</td>
+</tr>
+<tr>
+<td>8. 数据、覆盖与相关性</td>
+<td>【待确认】真实转移、失败缺失、状态动作次数、两表分支数据来源、共享任务与估计相关性</td>
+</tr>
+<tr>
+<td>9. 指标与评价策略</td>
+<td>【待确认】回报、成功、错误、取消、覆盖及估计误差参考；探索行为与冻结评价分别报告</td>
+</tr>
+<tr>
+<td>10. 采集与训练成本</td>
+<td>【待确认】交互、标注核验、独立重复、调参、训练及双表存储成本</td>
+</tr>
+<tr>
+<td>11. 推理与执行成本</td>
+<td>【待确认】视觉编码、候选动作、策略概率、求和/argmax、双表查询、等待恢复与结果核验</td>
+</tr>
+<tr>
+<td>12. 方法与非 RL 对照</td>
+<td>【待确认】SARSA/QL/ES/Double 的条件匹配方法比较，与固定流程、监督定位加流程、示范行为等非 RL 对照分开</td>
+</tr>
+</tbody></table></div>
+<p>拟议比较应固定任务、输入、动作权限、交互预算与成功判据，分开调参和测试，用独立重复评估不确定性，同时记录环境步、更新及计算成本。条件方差理论值不能替代学习曲线；噪声 toy 的真值 0 不能当成真实 GUI 的价值标签。没有当前真实运行，不能填入成功率提升或估计误差下降。</p>
+<p>模态路由的输入、标签语义、动作及错误成本均待确认，不能借旧标签代替本课定义。单次路由先检查单步建模是否足够；多步才考虑后续反馈。SR 同样需先有真实连续处理、计算分配或停止决策及成本反馈，普通监督重建不强套本课方法。</p>
+<h2 id="section-17">7. 常见误解、失败条件和适用边界</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>误解</th>
+<th>核查办法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>“Expected 意味着目标已经没有随机性”</td>
+<td>写出固定的 r、x′、Q_pre、π 与仅随机 A′；其他来源仍在</td>
+</tr>
+<tr>
+<td>“把 next Q 平均就行”</td>
+<td>按目标 π 加权并核验合法归一化；不是无条件算术平均</td>
+</tr>
+<tr>
+<td>“两个数组就等于两个独立无偏估计”</td>
+<td>区分存储分离与统计假设，核查复制、共享数据和自举相关性</td>
+</tr>
+<tr>
+<td>“A 支在 B 表取另一个 max，或平均两个 max”</td>
+<td>先记录 A 选出的索引，再只读 B 的同一动作值</td>
+</tr>
+<tr>
+<td>“一条转移顺便把 A、B 都更新”</td>
+<td>只取一个已声明分支；本课对称 B 是独立同 pre 核算</td>
+</tr>
+<tr>
+<td>“同初值非法，必须先训练两套模型”</td>
+<td>可以同初值，但分别维护和分支更新；不是两个完整训练流程</td>
+</tr>
+<tr>
+<td>“max 的一次正误差就是统计 bias”</td>
+<td>明确真值、估计分布、独立性与跨假设重复的期望</td>
+</tr>
+<tr>
+<td>“目标较小或方差分量为零就保证更好”</td>
+<td>检查实际目标、奖励、覆盖、相关性和评价成本，不能跳过真实证据</td>
+</tr>
+</tbody></table></div>
+<p>本课没有证明固定 α=0.5 的短记录必收敛，也没有将表格条件推广给任意神经网络。原论文的条件性收敛与有限样本偏差是不同问题；双估计还可能低估。更完整的覆盖、步长和收敛讨论留给下一课。</p>
+<h2 id="section-18">8. 三道理解题</h2>
+<p><strong>题 1｜Expected SARSA 与条件方差。</strong> 用主表 π=(0.9,0.1)、F 值 4、−2、r=−1、γ=0.9、当前项 1、α=0.5，计算后继均值、y、δ 与 post。仅随机下一动作时，SARSA 目标均值与方差是多少？ES 的 0 方差分量能否推出所有训练目标没有方差或真实价值无偏？</p>
+<p><strong>题 2｜Double Q 分支。</strong> 用第 4.4 节两张原始 pre 表：人为取 A 支，依次写选动作表、选中索引、评价表和 y、δ、post，哪张表不变？再从同一原始 pre 独立核对 B 支，能否与 A 支顺序合并？若真终止或非终止 mask 缺失，控制流怎样处理？</p>
+<p><strong>题 3｜偏差、相关性与真实应用。</strong> 两真值 0、独立 ±1 估计的四种组合为什么使 E[max]=0.5？独立 Z 评价与同步复制 Z=X 各得到什么均值，这能否证明实际 Double Q 总无偏？列四项 GUI 或路由待确认合同，以及一个非 RL 行为对照。</p>
+<h2 id="section-19">9. 下一单元与待复习问题</h2>
+<p>下一单元为 <strong>RL-019《表格控制的边界：收敛条件与数据覆盖》</strong>。本课只保留必要的条件边界，不提前展开完整证明。</p>
+<p>如果仍会把行为概率与目标概率混合，回查 RL-017；若不清楚 SARSA 的下一动作与 Q-learning 的 max，回查 RL-015、016。若把条件方差、偏差和单次误差互换，回查 RL-012。本课材料可用不代表已经学会，建议独立作答后再核对；没有新反馈时保持既定依赖，不推断个人掌握。</p>
+<h2 id="section-20">10. 可核查的参考来源与证据说明</h2>
+<ol>
+<li>Sutton、Barto，<em>Reinforcement Learning: An Introduction</em>，第 2 版：<a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">原始教材 PDF</a>。本次实际选读印刷页 133～136，重点为 §6.6 式 6.9 的动作期望与条件抽样分量、§6.7 的最大化偏差和式 6.10/双表程序；图中具体实验结果不作为本课实测，136 页开始的后续特殊任务不展开。</li>
+<li>Hado van Hasselt，<em>Double Q-learning</em>，NIPS 2010：<a href="https://proceedings.neurips.cc/paper/2010/hash/091d584fced301b442654dd8c23b3fc9-Abstract.html">官方会议页面</a>，<a href="https://proceedings.neurips.cc/paper_files/paper/2010/file/091d584fced301b442654dd8c23b3fc9-Paper.pdf">原始论文 PDF</a>。本次实际读取 PDF 第 1～5 页，含 §2 单/双估计、独立性假设及可能低估、§3 与 Algorithm 1 和条件边界，并核对算法图像。未声称通读其余实验、完整证明或补充材料，也不把后来的 Double DQN 当作本课这篇原文。</li>
+</ol>
+<p>来源核查日期 2026-11-02。教材完整网络打开受文件体积限制，使用重新校验原始缓存的上述选页；官方论文原文可读。来源访问和文件校验放在私有验证记录，下载整份文件不等于语义通读全文。</p>
+<p>已发表知识只支持相应机制与条件；给定 Q、人工转移、±1 噪声及独立 Z 是教学假设与精确枚举；GUI/路由/SR 的研究方案是工程推断。没有随机采样、研究训练、真实 GUI、GPU 或服务器实验，没有实际成功率、误差或时延提升，研究状态为<strong>未运行（NOT_RUN）</strong>。</p>
+<details class="answers" id="section-21"><summary>参考答案（练习完成后再看）</summary><p><strong>题 1 参考答案。</strong> 后继均值为 0.9×4+0.1×(−2)=3.4；y=−1+0.9×3.4=2.06，δ=2.06−1=1.06，post=1+0.5×1.06=1.53。三个目标列须从独立同 pre 表算，QL 为 2.6/1.8，已选 cancel 的 SARSA 为 −2.8/−0.9，不串写。</p>
+<p>固定 r、x′、Q_pre、π，只随机 A′ 时，SARSA 的目标以 0.9 取 2.6、以 0.1 取 −2.8，均值 2.06；条件方差为 0.9×0.54²+0.1×(−4.86)²=2.6244。ES 对该随机动作精确求和，目标固定为 2.06，故这一条件方差为 0。它没有消除奖励转移、训练快照及估计误差，不证明真实价值无偏或实际表现更优。本例 π=b；一般 ES 可以用与行为不同的目标 π。</p>
+<p><strong>题 2 参考答案。</strong> A 支用 Q^A_pre 选 save=4，再读 Q^B_pre(F1,save)=1；不能改取 B 的 cancel=5。y_A=−1+0.9×1=−0.1，δ_A=−0.1−1=−1.1，Q^A_Hpost=0.45。Q^B 全不变，A 其他项不变，只增该 A 项更新计数。</p>
+<p>独立同原始 pre 的 B 支用 Q^B 选 cancel=5，再读 Q^A(F1,cancel)=−2：y_B=−2.8，当前 B 的 Hopen=0，所以 δ_B=−2.8，Bpost=−1.4；A 的 Hopen 保持 1。这个核对不接 A 支之后，不与其合成实际双更新。实际程序每转移取一个与样本独立的 A/B 分支，行为可用两表和，但行为选择与更新支不是一回事；两表可以同初值，分开维护不保证统计独立。</p>
+<p>真终止直接 y=r，不做 argmax 或后继查询，Double 仍只写选定表。非终止旧后继或 mask 缺失则记录并立即返回、不写 Q 或更新计数；ES 还需有效目标 π。reset 新图不能补旧后继，外部截断在原任务继续且所需资料有效时可构一步目标，不要求已选下一行为动作或实际续接。</p>
+<p><strong>题 3 参考答案。</strong> X1、X2 各独立 ±1 各半，单个均值 0；四等概率组合的 max 为 1、1、1、−1，均值 0.5，与最大真值 0 的差为正偏差。这是分布期望性质，单次差值不是这个 bias。</p>
+<p>若整组 Z 与 X 独立且每个 Z 的均值 0，选择索引仅依赖 X 和独立的均匀平局随机性，则给定索引后的 Z_I 均值仍 0，总期望为 0。若 Z=X，同一选择与评价又得到 max，均值仍为 0.5。这里真值相等、误差分布和独立性均为明确教学条件；真实双表可能相关、有估计误差或选择错动作，所以不推出实际 Double Q 总无偏、无低估或效果保证。</p>
+<p>合同可列完整状态与预算、合法 mask、行为/目标 π 与更新支日志、奖励单位和独立后果核验、终止/截断/reset、初态可达性、覆盖和相关性、评价及训练推理成本。非 RL 行为对照可用固定流程或监督定位加流程，匹配输入、权限、预算和成功判据；SARSA 等属于方法对照。路由输入、标签、动作与业务成本仍待确认，不代用旧标签。当前真实研究为 NOT_RUN。</p>
+</details></article></div><section class="pdf-preview wrap" aria-labelledby="pdf-preview-title"><h2 id="pdf-preview-title">同内容伴随 PDF · 阅读版</h2><p>本课 PDF 使用与 PPT 相同的源内容，经独立排版用于阅读，非 PowerPoint 原生导出；可编辑汇报请使用 PPT。手机或浏览器未显示时，可<a href="./RL-018.pdf" style="text-decoration:underline">直接打开 PDF 阅读版</a>。</p><iframe src="./RL-018.pdf#toolbar=1" title="RL-018 同内容伴随 PDF 阅读版" loading="lazy"></iframe></section><div class="lesson-navigation wrap"><a href="../RL-017/"><span>← 上一单元 · RL-017</span><strong>探索策略：ε-greedy的代价与覆盖</strong></a><a class="next" href="../RL-019/"><span>下一单元 · RL-019 →</span><strong>表格控制的边界：收敛条件与数据覆盖</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>
