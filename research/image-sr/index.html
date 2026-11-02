@@ -1,0 +1,95 @@
+<!DOCTYPE html> <html lang="zh-CN"> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <title> 图像超分辨论文调研 | 王超华 · 个人研究主页 </title> <meta name="author" content="王超华 "> <meta name="description" content="从顶刊顶会论文中梳理图像超分辨方法、实验条件与证据边界，按调研月份持续归档。"> <meta name="keywords" content="王超华, Chaohua Wang, 计算机视觉, 多模态大模型, 图像恢复, 超分辨率, 端侧部署"> <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; media-src 'self' https:; frame-src 'self' https:; connect-src 'self' https:;"> <style>
+  :root {
+    --max-content-width: 930px;
+  }
+</style> <link rel="stylesheet" href="/assets/css/tailwind.css?v=50c64c15cbb9fd1ce6056fdb8bcb4b62"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css" integrity="sha256-MVopmdyC2tYTiJ8wlktf0uh0v4NgT+vNdyVFepi7Q0c=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/academicons@1.9.5/css/academicons.min.css" integrity="sha256-SzrCOBJbGVFMahewkgjwnApaV2+av1DwMAA+/QGLyZw=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/scholar-icons@1.0.3/css/scholar-icons.css" integrity="sha256-VY3hHVj/hNX3fYG6wtbA6TcKJQl7+FthzGSyIB64klY=" crossorigin="anonymous"> <link defer rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons&amp;display=swap"> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-github.css?v=591dab5a4e56573bf4ef7fd332894c99" media="" id="highlight_theme_light"> <link rel="shortcut icon" href="data:image/svg+xml,&lt;svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22&gt;&lt;text%20y=%22.9em%22%20font-size=%2290%22&gt;%E2%9A%9B%EF%B8%8F&lt;/text&gt;&lt;/svg&gt;"> <link rel="stylesheet" href="/assets/css/main.css?v=3116ba77db9ee1581d05bb3e86fbf7f1"> <link rel="canonical" href="https://chaohuawang-phd.github.io/research/image-sr/"> <script src="/assets/js/theme.js?v=5286c3e4c334d0ecb8fc0c40ff4fa7ec"></script> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-native.css?v=5847e5ed4a4568527aa6cfab446049ca" media="none" id="highlight_theme_dark"> <script>
+    initTheme();
+  </script> </head> <body class="fixed-top-nav sticky-bottom-footer"> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <a class="navbar-brand title font-weight-lighter" href="/"> 王超华 · 个人研究主页 </a> <button class="navbar-toggler collapsed navbar-toggler-main" type="button" data-nav-toggle="navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse navbar-collapse-main" id="navbarNav"> <ul class="navbar-nav navbar-menu-list flex-nowrap"> <li class="nav-item "> <a class="nav-link" href="/">关于我 </a> </li> <li class="nav-item active"> <a class="nav-link" href="/research/">研究方向 <span class="sr-only">(current)</span> </a> </li> <li class="nav-item "> <a class="nav-link" href="/publications/">论文成果 </a> </li> <li class="nav-item "> <a class="nav-link" href="/projects/">研究项目 </a> </li> <li class="nav-item "> <a class="nav-link" href="/cv/">教育与经历 </a> </li> <li class="nav-item active"> <a class="nav-link" href="/research/image-sr/">图像超分辨论文调研 <span class="sr-only">(current)</span> </a> </li> <li class="nav-item"> <button id="search-toggle" type="button" title="Search" aria-label="Open search"> <span class="nav-link">ctrl k <i class="fa-solid fa-magnifying-glass"></i></span> </button> </li> <li class="toggle-container"> <button id="light-toggle" type="button" title="Change theme" aria-label="Change color theme"> <i class="fa-half-sun-moon" id="light-toggle-system"></i> <i class="fa-solid fa-moon" id="light-toggle-dark"></i> <i class="fa-solid fa-sun" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="container mt-5" role="main"> <div class="post"> <header class="post-header"> <h1 class="post-title">图像超分辨论文调研</h1> <p class="post-description">从顶刊顶会论文中梳理图像超分辨方法、实验条件与证据边界，按调研月份持续归档。</p> </header> <article> <p>这里整理图像超分辨领域近五年的顶刊顶会论文，关注方法为什么成立、实验是否支持结论，以及质量、感知与成本之间的取舍。论文按<strong>完成调研的月份</strong>归档，发表年份另行标注。</p> <p>目前已核验 9 篇主会论文的官方记录，完成 HAT 的正文与补充材料精读；其余候选保留在待精读清单中。首轮覆盖仍有限，尚不构成完整综述或当前 SOTA 排名。</p> <h2 id="月份归档">月份归档</h2> <table> <thead> <tr> <th>调研月份</th> <th>本月内容</th> <th>完成状态</th> </tr> </thead> <tbody> <tr> <td><a href="/research/image-sr/2026-11/">2026-11月份</a></td> <td>首轮检索、HAT 精读与后续阅读清单</td> <td>1 篇完成精读，8 篇待全文核验</td> </tr> </tbody> </table> <h2 id="最新精读">最新精读</h2> <p><a href="/research/image-sr/2026-11/hat-cvpr-2023/">HAT CVPR 2023 论文精读</a>：窗口、通道注意力与跨窗口信息交换分别贡献多少，ImageNet 预训练又改变了哪些比较条件。</p> <h2 id="如何阅读本栏目">如何阅读本栏目</h2> <p>具体性能结论保留原论文的任务条件，不将 bicubic、真实退化和生成式超分辨混成一个总榜。</p> <h2 id="调研范围与纳入标准">调研范围与纳入标准</h2> <p>当前回溯范围为 2022 年至 2026 年 11 月 2 日；后续采用运行当年及前四个自然年的窗口。关注经典单图像超分辨、盲与真实世界超分辨、生成式方法、轻量高效及任意倍率方法。视频、医学、遥感、人脸等专项问题不在本轮默认范围。</p> <p>正式来源限定为 CVPR、ICCV、ECCV、IEEE TPAMI、IJCV，以及 NeurIPS、ICML、ICLR 中直接研究图像超分辨的正式主会研究论文。以官方论文集、出版社或正式接收记录确认身份，不以期刊分区和影响因子替代名单。排除 workshop、竞赛报告、只有摘要的非完整研究记录及未有官方接收证据的纯预印本；主会论文以 poster 形式展示不影响纳入。</p> <h2 id="公平比较与持续更新">公平比较与持续更新</h2> <p>比较时记录退化模型、倍率、训练集和额外数据、测试集、指标、RGB/Y 通道、裁边、自集成、模型规模、计算量及测速条件。协议不一致时分组呈现；未报告的字段保留为未报告。PSNR/SSIM 与 LPIPS/DISTS/FID 分开解释，区分作者宣称领先、相同协议下核验领先和条件不足以比较。</p> <p>每次检索保留来源、日期、检索式、纳入或排除理由和未完成范围。预印本、会议版与期刊扩展版关联到同一工作。每轮最多完成两篇精读，其余合格候选继续保留。月份代表完成调研时间；后续新证据更新原论文入口，并在当月归档说明变化。</p> <p><a href="/">返回个人主页</a> · <a href="/research/">查看研究方向</a></p> </article> </div> </div> <footer class="sticky-bottom mt-5" role="contentinfo"> <div class="container"> © Copyright 2026 王超华 . 基于 <a href="https://github.com/alshedivat/al-folio" rel="external nofollow noopener" target="_blank">al-folio</a> 构建，由 <a href="https://pages.github.com/" rel="external nofollow noopener" target="_blank">GitHub Pages</a> 托管。 </div> </footer> <script>
+  window.alFolio = {
+    compatBootstrap: false
+  };
+</script> <script src="/assets/js/nav-toggle.js?v=141bd79a73ebc0f0b6ea58e440ae79fc"></script> <script defer src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js" integrity="sha256-Nn1q/fx0H7SNLZMQ5Hw5JLaTRZp0yILA/FRexe19VdI=" crossorigin="anonymous"></script> <script defer src="https://cdn.jsdelivr.net/npm/imagesloaded@5.0.0/imagesloaded.pkgd.min.js" integrity="sha256-htrLFfZJ6v5udOG+3kNLINIKh2gvoKqwEhHYfTTMICc=" crossorigin="anonymous"></script> <script defer src="/assets/js/masonry.js?v=e49affc7bd2646f6acdad1dbe02c2359" type="text/javascript"></script> <script defer type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script> <script src="/assets/al_math/js/mathjax-setup.js"></script> <script src="/assets/js/tooltips-setup.js?v=fe487e99db6c43751e6e7bdb2d6a0611"></script> <script src="/assets/js/no_defer.js?v=53b1b1a645525975c963ce8bf8bfefcf"></script> <script defer src="/assets/js/common.js?v=87baac90f765f2f3362dcf6aaf312a8a"></script> <script defer src="/assets/js/copy_code.js?v=c8a01c11a92744d44b093fc3bda915df" type="text/javascript"></script> <script defer src="/assets/js/jupyter_new_tab.js?v=896d254890d9b47f0281f63bfccf0dee"></script> <script defer src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script> <script defer src="/assets/al_img_tools/js/zoom.js"></script> <script defer src="/assets/js/progress-bar.js?v=499464c5c63ced6cf7ad62509f1e2610" type="text/javascript"></script> <script src="https://cdn.jsdelivr.net/npm/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js" integrity="sha256-uMJJ3EoTyfRBoTbR+lrfu1uRQ87RZG8AR3cVNuQVeFg=" crossorigin="anonymous"></script> <script>
+    addBackToTop();
+  </script> <script type="module" src="/assets/al_search/js/search/ninja-keys.min.js"></script> <ninja-keys hidebreadcrumbs noautoloadmdicons placeholder="Type to start searching"></ninja-keys> <script src="/assets/al_search/js/search-setup.js"></script> <script>
+// get the ninja-keys element
+const ninja = document.querySelector('ninja-keys');
+
+// add the home and posts menu items
+ninja.data = [{
+    id: "nav-关于我",
+    title: "关于我",
+    section: "Navigation",
+    handler: () => {
+      window.location.href = "/";
+    },
+  },{id: "nav-研究方向",
+          title: "研究方向",
+          description: "从视觉感知到多模态理解，关注模型能力与实际应用之间的连接。",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/research/";
+          },
+        },{id: "nav-论文成果",
+          title: "论文成果",
+          description: "视频去模糊研究论文与开源代码。",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/publications/";
+          },
+        },{id: "nav-研究项目",
+          title: "研究项目",
+          description: "围绕多模态交互、视觉恢复与模型部署开展研究和工程实践。",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/projects/";
+          },
+        },{id: "nav-教育与经历",
+          title: "教育与经历",
+          description: "教育背景、工作经历与研究工程能力。",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/cv/";
+          },
+        },{id: "nav-图像超分辨论文调研",
+          title: "图像超分辨论文调研",
+          description: "从顶刊顶会论文中梳理图像超分辨方法、实验条件与证据边界，按调研月份持续归档。",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/research/image-sr/";
+          },
+        },{
+        id: 'social-github',
+        title: 'GitHub',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://github.com/chaohuawang-phd", "_blank");
+        },
+      },{
+      id: 'light-theme',
+      title: 'Change theme to light',
+      description: 'Change the theme of the site to Light',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("light");
+      },
+    },
+    {
+      id: 'dark-theme',
+      title: 'Change theme to dark',
+      description: 'Change the theme of the site to Dark',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("dark");
+      },
+    },
+    {
+      id: 'system-theme',
+      title: 'Use system default theme',
+      description: 'Change the theme of the site to System Default',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("system");
+      },
+    },];
+
+</script> <script src="/assets/al_search/js/shortcut-key.js"></script> </body> </html>
