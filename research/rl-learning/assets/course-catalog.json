@@ -799,7 +799,8 @@
         "避免把表格结论直接套给深网"
       ],
       "tags": [
-        "TD控制"
+        "TD控制",
+        "GUI"
       ],
       "study_minutes": {
         "min": 30,
@@ -808,13 +809,13 @@
       "previous_unit": "RL-018",
       "next_unit": "RL-020",
       "revision": "1.0.0",
-      "created_date": null,
-      "content_updated_date": null,
+      "created_date": "2026-11-04",
+      "content_updated_date": "2026-11-04",
       "url": "lessons/RL-019/",
       "availability": {
-        "lecture": false,
-        "pptx": false,
-        "pdf": false
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
       }
     },
     {
