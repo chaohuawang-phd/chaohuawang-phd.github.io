@@ -1,3 +1,334 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151a17"><meta name="description" content="解释经典收敛条件的作用，并连接本阶段的前置概念。"><meta name="color-scheme" content="light"><title>RL-019｜表格控制的边界：收敛条件与数据覆盖 · 王超华</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%23151a17'/%3E%3Cpath d='M31 14a13 13 0 1 0 0 20' fill='none' stroke='%23c8f45b' stroke-width='5'/%3E%3Ccircle cx='32' cy='24' r='3' fill='%23c8f45b'/%3E%3C/svg%3E"><link rel="stylesheet" href="../../styles.css"><link rel="stylesheet" href="../../assets/katex/katex.min.css"><script src="../../script.js" defer></script></head>
-<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-019</span></div><section class="lesson-hero"><p class="eyebrow">RL-019 · WEEK 03 · 新知识</p><h1>表格控制的边界：收敛条件与数据覆盖</h1><p class="lesson-summary">解释经典收敛条件的作用，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">TD控制</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>计划课 · 未生成</span></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="计划课目录"><h2>本课计划</h2><ol><li><a href="#planned-objectives">学习目标</a></li><li><a href="#planned-concepts">核心概念</a></li><li><a href="#planned-prerequisites">前置单元</a></li><li><a href="#planned-format">交付结构</a></li></ol></aside><article class="lecture planned-content"><p class="planned-label">课程计划 · 材料尚未生成</p><div class="planned-state"><p>这是 RL-019 的稳定归档入口。目前只有课程计划，讲义、PPT 与参考资料尚未生成；后续材料将在此页面更新。</p></div><h2 id="planned-objectives">学习目标</h2><ol><li>解释经典收敛条件的作用</li><li>指出有限数据的限制</li><li>避免把表格结论直接套给深网</li></ol><h2 id="planned-concepts">核心概念</h2><div class="concepts"><span>表格表示</span><span>步长</span><span>访问覆盖</span><span>分布偏移</span></div><h2 id="planned-prerequisites">前置单元</h2><ul><li><a href="../RL-018/">RL-018 · Expected SARSA与Double Q：改进目标估计</a></li></ul><h2 id="planned-format">交付结构</h2><p>本单元计划提供问题与前置关系、学习目标、直觉与公式、手算或更新示例、方法关系、主要应用分析、适用边界、3 道练习与文末答案，以及可核查的参考来源。</p><p>配套 PPT 使用统一模板，目标 10～14 页。实际生成后才提供下载与预览入口；目前没有研究实验结果。</p></article></div><div class="lesson-navigation wrap"><a href="../RL-018/"><span>← 上一单元 · RL-018</span><strong>Expected SARSA与Double Q：改进目标估计</strong></a><a class="next" href="../RL-020/"><span>下一单元 · RL-020 →</span><strong>应用：小型GUI导航中的安全探索与控制</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>
+<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="https://chaohuawang-phd.github.io/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="https://chaohuawang-phd.github.io/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="https://chaohuawang-phd.github.io/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-019</span></div><section class="lesson-hero"><p class="eyebrow">RL-019 · WEEK 03 · 新知识</p><h1>表格控制的边界：收敛条件与数据覆盖</h1><p class="lesson-summary">解释经典收敛条件的作用，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">TD控制</span><span class="tag">GUI</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>讲义 · PPT 可用</span></div><div class="button-row"><a class="button small" href="./lecture.md" download>讲义下载 · MD</a><a class="button small" href="./RL-019.pptx" download>PPT 下载</a><a class="button small" href="./RL-019.pdf">PDF 阅读版</a></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="本课目录"><h2>本课目录</h2><ol><li><a href="#section-1">1. 今天解决什么问题，与前面哪些单元有关</a></li><li><a href="#section-2">2. 学习目标</a></li><li><a href="#section-3">3. 直觉、定义和必要公式</a></li><li><a href="#section-9">4. 手算例子或更新过程</a></li><li><a href="#section-14">5. 与前一种方法的关系</a></li><li><a href="#section-15">6. 一个主要研究应用：多步 GUI 的覆盖与收敛条件核查</a></li><li><a href="#section-16">7. 常见误解、失败条件和适用边界</a></li><li><a href="#section-17">8. 三道理解题</a></li><li><a href="#section-18">9. 下一单元与待复习问题</a></li><li><a href="#section-19">10. 可核查的参考来源与证据说明</a></li><li><a href="#section-20">参考答案（练习完成后再看）</a></li></ol></aside><article class="lecture"><p>课程：强化学习学习与应用 · 第 3 周 / 单元 19<br>课程版本：1.0.0 · 内容版本：1.0.0 · 日期：2026-11-04（Asia/Shanghai）<br>预计学习：30～45 分钟 · 汇报：10～15 分钟<br>前置：<a href="../RL-018/">RL-018｜Expected SARSA与Double Q：改进目标估计</a>，并需区分 <a href="../RL-015/">RL-015</a> 的 SARSA、<a href="../RL-016/">RL-016</a> 的 Q-learning 和 <a href="../RL-017/">RL-017</a> 的探索与覆盖。<br>证据说明：理论条件依据原始教材与 Watkins、Dayan 1992；算例和反例为<strong>教学假设与精确推导</strong>。真实任务分析为工程推断；研究训练、随机采样和真实 GUI 实验均<strong>未运行（NOT_RUN）</strong>。</p>
+<p>建议节奏：收敛命题与条件 12 分钟 → 步长和覆盖手算 12 分钟 → 方法关系与 GUI 合同 9 分钟 → 三题自测及核对 8 分钟。</p>
+<h2 id="section-1">1. 今天解决什么问题，与前面哪些单元有关</h2>
+<p>前课分别减少了下一动作抽样分量、分离了最大动作的选择与评价。但“目标写得更合理”不等于“有限训练必然找到最优策略”。还要问：哪些状态动作真正得到数据？步长是否让旧偏差能被纠正，又让噪声逐渐减小？任务和状态表示有没有在学习中改变？</p>
+<p>经典表格收敛结论说的是：<strong>在明确的一组长期条件下，估计以概率 1 趋于指定目标。</strong>它不是“训练若干轮一定好”的时间表，不是当前日志覆盖充分的证书，也不直接适用于神经网络 Q 函数。</p>
+<p>今天以有限、平稳、折扣的单表 Q-learning 为主要理论对象，再单独说明 SARSA 的 GLIE 条件。Expected SARSA 与 Double Q 的机制仍有各自分析要求，不能把一条单表定理统一盖在四种方法上。</p>
+<h2 id="section-2">2. 学习目标</h2>
+<ol>
+<li>能说出本课采用的 tabular Q-learning 一组充分条件，正确解释“每对无限访问”和按对计数的步长两和。</li>
+<li>能区分 SARSA 的 GLIE、Q-learning 的行为覆盖、ε 退火与状态可达性，避免把算法名称或退火公式当成覆盖证明。</li>
+<li>能独立复算常数步长与按对 1/n 的三次更新，解释有限数据、模型变化与表格到深网之间的结论边界。</li>
+</ol>
+<h2 id="section-3">3. 直觉、定义和必要公式</h2>
+<h3 id="section-4">3.1 先说清楚“收敛到什么”和“以什么意义”</h3>
+<p>Q*(s,a) 是指定 MDP 中，从完整状态 s 先做合法动作 a、之后最优续行的期望折扣回报。表格表示为每个合法状态动作对单独存一个值；不是多个状态共用一组神经网络参数。</p>
+<p>Q-learning 对已执行的当前对作一次更新。在这个对的第 n 次可用更新中，可以写成：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>Q</mi><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow></msub><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi>Q</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">d</mi></mrow></msub><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>+</mo><msub><mi>α</mi><mi>n</mi></msub><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mrow><mo fence="true">[</mo><msub><mi>Y</mi><mi>n</mi></msub><mo>−</mo><msub><mi>Q</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">d</mi></mrow></msub><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo fence="true">]</mo></mrow><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">Q_{\mathrm{new}}(s,a)=Q_{\mathrm{old}}(s,a)
++\alpha_n(s,a)\left[Y_n-Q_{\mathrm{old}}(s,a)\right].</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight" style="margin-right:0.01389em;">new</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">old</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0037em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;">[</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">Y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">old</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mclose delimcenter" style="top:0em;">]</span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">.</span></span></span></span></span></div>
+<ul>
+<li>s、a：本次更新的完整状态及已执行的合法动作。</li>
+<li>old、new：本次写入前后的表；其他表项保持不变。</li>
+<li>n：<strong>这个状态动作对自己的更新编号</strong>，不是全局环境步或全局任务编号。</li>
+<li>α_n(s,a)：处理这个对第 n 次有效样本时的步长。</li>
+<li>Y_n：该次 Q-learning 目标，仍由写入前表构造。</li>
+</ul>
+<p>真终止时 Y_n=r；非终止时 Y_n=r+γ max_u Q_old(s′,u)，u 只遍历真实后继的合法动作。r 是即时奖励，s′ 是原任务后继，γ 是折扣。真终止分支直接取奖励，不读取终止空动作集合。后继、mask 或必需反馈缺失时，按前课约定保留原因并跳过写入，不用 reset 新图补后继，也不把跳过的记录算成可用更新。</p>
+<p>经典结论中的“以概率 1（almost surely，a.s.）”是相对于随机反馈与采样过程的长期概率命题，不是“本次有限日志看起来平稳”。结论针对 Q 值趋于 Q*；有多个并列最优动作时，动作选择仍可能在最优集合中切换，不必最终固定成一个动作编号。</p>
+<h3 id="section-5">3.2 单表 Q-learning：本课采用的一组充分条件</h3>
+<p>以下集中在<strong>有限、平稳、折扣的表格 MDP</strong>，不把它推广为所有 RL 的无条件定理。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>条件</th>
+<th>本课的准确含义</th>
+<th>真实任务中要检查什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>有限表格与完整状态</td>
+<td>状态、合法动作有限，表项语义固定；状态包含影响未来的必要变量</td>
+<td>截图或连续特征是否真的形成有限、充分且稳定的状态</td>
+</tr>
+<tr>
+<td>平稳与正确反馈</td>
+<td>给定同一状态动作，奖励和转移条件分布不随时间变；样本符合该 MDP</td>
+<td>不只保留成功，不用错误后继、事后信息或缺失结果补样本</td>
+</tr>
+<tr>
+<td>有界奖励与折扣</td>
+<td>存在有限 R_max 使每步奖励绝对值不超过它，0&lt;γ&lt;1，初始表值有限</td>
+<td>真实成本/奖励定义与单位，不能悄换目标</td>
+</tr>
+<tr>
+<td>无限覆盖</td>
+<td>这个已明确 MDP 中的每个合法状态动作对，以概率 1 得到无限多次有效访问与更新</td>
+<td>初态、可达路径、reset、动作 mask 和采集机制是否提供机会</td>
+</tr>
+<tr>
+<td>按对的步长</td>
+<td>每对自己的更新序列满足下面两和，并在通常的因果采样设定中使用</td>
+<td>不把全局步长或按奖励挑选的更新当作该条件</td>
+</tr>
+</tbody></table></div>
+<p>对每个合法 (s,a)，步长的经典两和为：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mi mathvariant="normal">∞</mi></munderover><msub><mi>α</mi><mi>n</mi></msub><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><mi mathvariant="normal">∞</mi><mo separator="true">,</mo><mspace width="2em"/><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mi mathvariant="normal">∞</mi></munderover><msubsup><mi>α</mi><mi>n</mi><mn>2</mn></msubsup><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>&lt;</mo><mi mathvariant="normal">∞</mi><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\sum_{n=1}^{\infty}\alpha_n(s,a)=\infty,
+\qquad
+\sum_{n=1}^{\infty}\alpha_n^2(s,a)&lt;\infty.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.9185em;vertical-align:-1.2671em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.6514em;"><span style="top:-1.8829em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mrel mtight">=</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2671em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0037em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.9185em;vertical-align:-1.2671em;"></span><span class="mord">∞</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.6514em;"><span style="top:-1.8829em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mrel mtight">=</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2671em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-2.453em;margin-left:-0.0037em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.247em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord">∞.</span></span></span></span></span></div>
+<p>第一和不耗尽纠正初值和持续误差的总调整机会；第二和限制长期累积的随机噪声。它们要与表格、MDP、折扣和覆盖等条件共同使用，不能只检查一条学习率曲线。</p>
+<p>Watkins、Dayan 原文的步长区间写为 0≤α&lt;1，并在各状态动作对的访问子序列上求和。本课用这一严格上界说明原文条件；第 4 节的 1/n 手算首项为 1，会单独交代有限首项与尾部的区别，不冒称逐字满足原文全部写法。</p>
+<p>步长应按已知计数或过去信息设定，样本按真实任务条件获得；不能看见奖励好才计数、才更新，再把筛过的数据称为无偏的原环境样本。同一平稳 MDP 产生的 Markov 轨迹可以相关；经典前提不是要求整条日志全局 IID。反复重放固定有限日志，不会自动补出原环境未观测的后果，也不自动证明原 MDP 的覆盖与样本条件。给定前述模型、覆盖、步长和通常采样条件，可得到单表 Q-learning 的 Q 值以概率 1 趋于 Q*。<a href="https://www.gatsby.ucl.ac.uk/~dayan/papers/cjch.pdf">原文设定、无限访问与定理见 Watkins、Dayan 1992 印刷页 280～282。</a></p>
+<p><strong>这些是充分条件，不是每种特殊任务的必要且充分条件。</strong>某一条未满足时，应说“不能调用这组保证”，不能立即推出所有运行必失败、必振荡或必发散。本课也不展开 γ=1 吸收任务等另需条件的扩展。</p>
+<h3 id="section-6">3.3 全局计时不等于每对计数</h3>
+<p>若某个稀有对只在全局时刻 t_n=2^n 更新，却使用全局 α_t=1/t，则它实际收到的步长是 2^(−n)：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mi mathvariant="normal">∞</mi></munderover><msub><mi>α</mi><msub><mi>t</mi><mi>n</mi></msub></msub><mo>=</mo><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mi mathvariant="normal">∞</mi></munderover><msup><mn>2</mn><mrow><mo>−</mo><mi>n</mi></mrow></msup><mo>=</mo><mn>1</mn><mo>&lt;</mo><mi mathvariant="normal">∞</mi><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\sum_{n=1}^{\infty}\alpha_{t_n}
+=\sum_{n=1}^{\infty}2^{-n}=1&lt;\infty.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.9185em;vertical-align:-1.2671em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.6514em;"><span style="top:-1.8829em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mrel mtight">=</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2671em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0037em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1645em;"><span style="top:-2.357em;margin-left:0em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2501em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.9185em;vertical-align:-1.2671em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.6514em;"><span style="top:-1.8829em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mrel mtight">=</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2671em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8213em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6835em;vertical-align:-0.0391em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord">∞.</span></span></span></span></span></div>
+<p>t_n 是该对第 n 次更新发生的全局时刻。虽然全局的 1/t 级数发散，这个对的子序列总步长却有限，不能通过第一条条件。这里是一个计数教学构造，不是实际训练失败率。</p>
+<p>反过来，按对取 α_n=1/n 的两和分别为发散的调和级数与收敛的平方倒数级数；但如果这个对根本只更新了三次，就不存在已由日志验证的无限尾部。还需独立检查访问机会，而不是写上 1/n 就完成证明。</p>
+<h3 id="section-7">3.4 SARSA 的 GLIE 与 Q-learning 的行为覆盖应分开</h3>
+<p>SARSA 的目标使用下一实际行为动作，因此它的 on-policy 最优控制收敛条件还涉及行为策略怎样趋于贪心。在本课同类有限平稳折扣设定与合适步长下，常用 <strong>GLIE：Greedy in the Limit with Infinite Exploration</strong> 来概括：</p>
+<ol>
+<li>这个已明确 MDP 中的每个合法状态动作对仍被无限访问（Infinite Exploration）。</li>
+<li>行为策略相对于当前 Q 在极限中变贪心（Greedy in the Limit），即选非贪心动作的概率趋于零；并列最大动作可按规则选择。</li>
+</ol>
+<p>ε→0 只能说明 ε-greedy 的非贪心分量趋小，<strong>不自动说明所有状态动作得到无限机会</strong>。教材 §6.4 中的退火示例不能删掉前面的无限访问前提后，读成“任何多步任务用 1/t 就自动 GLIE”。RL-017 已给出稀有路径的反例。</p>
+<p>Q-learning 是 off-policy 控制：目标用合法动作最大值，行为策略可以保持探索，<strong>不强制要求行为本身 GLIE</strong>。例如固定正 ε 的行为，在额外满足可达/重置与无限更新等条件时仍可用于 Q-learning 的经典分析；固定 ε 本身却不能保证状态一定可达或有限预算内覆盖充分。</p>
+<p>相同固定 ε 不能直接调用 SARSA 到 Q* 的上述 GLIE 保证；这也不等于 SARSA 的数值必发散。SARSA 和 Q-learning 的目标差异、探索行为代价与长期 Q 值结论应分别说明。<a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">教材 §6.4 印刷页 129、§6.5 印刷页 131。</a></p>
+<h3 id="section-8">3.5 有限数据与深网：定理没有提供什么</h3>
+<p>有限日志可以核对实际计数、覆盖空缺、反馈质量、固定评价集表现和不确定性；它不能证明某个无穷级数或每对的无限访问已经发生。曲线平、TD 差小、Q 改变量小，也可能来自步长过小、没有新数据或后继/奖励有误。</p>
+<p>行为改变会改变数据分布，本身并不必然破坏平稳 MDP；真正要分清的是奖励/转移规律、状态含义或动作权限有没有变化。若系统版本、表示或 mask 改变后继续混用同一个计数，先核对它们是否仍代表相同问题。</p>
+<p>表格结论也不能直接给 DQN 或任意 Q 网络作保证。参数共享、函数近似和优化过程改变了条件，不能把“见过很多样本”当作每个固定表项无限更新，也不能把经验回放、目标网络等机制自动当作同一定理前提。后续深度 RL 课程要另读相应分析与实验证据。</p>
+<h2 id="section-9">4. 手算例子或更新过程</h2>
+<h3 id="section-10">4.1 独立新起点：同样三次奖励，比较两条步长序列</h3>
+<p>这是<strong>独立于前课 GUI 快照的新教学任务</strong>：只有一个非终止状态 s 和一个合法动作 a，每次执行后立即终止，再从同一 s 重置。没有后继自举项，目标就是这次奖励。人工给定三条有效样本奖励 +1、+1、−1；没有随机采样，也没有实际训练。</p>
+<p>两份独立副本都从 q₀=0 开始，分别用常数步长 0.5 与按这个对计数的 1/n。它们各自消费相同三条假设记录，不把第一份的最终值接入第二份，也不继承 RL-018 的 1.53 或 0.45。</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>q</mi><mi>n</mi></msub><mo>=</mo><msub><mi>q</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>α</mi><mi>n</mi></msub><mo stretchy="false">(</mo><msub><mi>r</mi><mi>n</mi></msub><mo>−</mo><msub><mi>q</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false">)</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">q_n=q_{n-1}+\alpha_n(r_n-q_{n-1}).</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7917em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0037em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mord">.</span></span></span></span></span></div>
+<p>q_n 是这个唯一状态动作对完成第 n 次更新后的估计；r_n 是该次终止奖励；n 是局部有效更新次数。与第 3 节 q/Q 的含义一致，这里用小写 q 简写单个表项。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>局部更新 n</th>
+<th align="right">奖励 r_n</th>
+<th>常数 α=0.5 的计算</th>
+<th>按对 α_n=1/n 的计算</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>初始</td>
+<td align="right">—</td>
+<td>q₀=0</td>
+<td>q₀=0</td>
+</tr>
+<tr>
+<td>1</td>
+<td align="right">+1</td>
+<td>0+0.5×(1−0)=0.5</td>
+<td>0+1×(1−0)=1</td>
+</tr>
+<tr>
+<td>2</td>
+<td align="right">+1</td>
+<td>0.5+0.5×(1−0.5)=0.75</td>
+<td>1+0.5×(1−1)=1</td>
+</tr>
+<tr>
+<td>3</td>
+<td align="right">−1</td>
+<td>0.75+0.5×(−1−0.75)=−0.125</td>
+<td>1+(1/3)×(−1−1)=1/3</td>
+</tr>
+</tbody></table></div>
+<p>1/n 副本的结果等于三条奖励的算术平均 1/3；常数步长给较近的 −1 更大权重，结果是 −0.125。<strong>没有声明真实奖励分布时，不能据此说哪个数更接近真实均值；三步也不证明哪一种长期收敛。</strong></p>
+<h3 id="section-11">4.2 级数条件、原文严格上界与有限首项</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>假设无限继续使用的序列</th>
+<th>步长和</th>
+<th>步长平方和</th>
+<th>本课能说什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>每次 0.5</td>
+<td>发散</td>
+<td>也发散</td>
+<td>不满足经典平方和条件，不得据此声称一般 a.s. 收敛</td>
+</tr>
+<tr>
+<td>按对 1/n</td>
+<td>发散</td>
+<td>收敛</td>
+<td>满足两和；还需覆盖、平稳、奖励等其他前提</td>
+</tr>
+</tbody></table></div>
+<p>1/n 的首项为 1，而原论文写 α&lt;1，因此不能说这三步逐字满足原论文每一步的区间。可把有限首步完成后的 q₁ 视作一个新的有限初值，后续编号 m=1,2,… 的步长是 1/(m+1)，均小于 1，尾部仍满足两和。把定理从这个新起点应用，是有限前缀不改变尾部条件的推论；并不是把原文严格不等号改成小于等于。</p>
+<p>这仍只解释步长条件的适用口径，<strong>不把三条人工样本变成一个已经满足全部无穷前提的训练证明</strong>。教材 §2.5 印刷页 32～33、式 (2.7) 说明了样本均值、常数步长和两和的区别。</p>
+<h3 id="section-12">4.3 常数步长不等于必发散：一个明确的噪声边界</h3>
+<p>再作一个单独的概率教学假设：上述终止任务每次奖励独立地以 1/2 取 +1 或 −1，q₀=0，始终 α=0.5。估计一直在 [−1,1] 内，因此“没有 a.s. 点收敛”不能改写成“数值必然无界发散”。</p>
+<p>更新式可改写为 r_n=2q_n−q_(n−1)。如果 q_n 收敛到某个有限值，右侧也会收敛；但独立公平 ±1 奖励以概率 1 会无限多次出现两种符号，不会趋于一个值，因此 q_n 不能以概率 1 点收敛。这是<strong>在已明确的持续随机噪声条件下</strong>的反例，不是所有常数步长任务都不收敛；例如恒定奖励并没有这种持续噪声。</p>
+<p>这一段只作数学解释，没有产生随机序列或运行实验。实际非平稳问题可能故意用常数步长跟踪变化，但其目标与固定平稳环境下的 a.s. 收敛保证不同，不能混为一谈。</p>
+<h3 id="section-13">4.4 覆盖反例：退火、状态路径和合法范围</h3>
+<p>复用 RL-017 的<strong>独立采集模型</strong>，不沿用 GUI 奖励：每个任务从 X 开始，想访问 Y,probe，需先在 X 选非贪心 enter，再在 Y 选非贪心 probe。两处各有两个合法动作，估计排序冻结、exit 为唯一贪心，不更新 Q，所有奖励为 0。</p>
+<p>为区别局部更新 n，这里用全局任务编号 m。每个任务两次选择都用 ε_m=1/m，采用全合法均匀探索，因此该任务目标路径的概率为：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>p</mi><mi>m</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mn>2</mn><mi>m</mi></mrow></mfrac><mfrac><mn>1</mn><mrow><mn>2</mn><mi>m</mi></mrow></mfrac><mo>=</mo><mfrac><mn>1</mn><mrow><mn>4</mn><msup><mi>m</mi><mn>2</mn></msup></mrow></mfrac><mo separator="true">,</mo><mspace width="2em"/><mi>Pr</mi><mo>⁡</mo><mo stretchy="false">(</mo><mtext>曾访问 </mtext><mi>Y</mi><mo separator="true">,</mo><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">b</mi><mi mathvariant="normal">e</mi></mrow><mo stretchy="false">)</mo><mo>≤</mo><munderover><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi mathvariant="normal">∞</mi></munderover><msub><mi>p</mi><mi>m</mi></msub><mo>≤</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">p_m=\frac{1}{2m}\frac{1}{2m}=\frac{1}{4m^2},
+\qquad
+\Pr(\text{曾访问 }Y,\mathrm{probe})
+\le\sum_{m=1}^{\infty}p_m\le\frac12.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">m</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.0074em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span><span class="mord mathnormal">m</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span><span class="mord mathnormal">m</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.0074em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">4</span><span class="mord"><span class="mord mathnormal">m</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7401em;"><span style="top:-2.989em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop">Pr</span><span class="mopen">(</span><span class="mord text"><span class="mord cjk_fallback">曾访问</span><span class="mord"> </span></span><span class="mord mathnormal" style="margin-right:0.22222em;">Y</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathrm">probe</span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.9185em;vertical-align:-1.2671em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.6514em;"><span style="top:-1.8829em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">m</span><span class="mrel mtight">=</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2671em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">m</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.0074em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord">.</span></span></span></span></span></div>
+<p>并集上界不要求任务间独立。最后用到平方倒数级数不超过 2，所以从未访问的概率至少为 1/2；这是界，不是精确概率。即使 ε_m→0、Σε_m 发散，连续两次稀有选择组成的路径仍不能据此获得必然覆盖。</p>
+<p>这是冻结排序下的采集反例，不是一次真实 SARSA 或 Q-learning 训练，也不证明所有 1/m 计划都会失败。它只说明不能省略独立的覆盖论证。另一个更直接的缺口是不可达：前课固定 H2 初态的 GUI 核不会到 H1、F2，给到达页面的合法动作正概率，也不会创造新的初态。</p>
+<h2 id="section-14">5. 与前一种方法的关系</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>已解决或改变的机制</th>
+<th>本课必须保留的边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SARSA</td>
+<td>使用实际下一行为动作构造 on-policy 目标</td>
+<td>到 Q* 的经典条件还涉及 GLIE 与步长，单独 ε→0 不够</td>
+</tr>
+<tr>
+<td>Q-learning</td>
+<td>目标取合法后继估计最大值，行为可探索</td>
+<td>本课主定理要求表格、平稳、覆盖及按对步长；行为不强需 GLIE</td>
+</tr>
+<tr>
+<td>Expected SARSA</td>
+<td>对指定目标 π 的下一动作加权求和</td>
+<td>条件动作方差分量减少，不会生成缺失反馈；按实际目标/行为检查对应理论</td>
+</tr>
+<tr>
+<td>Double Q</td>
+<td>一表选择、另一表评价，分别维护更新</td>
+<td>需要其自身的更新支、覆盖与步长分析，不能直接套 Watkins 单表定理</td>
+</tr>
+</tbody></table></div>
+<p>RL-018 的条件方差为 0 或独立噪声枚举的均值，是指定假设下的估计性质；收敛则是整个随机更新序列的长期性质。两者不能互作证明。双表若某支长期不更新，或合法对没有数据，目标构造再正确也不自动补足条件。</p>
+<p>工程上可以使用固定步长、有限探索或近似状态，但应说明为何这样选择、付出什么代价，并用独立评价检查效果。不能同时采用不同理论设定的实践安排，却宣称已得到全部经典保证。</p>
+<h2 id="section-15">6. 一个主要研究应用：多步 GUI 的覆盖与收敛条件核查</h2>
+<p>本节是<strong>工程推断与拟议检查方案</strong>。主问题为具有多步后果和可独立核验目标结果的 GUI 控制；真实系统输入、任务、动作、奖励与成本尚未提供，不把教学表格视为业务模型。单帧控件定位仍可先做监督任务。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>真实合同项</th>
+<th>需要补齐的资料与检查</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1. 观测与状态</td>
+<td>【待确认】指令、截图/结构信息、历史、登录焦点与预算；表示是否有限、充分、稳定</td>
+</tr>
+<tr>
+<td>2. 合法动作与 mask</td>
+<td>【待确认】动作粒度、允许范围、mask 依据/版本，是否改变原问题；结论只针对明确合法集合</td>
+</tr>
+<tr>
+<td>3. 初态与可达性</td>
+<td>【待确认】任务分布、reset 机制与成本、稀有路径及不可达状态，不能只看页面内抽样概率</td>
+</tr>
+<tr>
+<td>4. 行为与目标</td>
+<td>【待确认】SARSA/QL/ES/Double 的具体版本、行为 b、目标 π、ε 计时单位、平局与更新支规则</td>
+</tr>
+<tr>
+<td>5. 奖励与折扣</td>
+<td>【待确认】成功/失败/取消及错误操作代价、单位、权重、有界性、γ；不借教学收益</td>
+</tr>
+<tr>
+<td>6. 反馈来源</td>
+<td>【待确认】谁、何时独立核验持久目标，延迟/缺失/噪声；按钮命中或成功提示不自动等于业务完成</td>
+</tr>
+<tr>
+<td>7. 时间与结束</td>
+<td>【待确认】真终止、任务期限、外部截断与 reset 标志，保留有效原后继而非新任务截图</td>
+</tr>
+<tr>
+<td>8. 覆盖与有效计数</td>
+<td>【待确认】按状态动作记录实际访问、有效目标、写入次数和各自分母；双表还分更新支，不以期望替实际计数</td>
+</tr>
+<tr>
+<td>9. 步长与版本</td>
+<td>【待确认】按对 α_n、计数何时增加、哪些更新跳过，状态/奖励/模型版本变化后是否仍为同一问题</td>
+</tr>
+<tr>
+<td>10. 评价指标</td>
+<td>【待确认】冻结评价策略下的完整成功率/回报、错误、覆盖空缺及不确定性；训练探索行为另报</td>
+</tr>
+<tr>
+<td>11. 采集与训练成本</td>
+<td>【待确认】交互、稀有路径机会、重置、反馈核验、标注、调参、重复和表/模型计算成本</td>
+</tr>
+<tr>
+<td>12. 推理与执行成本</td>
+<td>【待确认】视觉编码、候选动作、Q 查询、抽样/求和、等待恢复与结果验证，按完整任务计费计时</td>
+</tr>
+<tr>
+<td>13. 方法与非 RL 基线</td>
+<td>【待确认】匹配条件的方法比较；固定流程、监督定位加流程、示范策略等非 RL 行为对照，固定输入、权限、任务、预算和成功判据</td>
+</tr>
+</tbody></table></div>
+<p>有限工程预算的合理交付是实际覆盖表、未知区域、缺失反馈、版本与独立评价，而不是承诺真的执行无穷次探索。若只分析受限域，要预先固定并闭合地定义一个受限 MDP，明确状态、合法动作、后继、奖励和边界，并对其中每个合法对核对条件；它的 Q* 属于这个受限任务。不能事后删除未访问的对，就宣称原任务的全局最优；不可达或被排除的部分仍不能同时声称已经获得保证。不能为了套用定理就执行不允许的 GUI 动作。</p>
+<p>只收成功演示会改变反馈分布；同一张截图若混合不同隐藏状态，也不能靠多次计数变成充分状态。版本变化、状态别名和按结果筛选更新，都应与单纯的行为分布改变区分。实际学习曲线要记录交互步、更新数、成本、独立重复与测试协议；本课没有这些运行结果，不生成经验曲线或填入提升数字。</p>
+<p>一个可检验的<strong>研究假设</strong>是：在同任务与有限交互预算下，明确记录可达性、有效更新与反馈缺失，能否帮助发现表面稳定却缺少证据的 GUI 决策？它还需实际方案与独立对照，尚未验证，状态为 <strong>NOT_RUN</strong>。</p>
+<p>模态路由的真实输入、标签语义、可选动作和错误成本均为【待确认】，不移植其他任务标签。独立单次路由先匹配单步反馈与成本敏感监督/Bandit 框架；有真实后续决策再讨论多步。SR 同样先明确早停、迭代或计算分配动作与质量—成本目标，普通单次重建不强套本课表格控制。</p>
+<h2 id="section-16">7. 常见误解、失败条件和适用边界</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>误解</th>
+<th>本课核查</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>“ε→0 就满足收敛条件”</td>
+<td>分开 greedy limit、状态可达、每对无限机会和步长</td>
+</tr>
+<tr>
+<td>“全局 Σα_t 发散，每对就都合格”</td>
+<td>在这个对自己的更新子序列上重算两和</td>
+</tr>
+<tr>
+<td>“Q-learning off-policy，所以不需探索”</td>
+<td>行为可不 GLIE，但数据覆盖仍是经典前提</td>
+</tr>
+<tr>
+<td>“SARSA 与 Q-learning 的行为条件完全相同”</td>
+<td>另核 on-policy 目标与到最优值的 GLIE 条件</td>
+</tr>
+<tr>
+<td>“常数步长 .5 不满足条件，所以必无界发散”</td>
+<td>定理不给一般保证不等于必发散，明确噪声与目标</td>
+</tr>
+<tr>
+<td>“用 1/n 三步得到平均，就已证明长期学习正确”</td>
+<td>有限样本既不证明无限访问，也不核完任务假设</td>
+</tr>
+<tr>
+<td>“Double 或 Expected 自动修复覆盖”</td>
+<td>目标估计机制与长期访问/步长是不同条件</td>
+</tr>
+<tr>
+<td>“Q 值稳定或看过一万步就有收敛证书”</td>
+<td>核实际每对数据、反馈与版本，并作有限数据评价</td>
+</tr>
+<tr>
+<td>“表格 Q-learning 的定理直接证明 DQN”</td>
+<td>表示、参数共享与优化条件已变，须另查理论与实验</td>
+</tr>
+</tbody></table></div>
+<h2 id="section-17">8. 三道理解题</h2>
+<p><strong>题 1｜命题与算法条件。</strong> 有人说：“有限动作、γ=0.9，α=0.5，ε 逐渐减为零，采了一万步且每个页面至少出现一次，所以 SARSA、Q-learning 都已 a.s. 收敛到 Q*，同样适用于 DQN。”指出缺少或混淆的前提。Q-learning 为什么不强制行为 GLIE？对 SARSA 到 Q* 的经典保证，GLIE 两部分各是什么？</p>
+<p><strong>题 2｜局部计数与步长。</strong> 从两份独立 q₀=0 出发，使用终止奖励 +1、+1、−1，分别按常数 0.5 和按对 1/n 更新，写出三次结果。它们的步长平方和有何区别？1/n 首项与原论文 α&lt;1 怎样准确解释？若一个对只在全局 t_n=2^n 更新，却用 α_t=1/t，它在自己子序列上的总步长是多少？这些有限计算能否证明真实训练收敛？</p>
+<p><strong>题 3｜覆盖与真实应用。</strong> 在第 4.4 节的冻结 X/Y 模型中，为什么 ε_m=1/m 仍不能保证 Y,probe 被访问？“曾访问”与“从未访问”的概率界是什么，能否当作真实学习结果？为真实 GUI 列至少四项待确认合同与一个非 RL 对照，并说明只收成功记录、把提示当完成或按全局步数记录 α 为什么不够。</p>
+<h2 id="section-18">9. 下一单元与待复习问题</h2>
+<p>下一单元是 <strong>RL-020《应用：小型GUI导航中的安全探索与控制》</strong>。它会在明确的离散导航任务中连接合法动作、重置、反馈、探索与控制，本课不提前生成该应用或运行实验。</p>
+<p>若把 ε 与访问机会混为一谈，回查 RL-017；若把条件方差或最大化偏差当收敛证明，回查 RL-018；SARSA 与 Q-learning 的下一目标差别回查 RL-015～016。自查的重点是能否说出“哪条命题、哪种算法、什么目标、哪些前提和证据”，而非只背诵算法名称。</p>
+<h2 id="section-19">10. 可核查的参考来源与证据说明</h2>
+<ol>
+<li><strong>Sutton、Barto，<em>Reinforcement Learning: An Introduction</em>，第二版原稿。</strong><a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">CMU 正式课程托管 PDF</a>。2026-11-04 实际选读印刷页 32～33（样本均值、常数步长与式 2.7）、129～131（§6.4 SARSA 的条件、§6.5 Q-learning 的行为覆盖与步长说明）。保留教材中无限访问与策略极限等条件，不把示例退火或固定参数的经验图当作本课的定理证据。缓存长度 43,634,706 字节、SHA-256 已重新核验；当日 HEAD 返回 200，未重新下载全文。该缓存是保留排版占位的二版原稿，不称为已核对最终出版排版。</li>
+<li><strong>Christopher J. C. H. Watkins、Peter Dayan，<em>Technical Note: Q-Learning</em>，Machine Learning 8，279～292，1992。</strong><a href="https://www.gatsby.ucl.ac.uk/~dayan/papers/cjch.pdf">作者大学站点原始 PDF</a>。本次于 2026-11-04 实际读取印刷页 280～282 的有限受控 Markov 设定、表格表示、每对无限访问及步长定理，另选读 286 页关于重放有限经验的讨论；原图式 (3) 已核对，正文下载与缓存校验已保存。原文用各对第 i 次访问的全局索引表示步长子序列，本课改写为局部 n。没有声称核查完整证明或附录，也不把原文单表结论直接推广给 SARSA、Double Q 或神经网络。</li>
+</ol>
+<p><strong>已发表知识：</strong>相应条件下的单表 Q-learning 收敛、SARSA 的 on-policy 最优控制条件、样本均值和步长两和。<br><strong>教学假设与精确推导：</strong>独立终止奖励 trace、常数步长噪声边界、稀有更新时刻和冻结 X/Y 采集反例，均非论文实验或真实训练。<br><strong>工程推断与研究假设：</strong>GUI 反馈、覆盖、计数、版本和成本核查，以及有限预算下的拟议比较；真实资料仍待确认。<br><strong>实际实验结果：</strong>无，<strong>未运行（NOT_RUN）</strong>。未运行随机采样、研究训练、真实 GUI、GPU 或服务器实验，没有实际成功率或覆盖提升。</p>
+<details class="answers" id="section-20"><summary>参考答案（练习完成后再看）</summary><p><strong>题 1 参考答案。</strong> 有限动作不足以说明完整状态有限、充分和稳定，也未核平稳奖励/转移、奖励有界、正确反馈与有限初值。“页面出现一次”不是每个合法完整状态动作对得到无限有效更新；一万步也不证明长期条件。常数 α=0.5 的平方和发散，不能调用本课经典步长保证，但不推出所有运行必无界发散。ε→0 不保证状态可达或持续覆盖。</p>
+<p>Q-learning 用合法后继最大值构造目标，行为不必在极限变贪心；但仍需覆盖与其余模型、采样和按对步长条件。SARSA 到 Q* 的常用 GLIE 条件包括每对无限探索，以及行为相对当前 Q 在极限贪心，两者缺一不能直接调用该保证。不同表示的 DQN 不能直接继承此表格定理；有限曲线或计数也不是 a.s. 收敛证书。</p>
+<p><strong>题 2 参考答案。</strong> 常数 0.5 副本为 0→0.5→0.75→−0.125；按对 1/n 副本为 0→1→1→1/3。第三步分别是 0.75+0.5×(−1−0.75) 与 1+(1/3)×(−1−1)。没有指定真实分布时，不能判哪个更接近真均值。</p>
+<p>常数序列的和与平方和都发散；1/n 的和发散而平方和收敛，但仍需无限有效访问等其他前提。首项 α₁=1 不逐字满足原论文 strict&lt;1：有限首步后以有限 q₁ 为新初值，尾序列为 1/(m+1)&lt;1，两和不变，是有限前缀的重新起点推论。稀有对在 t_n=2^n 时用全局 1/t，会收到 2^(−n)，累计和为 1，违反按对第一和。这些都是教学代数与条件检查，不是真实训练证明。</p>
+<p><strong>题 3 参考答案。</strong> 每个任务要连续两次选中非贪心动作，两处概率各 1/(2m)，故 p_m=1/(4m²)。并集上界给 P(曾访问)≤Σp_m≤1/2，所以 P(从未访问)≥1/2；是界不是精确值，不要求任务间独立，也不是一次 Q-learning 或 SARSA 训练的结果。它反驳“仅退火就保证覆盖”，不否定所有 1/m 设计。</p>
+<p>GUI 可列完整状态与预算、合法 mask、初态可达/reset、行为/目标与计时、奖励单位和持久结果独立核验、真终止/截断、按对有效计数与版本、评价与采集/训练/执行成本。非 RL 对照可用固定流程或监督定位加流程，匹配输入、权限、任务、预算与成功判据。只收成功会改变反馈分布，提示不是独立持久验证；全局步数不能替按对步长和有效样本分母。所有未知保持【待确认】，本课实际研究为 NOT_RUN。</p>
+</details></article></div><section class="pdf-preview wrap" aria-labelledby="pdf-preview-title"><h2 id="pdf-preview-title">同内容伴随 PDF · 阅读版</h2><p>本课 PDF 使用与 PPT 相同的源内容，经独立排版用于阅读，非 PowerPoint 原生导出；可编辑汇报请使用 PPT。手机或浏览器未显示时，可<a href="./RL-019.pdf" style="text-decoration:underline">直接打开 PDF 阅读版</a>。</p><iframe src="./RL-019.pdf#toolbar=1" title="RL-019 同内容伴随 PDF 阅读版" loading="lazy"></iframe></section><div class="lesson-navigation wrap"><a href="../RL-018/"><span>← 上一单元 · RL-018</span><strong>Expected SARSA与Double Q：改进目标估计</strong></a><a class="next" href="../RL-020/"><span>下一单元 · RL-020 →</span><strong>应用：小型GUI导航中的安全探索与控制</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>
