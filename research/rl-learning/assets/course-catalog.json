@@ -855,13 +855,13 @@
       "previous_unit": "RL-019",
       "next_unit": "RL-021",
       "revision": "1.0.0",
-      "created_date": null,
-      "content_updated_date": null,
+      "created_date": "2026-11-05",
+      "content_updated_date": "2026-11-05",
       "url": "lessons/RL-020/",
       "availability": {
-        "lecture": false,
-        "pptx": false,
-        "pdf": false
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
       }
     },
     {
