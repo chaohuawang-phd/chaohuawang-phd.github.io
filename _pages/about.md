@@ -35,9 +35,9 @@ latest_posts:
 <div id="rl-learning-recent" aria-label="强化学习最近更新">
   <h3>最近更新</h3>
   <ul>
+    <li><time datetime="2026-11-05">2026-11-05</time> · <a href="{{ '/research/rl-learning/lessons/RL-020/' | relative_url }}">RL-020｜应用：小型GUI导航中的安全探索与控制</a></li>
     <li><time datetime="2026-11-04">2026-11-04</time> · <a href="{{ '/research/rl-learning/lessons/RL-019/' | relative_url }}">RL-019｜表格控制的边界：收敛条件与数据覆盖</a></li>
     <li><time datetime="2026-11-02">2026-11-02</time> · <a href="{{ '/research/rl-learning/lessons/RL-018/' | relative_url }}">RL-018｜Expected SARSA与Double Q：改进目标估计</a></li>
-    <li><time datetime="2026-11-01">2026-11-01</time> · <a href="{{ '/research/rl-learning/lessons/RL-017/' | relative_url }}">RL-017｜探索策略：ε-greedy的代价与覆盖</a></li>
   </ul>
 </div>
 <!-- RL_LEARNING_RECENT_END -->
