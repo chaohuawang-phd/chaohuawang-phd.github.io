@@ -205,6 +205,36 @@ nav: false
 
 **出发点与问题：**合成样本价值取决于目标相关性、合成错误及已有数据集合。**方案：**线性理论分析这些因素，TATC筛选有利训练影响，再扩展尚未覆盖的目标相关方向。**任务：**主要为LLM数学微调；摘要也报告文本与图像理论验证。**重合、差异及局限：**“训练收益 + 目标覆盖 + 边际价值”已有新近通用工作；不能以简单拼接这三项声称首次。恢复任务的具体重合度与目标标签要求须进一步读全文，不据摘要猜测。
 
+### G12. Correcting Sample Selection Bias by Unlabeled Data
+
+**2006 · NIPS（现NeurIPS） · 方法相关 · 原摘要。** [出版页](https://papers.nips.cc/paper_files/paper/2006/hash/a2186aa7c086b46ad4e8bf81e2a3a19b-Abstract.html)
+
+**出发点与问题：**训练与测试分布不同导致样本选择偏差。**方案：**在特征空间匹配训练与测试分布，直接得到重采样权重，而不先显式估计两端密度；即经典kernel mean matching思路。**任务：**分布偏移下的学习。**重合、差异及局限：**无标签目标引导重权已有长期基础；在恢复中需要检验条件关系变化，不能仅靠输入边际匹配保证恢复收益。
+
+### G13. Data Shapley: Equitable Valuation of Data for Machine Learning
+
+**2019 · ICML · 方法相关 · 原摘要。** [论文](https://proceedings.mlr.press/v97/ghorbani19c.html)
+
+**出发点与问题：**如何公平量化训练点对预测性能的贡献。**方案：**以数据Shapley定义贡献，并给出Monte Carlo与梯度近似估计。**任务：**监督学习数据估值、异常与污染诊断。**重合、差异及局限：**提供“价值依赖其他已选数据”的基础；平均联盟贡献与固定预算最优子集并不等价，恢复中的高成本重训也限制直接使用。
+
+### G14. Rethinking Data Shapley for Data Selection Tasks: Misleads and Merits
+
+**2024 · ICML · 方法相关 · 原摘要。** [论文](https://proceedings.mlr.press/v235/wang24cg.html)
+
+**出发点与问题：**Shapley选样在不同实验中效果不一致。**方案：**用假设检验框架分析何时可能不优于随机，给出单调变换模函数等有利效用条件，并提出有效性预测启发式。**任务：**数据选择。**重合、差异及局限：**直接提醒“有原则的估值”并不自动变成好的选择策略；本文条件不可直接假设在图像恢复网络成立。
+
+### G15. Is Data Shapley Not Better than Random in Data Selection? Ask NASH
+
+**2026 · ICML · 方法相关 · 原摘要。** [论文](https://proceedings.mlr.press/v306/tian26c.html)
+
+**出发点与问题：**Shapley或semivalue排序可能无法稳定选出好子集。**方案：**将目标效用分解为Shapley-informative成分，以非线性聚合目标驱动选择。**任务：**数据估值与选择。**重合、差异及局限：**已有工作研究价值函数与选样目标不一致；不能仅把单样本打分改为组合价值就宣称首次。恢复应用及高维空间结构尚需专门验证。
+
+### G16. Unifying and Optimizing Data Values for Selection via Sequential Decision-Making
+
+**2026 · ICML · 方法相关 · 原摘要。** [论文](https://proceedings.mlr.press/v306/chi26d.html)
+
+**出发点与问题：**数据估值如何真正服务子集选择。**方案：**将选样表述为序贯决策与动态规划，分析效用曲率与近似失效，再以保留次模结构的二部图代理支持高效贪心。**任务：**经典机器学习与大规模LLM微调选样。**重合、差异及局限：**序贯数据价值与非独立边际贡献已有通用研究；它不等同于“用PPO训练恢复模型”，其代理保证也不能无条件迁移到恢复训练。
+
 <a id="questions"></a>
 ## 可继续研究的问题与可落地验证
 
@@ -214,7 +244,7 @@ nav: false
 
 定义固定初始化、优化器与短训练预算K下，一个候选组S的操作性价值为：不使用S训练时的目标风险，减去使用S训练后的目标风险。以独立目标集衡量；估值所用校准集与最终评测集必须分开。单样本一阶分数可从目标梯度与合成监督梯度的内积开始，但这只是强基线。真正要研究的是：少量校准图造成的估值方差、同图patch的冗余、合成错配造成的负迁移，以及分数随训练阶段变化。
 
-可行候选方案：先做图像/场景分层，使用不同校准图子集和训练检查点计算梯度收益分布，估计均值与不稳定性；在预算内偏好稳定正收益并限制同图重复，同时保留覆盖和探索份额。低置信候选不能永久淘汰，定期重评。校准重采样按原图或场景进行；置信惩罚没有自动收益保证。任何用真实配对目标校准的版本，都归入少量配对条件并报告标签预算。**这些部件本身不是新颖性承诺**；若只是现有梯度方法加通用置信惩罚，创新仍弱。需要说明恢复中的特定错配机制，并证明校准改善了真实收益排名及最终训练效果，而不仅是调参后提升均值。
+可行候选方案：先做图像/场景分层，使用不同校准图子集和训练检查点计算梯度收益分布，估计均值与不稳定性；在预算内偏好稳定正收益并限制同图重复，同时保留覆盖和探索份额。低置信候选不能永久淘汰，定期重评。校准重采样按原图或场景进行；置信惩罚没有自动收益保证。任何用真实配对目标校准的版本，都归入少量配对条件并报告标签预算。数据估值与固定预算选样的目标区别还应参考G13—G16，不能把逐样本价值排名当作最优子集保证。**这些部件本身不是新颖性承诺**；若只是现有梯度方法加通用置信惩罚，创新仍弱。需要说明恢复中的特定错配机制，并证明校准改善了真实收益排名及最终训练效果，而不仅是调参后提升均值。
 
 ### 无配对路线：先检验代理是否有效
 
@@ -244,7 +274,7 @@ nav: false
 
 ### 检索记录
 
-日期：2026-11-05；工具：SciSpace、多引擎网页检索、CVF/PMLR/NeurIPS/AAAI出版页、arXiv原文与作者代码。不限论文数量；本轮纳入25项主记录（恢复14、其他领域11），另列待核线索。这个数量来自已核相关性，不代表穷尽所有论文。
+日期：2026-11-05；工具：SciSpace、多引擎网页检索、CVF/PMLR/NeurIPS/AAAI出版页、arXiv原文与作者代码。不限论文数量；本轮纳入30项主记录（恢复14、其他领域16），另列待核线索。这个数量来自已核相关性，不代表穷尽所有论文。
 
 | 方向 | 实际检索式或自然语言问题 | 覆盖 |
 | --- | --- | --- |
@@ -254,6 +284,7 @@ nav: false
 | 非恢复方法 | How do target-domain validation gradients, importance resampling, meta learning or reinforcement learning select valuable source training data? | 域选择、梯度、元学习、RL |
 | 精确方法核验 | "Learning to Reweight Examples"；"GRAD-MATCH" "GLISTER"；"Data Valuation using Reinforcement Learning"；"LESS: Selecting Influential" | 原始方法与来源 |
 | 生成与验证 | "Learning the Degradation Distribution"；"Designing a Practical Degradation Model"；RealSR SIDD RealBlur dataset official | 退化匹配与公开数据 |
+| 估值基础补检 | "Data Shapley"；"Correcting Sample Selection Bias"；后续原论文页链接追踪 | 重要性重权、估值与固定预算选择、序贯选择 |
 | 新近补检 | "Training-Aware Target Coverage"；"Distribution-aware Dataset Distillation"；"Exploring Data Efficiency in Image Restoration" | 2025—2026近邻与遗漏 |
 
 引用追踪采取有限范围：从PatchNet、DASR、patch分析及LESS正文的相关工作与参考文献，回查主动选择、局部加权和梯度选样原始条目；通过精确题名补查后续剪枝和分布蒸馏。未完成全量前向引用数据库遍历，也未系统覆盖所有医学、遥感或视频恢复分支。正式版与预印本按题名、作者和DOI归并，不重复计算DASR、RTNet、LESS等版本。拒绝将自动生成的论文解读站当作关键方法证据。
@@ -268,12 +299,13 @@ nav: false
 4. 补入TATC，避免把训练收益与目标覆盖组合误称首次。
 5. 把DVRL算法写为REINFORCE，不写成PPO；将GLISTER来源核为AAAI。
 6. 分开无GT代理与真实目标收益；明确公开数据隐藏GT、诊断GT和最终测试的角色。
-7. 修正年份与来源：patch分析为2022预印本记录；Real-ESRGAN为ICCV Workshops。
+7. 补入kernel mean matching、Data Shapley及2024—2026关于“估值不等于选样最优”的工作，补足基础与最新理论。
+8. 修正年份与来源：patch分析为2022预印本记录；Real-ESRGAN为ICCV Workshops。
 
 ### 尚待核查的线索
 
 - **DDGA全文**：出版页当前访问失败；需确认候选池属性、整图/patch粒度、精确三项指标、训练与选样预算。当前风险判断建立在一致的摘要记录上，不冒充全文比较。
-- **Exploring Data Efficiency in Image Restoration: A Gaussian Denoising Case Study（2024）**：[原论文入口](https://openreview.net/pdf?id=vw0uV99zWo)。检索找到原PDF线索，访问触发验证；独立审核认为与内容复杂度和有效图像选择有关。具体算法与来源元数据尚未充分核验，故列待核，不计入25项已整理主记录。
+- **Exploring Data Efficiency in Image Restoration: A Gaussian Denoising Case Study（2024）**：[原论文入口](https://openreview.net/pdf?id=vw0uV99zWo)。检索找到原PDF线索，访问触发验证；独立审核认为与内容复杂度和有效图像选择有关。具体算法与来源元数据尚未充分核验，故列待核，不计入30项已整理主记录。
 - **Unsupervised Unpaired Super-Resolution Using an Active Sampling Strategy Based on Edge Detection（IJCNN 2022，索引记录）**：主动边缘采样是潜在近邻；未取得足够原始方法证据，不推断它是否从合成池做目标收益选择。
 - **2026新稿与细分任务**：TATC仅有原始摘要证据；新近all-in-one域适配、照明恢复复杂度重权等检索命中尚未完成全文复核，不用于支持“没有相关工作”。
 
