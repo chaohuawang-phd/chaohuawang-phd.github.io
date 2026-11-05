@@ -25,6 +25,13 @@ latest_posts:
 
 [了解研究方向]({{ '/research/' | relative_url }}) · [查看研究项目]({{ '/projects/' | relative_url }})
 
+
+## 目标域数据筛选专题
+
+利用无配对或少量配对真实图像，筛选合成整图与 patch：已整理两类文献、最接近工作、创新边界及公开数据验证方案。
+
+[阅读专题调研]({{ '/research/target-domain-data-selection/' | relative_url }})
+
 ## 强化学习学习与应用
 
 沿着有前后依赖的课程路线，学习强化学习算法，并结合超分辨率、模态路由与 GUI 分析实际应用。栏目集中提供讲义、可编辑 PPT 和 PDF 阅读版。

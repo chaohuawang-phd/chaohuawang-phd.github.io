@@ -1,0 +1,285 @@
+---
+layout: page
+title: 目标域引导的图像恢复训练数据筛选
+permalink: /research/target-domain-data-selection/
+description: 无配对与少量配对条件下，合成整图和 patch 筛选的文献、创新边界与验证方案。
+nav: false
+---
+
+调研日期：2026-11-05。研究对象：利用目标领域无配对图像或少量真实配对图像，从大量廉价合成训练对中选择整图或 patch，提升目标域恢复能力。本页是文献证据与研究建议，不是已完成实验的结果。
+
+[创新性结论](#verdict) · [近邻对比](#comparison) · [恢复领域](#restoration) · [其他领域](#general) · [研究问题与验证](#questions) · [检索范围](#search)
+
+<a id="verdict"></a>
+## 创新性结论：需要调整后继续
+
+**宽泛想法已有直接重合，不能以“目标域指导合成数据选样”或“改成 patch”独立立项。值得投入的核心问题是：有限目标信息下，如何判断合成样本带来的目标域恢复收益，以及这种判断何时可信。**
+
+证据链有三层。第一，DASR（CVPR 2021）已用无配对真实 LR 指导合成 LR-HR 对的局部监督权重；第二，DDGA（TMM 2026，当前仅核验到摘要）明确研究无配对 SR 的目标域引导额外训练样本选择；第三，Learning to Reweight、GLISTER、GRAD-MATCH、DVRL 和 LESS 已覆盖验证集驱动的梯度、元学习与强化学习选样。因此，无配对局部加权、少量配对验证梯度选样、加 RL 选择器，都有实质先例。
+
+**不是已确认完全重复的具体算法**：目前还不能据此断言“固定随机退化候选池 + 可靠性校准 + 分层 patch 预算”的完整实现已被同一论文覆盖。DDGA 的候选来源、精确筛选单位与流程尚需全文确认。未检出完全同构方法不构成新颖性证明。
+
+### 两种数据条件必须分开
+
+| 条件 | 允许使用的信息 | 可以估计的东西 | 关键风险 |
+| --- | --- | --- | --- |
+| 无真实配对 | 目标受损图像；另有不配对干净图像时须明确其来源 | 域相似度、退化特征、自监督风险或一致性代理 | 相似度不等于恢复收益；伪标签与无参考指标可能奖励错误细节 |
+| 少量真实配对 | 独立目标校准集中的受损图与真值 | 小步训练后的目标损失变化、梯度匹配、元学习权重 | 小校准集过拟合；方法本身与现有验证驱动选样重合 |
+| 人工随机退化 | 公开干净图 + 已知退化生成的合成对 | 源域监督损失、已知退化参数、可控错配分析 | 随机退化“目标域”仍是模拟实验，不能替代真实目标验证 |
+
+记干净图为 x、受损图为 y。仅观察目标 p(y)，一般不能唯一确定恢复所需的 p(x|y)：不同干净结构和退化过程可以产生相似受损图。这是本报告对可识别性的分析，不是声称已有一个适用于所有恢复任务的定理。去噪中的 Noise2Self 提供有条件的例外：在条件无偏、分组噪声条件独立及 J-invariant 等条件满足时，可构造有意义的 noisy-only 风险；未知模糊、SR 和相关 ISP 噪声不能自动沿用该保证。
+
+### 整图与 patch 的区别
+
+整图筛选改变场景与相机覆盖，打分便宜，但随机裁剪仍可能主要取得平坦区域。patch 筛选能匹配局部退化与纹理，代价是邻近重复、局部语义缺失和同源泄漏。DASR 已有局部权重，PatchNet 已有学习式 patch 选择，故粒度变化本身不足以构成贡献。可研究图像级场景配额与 patch 级训练收益的联合预算；需要以等总像素量、等训练步数和等总耗时分别比较。
+
+<a id="comparison"></a>
+## 最接近工作逐项比较
+
+| 工作 | 数据条件与候选 | 单位 | 价值信号 | 目标与训练流程 | 对本想法的约束 |
+| --- | --- | --- | --- | --- | --- |
+| DASR，2021 | 无配对真实 LR、独立 HR，学习生成合成对 | 局部密集权重 | LR 域判别器输出 | 先学习降采样与判别器，再加权合成监督并约束真实 LR 输出 | 已覆盖目标域引导合成对局部加权 |
+| DDGA，2026 | 无配对 SR 的额外训练样本；具体候选属性待全文 | 摘要称样本；是否含 patch 待核 | 兼容性、互补性、代表性及相对偏移表示 | 以少量新增样本改善目标 SR；精确迭代流程待核 | 与目标域选样直接重合，不能忽略 |
+| PatchNet，2020 | 有恢复监督的训练图像 | patch | 可学习 trainability | 二值化选择/加权，与恢复网络联合优化 | 学习选 patch 与忽略无用区域已有 |
+| BSPA，2023 | 常规 SR 合成训练对 | patch；另有参数归因 | 内容难度分布、参数归因 | 均匀与逆采样，再动态参数细化 | 难例重采样已有；不是目标域收益判断 |
+| Ren 等，2018 | 大训练集 + 小干净验证集 | example 软权重 | 验证损失元梯度 | 一步虚拟更新评估权重，再更新网络 | 少量配对路线的重要通用先例 |
+| GLISTER / GRAD-MATCH，2021 | 训练集 + 可选有标签验证集 | 子集与权重 | 验证目标或梯度匹配 | 周期性贪心/OMP 选子集后训练 | 不能把目标梯度选样直接当创新 |
+| DVRL，2020 | 训练候选 + 小目标验证集 | 随机保留样本 | 目标验证回报 | 数据估值器与预测器交替学习；REINFORCE | RL 选样并非新范式；换 PPO 不解决奖励可信性 |
+| TATC，2026 预印本 | 合成候选与目标相关信息；主要 LLM | example 子集 | 训练影响与增量目标覆盖 | 先过滤有益影响，再扩展缺失方向覆盖；仅摘要证据 | “收益 + 覆盖”也需与最新通用工作区分 |
+
+<a id="restoration"></a>
+## 一、图像重构领域文献
+
+证据标记：**原文方法已核**表示读取了方法相关正文；**原摘要**表示只据作者/出版页面摘要，不延伸到未读实现；**索引摘要**表示仍缺原始全文或出版页核验。直接相关强调数据设定或目标相近，不表示算法完全相同。
+
+### R1. Unsupervised Real-World Image Super Resolution via Domain-Distance Aware Training
+
+**2021 · CVPR · 直接相关 · 原文方法已核。** [正式论文页](https://openaccess.thecvf.com/content/CVPR2021/html/Wei_Unsupervised_Real-World_Image_Super_Resolution_via_Domain-Distance_Aware_Training_CVPR_2021_paper.html) · [预印本全文](https://arxiv.org/pdf/2004.01178) · [作者代码](https://github.com/ShuhangGu/DASR)
+
+**出发点与问题：**生成的 LR-HR 对仍与真实 LR 有域差距。**方案：**用真实 LR 与独立 HR 学降采样；patch 判别器产生密集域距离图，逐位置加权源域内容与感知监督；真实 LR 输出另受对抗约束。**任务：**无配对真实 SR。**重合、差异及局限：**已经利用无标签目标域指导合成对局部权重；本想法若做固定候选池硬选择可有流程差异，但必须证明收益超过此类权重。判别器衡量域接近程度，未直接证明每个权重等于真实恢复增益。方法位置：预印本第3.3节、式(5)与式(6)；2020预印本与2021正式版合并记录，方法细节以所读预印本为证据。
+
+### R2. DDGA: Domain Distance Guided Active Domain Adaptation for Unpaired Super-Resolution
+
+**2026 · IEEE Transactions on Multimedia · 直接相关 · 索引摘要，全文未取得。** [DOI](https://doi.org/10.1109/TMM.2026.3703310) · [SciSpace记录](https://scispace.com/papers/ddga-domain-distance-guided-active-domain-adaptation-for-b7gcxbg2718b)
+
+**出发点与问题：**无配对 SR 扩充训练数据会增加成本，额外样本也可能不兼容目标域。**方案：**摘要提出兼容性、互补性、代表性三项指标，并以相对偏移构建域表示，选择额外训练样本。**任务：**无配对 SR。**重合、差异及局限：**“目标域指导高价值样本选择”高度重合；不能确认其候选是否都是固定廉价合成对，不能补写 patch 粒度或具体排序公式。元数据由SciSpace与DOI一致的索引交叉核对，出版页访问失败；其摘要足以触发新颖性风险，尚不足以给出完整算法等价判断。
+
+### R3. Learning to Sample the Most Useful Training Patches from Images
+
+**2020 · arXiv:2011.12097，当前确认预印本 · 方法相关 · 原文方法已核。** [全文](https://arxiv.org/html/2011.12097v1)
+
+**出发点与问题：**平滑区域占多数，手工搜集难图也不能避免图内简单区域。**方案：**PatchNet 为 patch 预测 trainability，二值化后作用于恢复损失，并做幅度归一化，与 RestoreNet 联合学习。**任务：**去马赛克及联合去噪去马赛克。**重合、差异及局限：**学习式 patch 选择、无用 patch 降权已有；未见外部无标签目标域直接决定价值的同一设定。较难不自动代表跨域有益。方法见第3.2—3.4节。
+
+### R4. Training Patch Analysis and Mining Skills for Image Restoration Deep Neural Networks
+
+**2022 · arXiv:2207.01075，当前确认预印本 · 方法相关 · 原文方法已核。** [全文](https://arxiv.org/pdf/2207.01075)
+
+**出发点与问题：**恢复论文常忽视裁块、数量和选样细节，影响复现。**方案：**分析训练 patch 数量与增强，对比预测误差、图像梯度、标准差、频率等挖掘指标。**任务：**SR、去噪。**重合、差异及局限：**提供局部信息量选择的必要低成本基线，未直接解决真实目标域适配。图像梯度不等于参数梯度；PDF页眉的2015为模板信息，不作为论文年份。
+
+### R5. Learning Re-sampling Methods with Parameter Attribution for Image Super-resolution
+
+**2023 · NeurIPS · 方法相关 · 原摘要。** [出版页](https://papers.neurips.cc/paper_files/paper/2023/hash/8434e0db3227276c00ef2b18c7f01c65-Abstract-Conference.html)
+
+**出发点与问题：**均匀裁块造成简单区域多、难纹理少。**方案：**BSPA结合均匀采样与逆采样，兼顾原分布和困难区域，再用 integrated gradients 做参数归因与动态细化。**任务：**SR。**重合、差异及局限：**重采样与归因相关，但参数贡献不能直接等同于目标域样本收益；报告不据摘要补写其全部实现。
+
+### R6. A Study in Dataset Pruning for Image Super-Resolution
+
+**2024 · ICANN · 方法相关 · 原文方法已核。** [论文](https://arxiv.org/html/2403.17083v2) · [作者项目](https://brian-moser.github.io/dataset-pruning-in-sr/)
+
+**出发点与问题：**大训练集的计算和存储成本。**方案：**利用简单预训练 SR 模型的损失排序构建子集，并研究删除极高损失样本。**任务：**SR 数据剪枝。**重合、差异及局限：**选择训练数据已有；研究发现最难部分可能有害，支持“难度不等于价值”。不是无标签目标域引导选择；结果不能外推所有退化和网络。
+
+### R7. Distribution-aware Dataset Distillation for Efficient Image Restoration
+
+**2025 · arXiv:2504.14826，当前确认预印本 · 方法相关 · 原摘要。** [论文](https://arxiv.org/abs/2504.14826)
+
+**出发点与问题：**恢复训练数据大、训练成本高。**方案：**TripleD以预训练ViT特征评估复杂度选子集，再用轻CNN调整子集特征分布；先简单后复杂与不确定样本。**任务：**多任务、all-in-one及超高清恢复。**重合、差异及局限：**选子集、分布和课程相关；其对齐对象是原训练集，不是本研究外部真实目标域。原摘要未提供充分依据把它当作纯粹不改图像的离散选择。
+
+### R8. ADD: Attribution-Driven Data Augmentation Framework for Boosting Image Super-Resolution
+
+**2025 · CVPR · 方法相关 · 原摘要。** [出版页](https://openaccess.thecvf.com/content/CVPR2025/html/Mi_ADD_Attribution-Driven_Data_Augmentation_Framework_for_Boosting_Image_Super-Resolution_CVPR_2025_paper.html)
+
+**出发点与问题：**SR训练中的有效数据利用。**方案：**以归因为驱动设计数据增强框架。**任务：**多种SR任务与网络。**重合、差异及局限：**与“利用模型信号改善训练数据”相关；增强与固定候选池筛选是不同操作。当前只核验摘要和题名，不将其具体增强步骤作为已核事实，也不能以不同任务名称排除方法重合。
+
+### R9. Learning the Degradation Distribution for Blind Image Super-Resolution
+
+**2022 · CVPR · 直接相关（退化匹配） · 原摘要。** [论文](https://arxiv.org/abs/2203.04962) · [官方代码](https://github.com/greatlog/UnpairedSR)
+
+**出发点与问题：**确定性退化模型难覆盖随机且内容无关的真实退化。**方案：**PDM把退化视作随机变量，学习先验随机变量到退化的映射，用其生成训练对。**任务：**盲SR。**重合、差异及局限：**同样改善训练与目标退化匹配；它改变生成分布，核心不是固定池的价值筛选。应固定同一生成器比较筛选贡献，避免把生成器收益归因于选样。
+
+### R10. Unpaired Image Super-Resolution Using Pseudo-Supervision
+
+**2020 · CVPR · 直接相关（无配对适配） · 原摘要与正文引言。** [出版页](https://openaccess.thecvf.com/content_CVPR_2020/html/Maeda_Unpaired_Image_Super-Resolution_Using_Pseudo-Supervision_CVPR_2020_paper.html)
+
+**出发点与问题：**真实LR缺少对齐HR且退化未知。**方案：**无配对核/噪声校正网络与伪配对SR网络组合，从HR构造伪干净LR用于像素监督。**任务：**真实、遥感等SR。**重合、差异及局限：**建立无配对学习与伪监督基线；不等于从既定合成池选择高收益样本，伪监督偏差仍需控制。
+
+### R11. Designing a Practical Degradation Model for Deep Blind Image Super-Resolution
+
+**2021 · ICCV · 背景相关 · 原摘要。** [出版页](https://openaccess.thecvf.com/content/ICCV2021/html/Zhang_Designing_a_Practical_Degradation_Model_for_Deep_Blind_Image_Super-Resolution_ICCV_2021_paper.html)
+
+**出发点与问题：**简单退化训练与真实图像差距大。**方案：**BSRGAN采用随机组合与打乱顺序的模糊、降采样和噪声等退化。**任务：**真实盲SR。**重合、差异及局限：**提供廉价候选池来源；广泛随机覆盖不等于针对特定目标域的选择。人工合成条件应单列。
+
+### R12. Real-ESRGAN: Training Real-World Blind Super-Resolution with Pure Synthetic Data
+
+**2021 · ICCV Workshops（AIM），非ICCV主会 · 背景相关 · 原摘要。** [出版页](https://openaccess.thecvf.com/content/ICCV2021W/AIM/html/Wang_Real-ESRGAN_Training_Real-World_Blind_Super-Resolution_With_Pure_Synthetic_Data_ICCVW_2021_paper.html)
+
+**出发点与问题：**纯合成训练难模拟复杂真实退化。**方案：**高阶退化合成，加入振铃等情况，并改进判别器与训练。**任务：**真实盲SR。**重合、差异及局限：**解决候选生成与感知恢复，不直接证明目标域样本价值。与PSNR导向模型比较时要统一训练损失与评价目标。
+
+### R13. Noise2Self: Blind Denoising by Self-Supervision
+
+**2019 · ICML · 方法相关（无GT价值信号） · 原论文摘要与假设框架核验。** [出版页](https://proceedings.mlr.press/v97/batson19a.html)
+
+**出发点与问题：**缺少干净去噪训练与评估目标。**方案：**通过J-invariant预测与自监督损失，在观测条件无偏、分组噪声条件独立等假设下关联有噪风险和干净风险。**任务：**去噪。**重合、差异及局限：**为无配对目标代理提供有原则的起点，论文并非合成样本选择器；真实相关噪声、未知模糊及SR不自动满足条件。
+
+### R14. Noise2Noise: Learning Image Restoration without Clean Data
+
+**2018 · ICML · 背景相关 · 原摘要。** [出版页](https://proceedings.mlr.press/v80/lehtinen18a.html)
+
+**出发点与问题：**干净监督难获得。**方案：**在适当噪声统计假设下，使用同一潜在内容的受损观测对学习恢复。**任务：**图像恢复。**重合、差异及局限：**说明无干净标签仍可能有监督，但需要相应观测关系与假设；不能将“同内容噪声对”误当完全不相关的无配对图像，也不是候选数据筛选方法。
+
+<a id="general"></a>
+## 二、非图像重构领域文献
+
+### G1. Learning to Reweight Examples for Robust Deep Learning
+
+**2018 · ICML · 方法相关 · 原文方法已核。** [论文](https://proceedings.mlr.press/v80/ren18a.html)
+
+**出发点与问题：**偏置和噪声训练集使网络过拟合。**方案：**对每批样本引入权重，经虚拟训练步，最小化小干净验证集损失以产生元梯度权重，再更新模型。**任务：**不平衡及噪声分类。**重合、差异及局限：**少量真实配对数据驱动合成对加权可直接套用此范式；新意需来自恢复特有失败机制与可靠性，而非只换任务。无GT时不能直接计算干净验证损失。
+
+### G2. GLISTER: Generalization based Data Subset Selection for Efficient and Robust Learning
+
+**2021 · AAAI · 方法相关 · 原摘要及作者方法说明。** [出版页](https://ojs.aaai.org/index.php/AAAI/article/view/16988) · [作者全文](https://www.cse.iitb.ac.in/~ganesh/papers/aaai2021.pdf)
+
+**出发点与问题：**少数据训练仍须保持泛化。**方案：**以验证表现为外层目标建立双层子集选择，使用近似与贪心策略降低成本。**任务：**高效学习、噪声与不平衡、主动学习。**重合、差异及局限：**直接约束“用目标校准集选训练子集”的创新声明；小目标集覆盖不足会影响选择。不能把全部公式和保证无条件迁移到非凸恢复网络。
+
+### G3. GRAD-MATCH: Gradient Matching based Data Subset Selection for Efficient Deep Model Training
+
+**2021 · ICML · 方法相关 · 原摘要。** [论文](https://proceedings.mlr.press/v139/killamsetty21a.html)
+
+**出发点与问题：**训练全量数据成本高。**方案：**以带权子集匹配完整训练集或验证集的梯度，利用orthogonal matching pursuit选样。**任务：**高效深度学习。**重合、差异及局限：**覆盖目标梯度匹配和子集权重；“完整训练梯度”和“目标验证梯度”是不同目标，实验需区分。全参数逐patch梯度开销需计入。
+
+### G4. Understanding Black-box Predictions via Influence Functions
+
+**2017 · ICML · 方法相关 · 原摘要。** [论文](https://proceedings.mlr.press/v70/koh17a.html)
+
+**出发点与问题：**解释哪些训练点影响一个预测。**方案：**用影响函数近似训练点权重扰动对预测/损失的影响，涉及训练曲率与梯度。**任务：**训练归因、模型诊断。**重合、差异及局限：**为训练收益估值提供基础；它不是自动可靠的深网选样器。局部近似、曲率计算及非凸优化使实际排序需用重训或短程干预检验。
+
+### G5. Data Selection for Language Models via Importance Resampling
+
+**2023 · NeurIPS · 方法相关 · 原文问题定义已核。** [出版页](https://papers.neurips.cc/paper_files/paper/2023/hash/6b9aa8f418bde2840d5f4ab7a02f663b-Abstract-Conference.html)
+
+**出发点与问题：**由无标签目标样本从大源语料选择合适训练分布。**方案：**DSIR在低维特征中估计重要性权重，再重要性重采样；文本实例使用hashed n-gram。**任务：**语言模型预训练和领域继续训练。**重合、差异及局限：**无标签目标域分布指导选择已有；在恢复中仅匹配LR特征不等于正确匹配受损—干净条件关系。
+
+### G6. LESS: Selecting Influential Data for Targeted Instruction Tuning
+
+**2024 · ICML · 方法相关 · 原文方法框架已核。** [出版页](https://proceedings.mlr.press/v235/xia24c.html) · [全文](https://arxiv.org/html/2402.04333v1)
+
+**出发点与问题：**从大指令池挑出对目标能力有帮助的数据。**方案：**warmup、低秩与投影梯度特征、优化器感知的影响估计，再按目标数据相关性选择。**任务：**LLM指令微调。**重合、差异及局限：**目标梯度相似度、训练轨迹和廉价代理都已有；恢复需处理空间相关与退化条件，并验证小模型选样能否迁移。不能仅因“用于SR”认定创新。
+
+### G7. Data Valuation using Reinforcement Learning
+
+**2020 · ICML · 方法相关 · 原文方法已核。** [论文](https://proceedings.mlr.press/v119/yoon20a.html)
+
+**出发点与问题：**估计训练点价值，处理域差异、错误样本和鲁棒训练。**方案：**DVRL的数据价值估计器输出保留概率，采样子集训练预测器，再由小目标验证集的表现提供回报，使用REINFORCE更新。**任务：**数据估值、域适配与鲁棒学习。**重合、差异及局限：**RL选样及目标回报驱动训练已有；原方法不是PPO。无标签目标域的奖励从何而来仍是核心，换RL算法不能替代该问题。
+
+### G8. Learning to Teach
+
+**2018 · ICLR · 方法相关 · 作者原摘要。** [作者论文页](https://www.microsoft.com/en-us/research/publication/learning-to-teach/)
+
+**出发点与问题：**固定教学策略浪费数据和训练迭代。**方案：**教师根据学生状态选择教学策略，使用学生反馈与强化学习优化教师。**任务：**图像分类、文本理解等网络训练。**重合、差异及局限：**训练阶段动态选数据/教学并非新概念；恢复目标代理、延迟回报和总计算预算仍须单独解决。
+
+### G9. Selective Transfer With Reinforced Transfer Network for Partial Domain Adaptation
+
+**2020 · CVPR · 方法相关 · 原摘要。** [出版页](https://openaccess.thecvf.com/content_CVPR_2020/html/Chen_Selective_Transfer_With_Reinforced_Transfer_Network_for_Partial_Domain_Adaptation_CVPR_2020_paper.html)
+
+**出发点与问题：**源域多余类别带来负迁移。**方案：**RTNet融合高层与像素层信息，RL数据选择器过滤无关源样本，配合域适配网络。**任务：**部分域适配分类。**重合、差异及局限：**无标签目标信息、源样本选择与RL组合已有；类空间不匹配与恢复的退化/内容错配机制不同，但不同任务本身不构成方法贡献。2019预印本与2020正式版合并。
+
+### G10. Training Data Subset Selection for Regression with Controlled Generalization Error
+
+**2021 · ICML · 方法相关 · 原摘要。** [论文](https://proceedings.mlr.press/v139/s21a.html)
+
+**出发点与问题：**回归子集训练需要控制泛化误差。**方案：**SELCON通过带泛化约束的子集目标与majorization-minimization求解，并分析近似性质。**任务：**回归。**重合、差异及局限：**说明选样不只适用于分类；不能直接将其简单回归保证当作高维非凸图像恢复保证。
+
+### G11. Training-Aware Target Coverage for Synthetic Data Selection
+
+**2026 · arXiv:2610.00814，预印本 · 方法相关、最新近邻 · 原始摘要索引，全文未读。** [论文](https://arxiv.org/abs/2610.00814)
+
+**出发点与问题：**合成样本价值取决于目标相关性、合成错误及已有数据集合。**方案：**线性理论分析这些因素，TATC筛选有利训练影响，再扩展尚未覆盖的目标相关方向。**任务：**主要为LLM数学微调；摘要也报告文本与图像理论验证。**重合、差异及局限：**“训练收益 + 目标覆盖 + 边际价值”已有新近通用工作；不能以简单拼接这三项声称首次。恢复任务的具体重合度与目标标签要求须进一步读全文，不据摘要猜测。
+
+<a id="questions"></a>
+## 可继续研究的问题与可落地验证
+
+### 建议主线：先做少量配对下的可靠价值校准
+
+建议问题表述：**有限目标配对监督下，合成patch的收益估计为何失效，怎样用可校准的不确定性及跨场景覆盖改善固定预算适配？** 实用价值是降低无效或有害合成训练，不需要相机采集和手机部署。是否形成论文贡献仍取决于相对DASR、DDGA、GLISTER、LESS和TATC的实证与方法差异。
+
+定义固定初始化、优化器与短训练预算K下，一个候选组S的操作性价值为：不使用S训练时的目标风险，减去使用S训练后的目标风险。以独立目标集衡量；估值所用校准集与最终评测集必须分开。单样本一阶分数可从目标梯度与合成监督梯度的内积开始，但这只是强基线。真正要研究的是：少量校准图造成的估值方差、同图patch的冗余、合成错配造成的负迁移，以及分数随训练阶段变化。
+
+可行候选方案：先做图像/场景分层，使用不同校准图子集和训练检查点计算梯度收益分布，估计均值与不稳定性；在预算内偏好稳定正收益并限制同图重复，同时保留覆盖和探索份额。低置信候选不能永久淘汰，定期重评。校准重采样按原图或场景进行；置信惩罚没有自动收益保证。任何用真实配对目标校准的版本，都归入少量配对条件并报告标签预算。**这些部件本身不是新颖性承诺**；若只是现有梯度方法加通用置信惩罚，创新仍弱。需要说明恢复中的特定错配机制，并证明校准改善了真实收益排名及最终训练效果，而不仅是调参后提升均值。
+
+### 无配对路线：先检验代理是否有效
+
+可先选择去噪作为受控任务，比较域判别器、退化特征匹配、教师一致性与有假设的自监督风险。把噪声相关性、相机ISP和噪声水平变化作为反例条件。对SR或去模糊只能把循环一致性、伪标签误差和无参考质量当代理；不能称为真实风险或默认保证可靠。
+
+在另设的研究诊断集上，隐藏GT运行选择，再以只用于诊断的真值测代理与短程实际收益的Spearman相关、正收益识别和错误淘汰率。这个诊断集不能反复调参后继续充当独立测试。若代理在真实域上不稳定，应报告失败条件或转向少量配对路线。
+
+### 全部可以使用公开数据
+
+| 环节 | 数据与依据 | 使用规则 |
+| --- | --- | --- |
+| 源干净图 | DIV2K/Flickr2K等公开训练图；BSRGAN/Real-ESRGAN公开退化流程 | 固定干净图、退化种子和候选池；选择与生成两种贡献拆开 |
+| 真实SR目标 | [RealSR，ICCV 2019](https://openaccess.thecvf.com/content_ICCV_2019/html/Cai_Toward_Real-World_Single_Image_Super-Resolution_A_New_Benchmark_and_a_ICCV_2019_paper.html) | 沿官方训练/测试划分；无配对设定隐藏训练HR，少量配对设定按完整图计标注预算 |
+| 真实去噪目标 | [SIDD，CVPR 2018](https://openaccess.thecvf.com/content_cvpr_2018/html/Abdelhamed_A_High-Quality_Denoising_CVPR_2018_paper.html) | 明确RAW或sRGB，不混域；按场景/相机分组；相关patch不能跨集合 |
+| 真实去模糊目标 | [RealBlur，ECCV 2020](https://github.com/rimchang/RealBlur) | 用公开配对划分，隐藏训练清晰图模拟无配对；按原场景与图像分离 |
+
+先做真实SR主任务，去噪用于检验无GT代理；去模糊作为后续跨任务验证，不预先承诺同时做全。模型可用小CNN快速诊断，再用SwinIR等不同结构验证选样迁移。无需设备部署，不能据离线实验宣称已降低手机实际功耗。
+
+必要比较包括全量合成、随机同预算、图像梯度/纹理、源loss剪枝、DASR式目标域权重、少量目标集直接微调、Ren/GLISTER/GRAD-MATCH或LESS式梯度选择。DDGA取得全文后纳入同设定复现；无法复现时明确差异。还应比较目标域退化学习后随机采样，排除仅仅退化匹配起作用。
+
+记录至少三类预算：候选数量或总像素、实际训练步数、包含特征提取/梯度/重评的总GPU时间。以相同模型初始化与多随机种子，按图像或场景而非patch计算置信区间；比较整体PSNR/SSIM及困难子集，并检验普通区域是否退化。感知模型另报告感知与忠实度指标；无参考分数不单独决定结论。少量配对可试5/10/20张校准图，注明是建议预算而非既有结果。
+
+**继续投入的门槛：**超过随机和廉价纹理基线；超过域相似度加权与目标梯度强基线；价值排名能预测实际收益；收益不是只来自增加计算或泄漏目标GT。若这些条件失败，优先保留反例与失效边界，调整研究主张。
+
+<a id="search"></a>
+## 检索范围、证据限制与复查
+
+### 检索记录
+
+日期：2026-11-05；工具：SciSpace、多引擎网页检索、CVF/PMLR/NeurIPS/AAAI出版页、arXiv原文与作者代码。不限论文数量；本轮纳入25项主记录（恢复14、其他领域11），另列待核线索。这个数量来自已核相关性，不代表穷尽所有论文。
+
+| 方向 | 实际检索式或自然语言问题 | 覆盖 |
+| --- | --- | --- |
+| 恢复目标域选择 | How are synthetic training images or patches selected or reweighted using unpaired target-domain images or few paired target images for real-world image restoration and super-resolution? | SR、恢复、无配对/少量配对、合成选择 |
+| 精确近邻 | "image restoration" "data selection" target；"super-resolution" "selection" "target domain"；"DDGA" "Domain Distance Guided"；"Unsupervised Real-World Image Super Resolution" domain distance | DASR、DDGA与域加权 |
+| patch与剪枝 | "Training Patch Analysis and Mining Skills"；"Learning to Sample the Most Useful Training Patches"；"A Study in Dataset Pruning" | patch学习、纹理挖掘、loss剪枝 |
+| 非恢复方法 | How do target-domain validation gradients, importance resampling, meta learning or reinforcement learning select valuable source training data? | 域选择、梯度、元学习、RL |
+| 精确方法核验 | "Learning to Reweight Examples"；"GRAD-MATCH" "GLISTER"；"Data Valuation using Reinforcement Learning"；"LESS: Selecting Influential" | 原始方法与来源 |
+| 生成与验证 | "Learning the Degradation Distribution"；"Designing a Practical Degradation Model"；RealSR SIDD RealBlur dataset official | 退化匹配与公开数据 |
+| 新近补检 | "Training-Aware Target Coverage"；"Distribution-aware Dataset Distillation"；"Exploring Data Efficiency in Image Restoration" | 2025—2026近邻与遗漏 |
+
+引用追踪采取有限范围：从PatchNet、DASR、patch分析及LESS正文的相关工作与参考文献，回查主动选择、局部加权和梯度选样原始条目；通过精确题名补查后续剪枝和分布蒸馏。未完成全量前向引用数据库遍历，也未系统覆盖所有医学、遥感或视频恢复分支。正式版与预印本按题名、作者和DOI归并，不重复计算DASR、RTNet、LESS等版本。拒绝将自动生成的论文解读站当作关键方法证据。
+
+### 独立复查后已修正的判断
+
+独立审核者另行检索并检查关键方法，主报告据此补核和修改：
+
+1. 补入DASR的密集局部域权重，撤销任何“现有方法只做整图或生成、不做目标引导patch”的暗示。
+2. 补入SR数据剪枝，明确高loss难例也可能有害。
+3. 将TripleD的“对齐原训练集”与“外部真实目标域适配”分开。
+4. 补入TATC，避免把训练收益与目标覆盖组合误称首次。
+5. 把DVRL算法写为REINFORCE，不写成PPO；将GLISTER来源核为AAAI。
+6. 分开无GT代理与真实目标收益；明确公开数据隐藏GT、诊断GT和最终测试的角色。
+7. 修正年份与来源：patch分析为2022预印本记录；Real-ESRGAN为ICCV Workshops。
+
+### 尚待核查的线索
+
+- **DDGA全文**：出版页当前访问失败；需确认候选池属性、整图/patch粒度、精确三项指标、训练与选样预算。当前风险判断建立在一致的摘要记录上，不冒充全文比较。
+- **Exploring Data Efficiency in Image Restoration: A Gaussian Denoising Case Study（2024）**：[原论文入口](https://openreview.net/pdf?id=vw0uV99zWo)。检索找到原PDF线索，访问触发验证；独立审核认为与内容复杂度和有效图像选择有关。具体算法与来源元数据尚未充分核验，故列待核，不计入25项已整理主记录。
+- **Unsupervised Unpaired Super-Resolution Using an Active Sampling Strategy Based on Edge Detection（IJCNN 2022，索引记录）**：主动边缘采样是潜在近邻；未取得足够原始方法证据，不推断它是否从合成池做目标收益选择。
+- **2026新稿与细分任务**：TATC仅有原始摘要证据；新近all-in-one域适配、照明恢复复杂度重权等检索命中尚未完成全文复核，不用于支持“没有相关工作”。
+
+### 本轮验收结论
+
+**有没有重复工作？** 有直接重合和大量通用方法先例，尤其DASR与DDGA；尚不能判定一个未定义的完整新算法完全重复。  
+**剩余空间是什么？** 恢复特有错配下，目标收益代理的可靠性、有限配对校准、分层覆盖与负迁移控制；这些仍须与最新工作和强基线验证。  
+**值得投入吗？** 需要调整后继续，先以少量配对路线检验“价值判断”是否成立；不建议先堆PPO或宣称无配对通用可靠选样。  
+**能公开验证吗？** 可以。使用公开源图、公开退化流程和RealSR/SIDD/RealBlur，严格分割与隐藏GT即可，无需采集或部署。

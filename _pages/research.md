@@ -36,3 +36,9 @@ nav_order: 1
 按课程依赖组织强化学习算法、手算例子与研究应用，结合超分辨率、模态路由和 GUI 讨论方法选择与适用边界。讲义、可编辑 PPT 和 PDF 阅读版统一归档在独立栏目中。
 
 [进入强化学习栏目]({{ '/research/rl-learning/' | relative_url }}) · [查看相关项目]({{ '/projects/' | relative_url }})
+
+## 目标域数据筛选专题
+
+利用无配对或少量配对真实图像，筛选合成整图与 patch：已整理两类文献、最接近工作、创新边界及公开数据验证方案。
+
+[阅读专题调研]({{ '/research/target-domain-data-selection/' | relative_url }})
