@@ -1,3 +1,453 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151a17"><meta name="description" content="用同一转移计算不同目标，并连接本阶段的前置概念。"><meta name="color-scheme" content="light"><title>RL-021｜复习：SARSA与Q-learning到底差在哪？ · 王超华</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%23151a17'/%3E%3Cpath d='M31 14a13 13 0 1 0 0 20' fill='none' stroke='%23c8f45b' stroke-width='5'/%3E%3Ccircle cx='32' cy='24' r='3' fill='%23c8f45b'/%3E%3C/svg%3E"><link rel="stylesheet" href="../../styles.css"><link rel="stylesheet" href="../../assets/katex/katex.min.css"><script src="../../script.js" defer></script></head>
-<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-021</span></div><section class="lesson-hero"><p class="eyebrow">RL-021 · WEEK 03 · 复习</p><h1>复习：SARSA与Q-learning到底差在哪？</h1><p class="lesson-summary">用同一转移计算不同目标，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">TD控制</span><span class="tag">复习</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>计划课 · 未生成</span></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="计划课目录"><h2>本课计划</h2><ol><li><a href="#planned-objectives">学习目标</a></li><li><a href="#planned-concepts">核心概念</a></li><li><a href="#planned-prerequisites">前置单元</a></li><li><a href="#planned-format">交付结构</a></li></ol></aside><article class="lecture planned-content"><p class="planned-label">课程计划 · 材料尚未生成</p><div class="planned-state"><p>这是 RL-021 的稳定归档入口。目前只有课程计划，讲义、PPT 与参考资料尚未生成；后续材料将在此页面更新。</p></div><h2 id="planned-objectives">学习目标</h2><ol><li>用同一转移计算不同目标</li><li>独立解释策略区别</li><li>汇总探索与覆盖条件</li></ol><h2 id="planned-concepts">核心概念</h2><div class="concepts"><span>on/off-policy</span><span>目标与行为</span><span>控制手算</span></div><h2 id="planned-prerequisites">前置单元</h2><ul><li><a href="../RL-015/">RL-015 · SARSA：沿当前行为策略学习动作价值</a></li><li><a href="../RL-016/">RL-016 · Q-learning：用贪心目标学习控制</a></li><li><a href="../RL-017/">RL-017 · 探索策略：ε-greedy的代价与覆盖</a></li><li><a href="../RL-018/">RL-018 · Expected SARSA与Double Q：改进目标估计</a></li><li><a href="../RL-019/">RL-019 · 表格控制的边界：收敛条件与数据覆盖</a></li><li><a href="../RL-020/">RL-020 · 应用：小型GUI导航中的安全探索与控制</a></li></ul><h2 id="planned-format">交付结构</h2><p>本单元计划提供问题与前置关系、学习目标、直觉与公式、手算或更新示例、方法关系、主要应用分析、适用边界、3 道练习与文末答案，以及可核查的参考来源。</p><p>配套 PPT 使用统一模板，目标 10～14 页。实际生成后才提供下载与预览入口；目前没有研究实验结果。</p></article></div><div class="lesson-navigation wrap"><a href="../RL-020/"><span>← 上一单元 · RL-020</span><strong>应用：小型GUI导航中的安全探索与控制</strong></a><a class="next" href="../RL-022/"><span>下一单元 · RL-022 →</span><strong>DQN：用神经网络近似动作价值</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>
+<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="https://chaohuawang-phd.github.io/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="https://chaohuawang-phd.github.io/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="https://chaohuawang-phd.github.io/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-021</span></div><section class="lesson-hero"><p class="eyebrow">RL-021 · WEEK 03 · 复习</p><h1>复习：SARSA与Q-learning到底差在哪？</h1><p class="lesson-summary">用同一转移计算不同目标，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">TD控制</span><span class="tag">复习</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>讲义 · PPT 可用</span></div><div class="button-row"><a class="button small" href="./lecture.md" download>讲义下载 · MD</a><a class="button small" href="./RL-021.pptx" download>PPT 下载</a><a class="button small" href="./RL-021.pdf">PDF 阅读版</a></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="本课目录"><h2>本课目录</h2><ol><li><a href="#section-1">1. 今天解决什么问题，与前面哪些单元有关</a></li><li><a href="#section-2">2. 学习目标</a></li><li><a href="#section-3">3. 直觉、定义和必要公式</a></li><li><a href="#section-7">4. 手算例子或更新过程</a></li><li><a href="#section-13">5. 与前一种方法的关系：本周机制如何连起来</a></li><li><a href="#section-14">6. 一个主要研究应用：检查 GUI 控制比较是否成立</a></li><li><a href="#section-15">7. 常见误解、失败条件和适用边界</a></li><li><a href="#section-16">8. 三道理解题</a></li><li><a href="#section-17">9. 下一单元与待复习问题</a></li><li><a href="#section-18">10. 可核查的参考来源与证据说明</a></li><li><a href="#section-19">参考答案（练习完成后再看）</a></li></ol></aside><article class="lecture"><p>课程：强化学习学习与应用 · 第 3 周 / 单元 21（周复习）<br>课程版本：1.0.0 · 内容版本：1.0.0 · 日期：2026-11-06（Asia/Shanghai）<br>预计学习：30～45 分钟 · 汇报：10～15 分钟<br>前置：<a href="../RL-015/">RL-015</a>、<a href="../RL-016/">RL-016</a>、<a href="../RL-017/">RL-017</a>、<a href="../RL-018/">RL-018</a>、<a href="../RL-019/">RL-019</a>、<a href="../RL-020/">RL-020</a>。<br>证据说明：机制依据原始教材与官方说明；本课复用的小环境、估计与人工轨迹为<strong>教学假设与精确手算</strong>，真实应用合同为工程推断。随机采样、研究训练、真实 GUI 操作及性能实验均<strong>未运行（NOT_RUN）</strong>。</p>
+<p>建议节奏：知识地图与概念 8 分钟 → 同条件复算 13 分钟 → 边界与应用 10 分钟 → 三题自测及核对 9 分钟。</p>
+<h2 id="section-1">1. 今天解决什么问题，与前面哪些单元有关</h2>
+<p>同样从 N2 做 review，之后实际 cancel，为什么 SARSA 把前一动作估计写成 −0.9，Q-learning 却写成 1.8？因为两者的<strong>后继目标不同</strong>，不是两条轨迹收到了不同奖励，也不是它们已经知道哪个真实策略更好。</p>
+<p>本课是第三周的固定总结。把六课串成一条线：<strong>行为产生数据 → 目标读取估计 → 写入改变表 → 表影响后续行为 → 覆盖、反馈与成本约束结论。</strong>这里不新增算法，不复制六篇长文，也不根据材料已生成推断任何读者已掌握。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>本周单元与稳定回链</th>
+<th>带走的一个关键问题</th>
+<th>与下一环的关系</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="../RL-015/">RL-015｜SARSA：沿当前行为策略学习动作价值</a></td>
+<td>目标里的下一动作会不会真的执行？</td>
+<td>选定 a′，读 pre 值，更新后携带同一个动作</td>
+</tr>
+<tr>
+<td><a href="../RL-016/">RL-016｜Q-learning：用贪心目标学习控制</a></td>
+<td>实际探索时，目标能否按当前合法最大值？</td>
+<td>max 目标与实际下一动作分开</td>
+</tr>
+<tr>
+<td><a href="../RL-017/">RL-017｜探索策略：ε-greedy的代价与覆盖</a></td>
+<td>状态内正概率是否等于路径有足够数据？</td>
+<td>探索改变机会与成本，不能只看 ε</td>
+</tr>
+<tr>
+<td><a href="../RL-018/">RL-018｜Expected SARSA与Double Q：改进目标估计</a></td>
+<td>求动作平均、分离选择评价各处理什么？</td>
+<td>改变估计机制，不补缺失反馈或覆盖</td>
+</tr>
+<tr>
+<td><a href="../RL-019/">RL-019｜表格控制的边界：收敛条件与数据覆盖</a></td>
+<td>哪些长期前提支持哪一种结论？</td>
+<td>有限记录不是无限访问、步长或 a.s. 最优证书</td>
+</tr>
+<tr>
+<td><a href="../RL-020/">RL-020｜应用：小型GUI导航中的安全探索与控制</a></td>
+<td>许可、重置、结束和持久成功如何定义？</td>
+<td>先有任务合同，才能解释目标和研究比较</td>
+</tr>
+</tbody></table></div>
+<p>本周总结与复习路线统一放在本单元，不另建一套课程正文。下面只用 RL-020 的 N2/C1/z 任务复算；旧 H/F 任务、冻结 X/Y 覆盖反例仍保持各自定义，不能拼奖励、计数或前课最终表。</p>
+<h2 id="section-2">2. 学习目标</h2>
+<ol>
+<li>能用“行为、目标、估计、完整回报”四个对象，解释 SARSA 与 Q-learning 的差别及一次数值相同的适用范围。</li>
+<li>能从独立同一 pre 表，复算两种主方法的两次写入，并独立核对 Expected SARSA 的动作平均；不串表、不编造未选动作反馈。</li>
+<li>能据本周知识判断覆盖、收敛、mask、外部截断与持久成功的边界，为真实 GUI 补齐评价、成本和非 RL 对照。</li>
+</ol>
+<h2 id="section-3">3. 直觉、定义和必要公式</h2>
+<h3 id="section-4">3.1 先把四个对象分开</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>对象</th>
+<th>回答的问题</th>
+<th>本课中的例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>行为策略 b</td>
+<td>实际执行什么，从而得到哪些数据？</td>
+<td>初始 ε-greedy；人工轨迹实际 review、cancel</td>
+</tr>
+<tr>
+<td>一步目标 y</td>
+<td>本次把当前估计朝哪里推？</td>
+<td>SARSA 的 −2.8、QL 的 2.6，含后继估计</td>
+</tr>
+<tr>
+<td>当前估计 Q</td>
+<td>现在这张表存什么？</td>
+<td>初始 Nreview=1，第一步之后为 −0.9 或 1.8</td>
+</tr>
+<tr>
+<td>完整回报 G</td>
+<td>这条已完成轨迹实际累计什么？</td>
+<td>奖励 −1、0，折扣后 G=−1</td>
+</tr>
+</tbody></table></div>
+<p>这里 Q 不等于指定策略真实动作价值 q_pi，更不等于真正最优动作价值 Q*。q_pi 是先做指定动作、之后持续按固定 π 续行的期望折扣回报；Q* 在之后选择最优续行。初始化与有限写入的 Q 可以尚未准确估计任何一个目标；y 和一条 G 也都不是自动可用的真实价值标签。</p>
+<p>SARSA 的 on-policy 联系体现在：a′ 按行为策略选定，其 pre 值进入当前目标，然后携带到下一次实际执行。Q-learning 的 off-policy 联系体现在：目标按后继合法最大估计，行为仍可探索。<strong>Off-policy 允许目标与行为不同，不等于任何日志都足以识别未访问动作。</strong></p>
+<h3 id="section-5">3.2 同一个写入骨架，不同的后继项</h3>
+<p>令 x,a 为已执行动作前的完整状态和合法动作，r 为这次即时奖励，x′ 为原任务真实后继；d=1 表示真终止，d=0 表示原任务继续。γ 是折扣，α 是步长，pre/post 是本次写入前后。对资料有效的记录：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>y</mi><mi>M</mi></msub><mo>=</mo><mrow><mo fence="true">{</mo><mtable rowspacing="0.36em" columnalign="left left" columnspacing="1em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><mi>r</mi><mo separator="true">,</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><mi>d</mi><mo>=</mo><mn>1</mn><mo separator="true">,</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><mi>r</mi><mo>+</mo><mi>γ</mi><msub><mi>Z</mi><mi>M</mi></msub><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo><mo separator="true">,</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><mi>d</mi><mo>=</mo><mn>0</mn><mo separator="true">,</mo></mrow></mstyle></mtd></mtr></mtable></mrow><mspace width="2em"/><msub><mi>δ</mi><mi>M</mi></msub><mo>=</mo><msub><mi>y</mi><mi>M</mi></msub><mo>−</mo><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow><mi>M</mi></msubsup><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><mspace width="2em"/><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow><mi>M</mi></msubsup><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow><mi>M</mi></msubsup><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>+</mo><mi>α</mi><msub><mi>δ</mi><mi>M</mi></msub><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">y_M=\begin{cases}
+r,&amp;d=1,\\
+r+\gamma Z_M(x&#x27;),&amp;d=0,
+\end{cases}
+\qquad
+\delta_M=y_M-Q^M_{\mathrm{pre}}(x,a),
+\qquad
+Q^M_{\mathrm{post}}(x,a)=Q^M_{\mathrm{pre}}(x,a)+\alpha\delta_M.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:3em;vertical-align:-1.25em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size4">{</span></span><span class="mord"><span class="mtable"><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.69em;"><span style="top:-3.69em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mpunct">,</span></span></span><span style="top:-2.25em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">Z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7519em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mpunct">,</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.19em;"><span></span></span></span></span></span><span class="arraycolsep" style="width:1em;"></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.69em;"><span style="top:-3.69em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord mathnormal">d</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">1</span><span class="mpunct">,</span></span></span><span style="top:-2.25em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord mathnormal">d</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">0</span><span class="mpunct">,</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.19em;"><span></span></span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03785em;">δ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0379em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.2744em;vertical-align:-0.3831em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">post</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.2744em;vertical-align:-0.3831em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03785em;">δ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0379em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">.</span></span></span></span></span></div>
+<p>M 标识方法，Z_M 是该方法的后继估计项；上标 M 表示独立维护的表，不是幂。δ_M 是目标差，不能称为相对真实价值的误差。本次只写当前项，其他项不动。真终止时直接 y=r，保留进入终态的奖励，不查询终止空动作集合。</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>Z</mi><mrow><mi mathvariant="normal">S</mi><mi mathvariant="normal">A</mi><mi mathvariant="normal">R</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">A</mi></mrow></msub><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo><mo>=</mo><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow><mrow><mi mathvariant="normal">S</mi><mi mathvariant="normal">A</mi><mi mathvariant="normal">R</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">A</mi></mrow></msubsup><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><msup><mi>a</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo><mo separator="true">,</mo><mspace width="2em"/><msub><mi>Z</mi><mrow><mi mathvariant="normal">Q</mi><mi mathvariant="normal">L</mi></mrow></msub><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo><mo>=</mo><munder><mrow><mi>max</mi><mo>⁡</mo></mrow><mrow><mi>u</mi><mo>∈</mo><mi>A</mi><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo></mrow></munder><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow><mrow><mi mathvariant="normal">Q</mi><mi mathvariant="normal">L</mi></mrow></msubsup><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>u</mi><mo stretchy="false">)</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">Z_{\mathrm{SARSA}}(x&#x27;)=Q^{\mathrm{SARSA}}_{\mathrm{pre}}(x&#x27;,a&#x27;),
+\qquad
+Z_{\mathrm{QL}}(x&#x27;)=\max_{u\in A(x&#x27;)}Q^{\mathrm{QL}}_{\mathrm{pre}}(x&#x27;,u).</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0519em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">Z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">SARSA</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.2744em;vertical-align:-0.3831em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">SARSA</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">Z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">QL</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.8573em;vertical-align:-0.966em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.4306em;"><span style="top:-2.309em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">u</span><span class="mrel mtight">∈</span><span class="mord mathnormal mtight">A</span><span class="mopen mtight">(</span><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6828em;"><span style="top:-2.786em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose mtight">)</span></span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">max</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.966em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">QL</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">u</span><span class="mclose">)</span><span class="mord">.</span></span></span></span></span></div>
+<p>a′ 是 SARSA 在当前写入前有效选定的下一行为动作，之后应沿用；u 是最大化时遍历的合法候选，A(x′) 为已知非空合法集合。QL 是 Q-learning 的缩写。max 返回数值；真正执行哪个动作仍由行为决定。若 SARSA 恰好选到当前最大动作，这一次目标可相同；不能由此推广两算法的动作链、平局、更新顺序与后续访问全相同。<a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">机制依据教材 §6.4～6.5，式 6.7、6.8。</a></p>
+<h3 id="section-6">3.3 两种目标改进的复习范围</h3>
+<p>Expected SARSA（ES）给定目标策略 π，对后继合法动作估计加权。下面 π=b，只作 on-policy 的独立对照：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>Z</mi><mrow><mi mathvariant="normal">E</mi><mi mathvariant="normal">S</mi></mrow></msub><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo><mo>=</mo><munder><mo>∑</mo><mrow><mi>u</mi><mo>∈</mo><mi>A</mi><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo></mrow></munder><mi>π</mi><mo stretchy="false">(</mo><mi>u</mi><mo>∣</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo stretchy="false">)</mo><msubsup><mi>Q</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi></mrow><mrow><mi mathvariant="normal">E</mi><mi mathvariant="normal">S</mi></mrow></msubsup><mo stretchy="false">(</mo><msup><mi>x</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo separator="true">,</mo><mi>u</mi><mo stretchy="false">)</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">Z_{\mathrm{ES}}(x&#x27;)=
+\sum_{u\in A(x&#x27;)}\pi(u\mid x&#x27;)Q^{\mathrm{ES}}_{\mathrm{pre}}(x&#x27;,u).</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0519em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">Z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">ES</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.566em;vertical-align:-1.516em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.809em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">u</span><span class="mrel mtight">∈</span><span class="mord mathnormal mtight">A</span><span class="mopen mtight">(</span><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6828em;"><span style="top:-2.786em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose mtight">)</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.516em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mopen">(</span><span class="mord mathnormal">u</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.2744em;vertical-align:-0.3831em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">pre</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">ES</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">u</span><span class="mclose">)</span><span class="mord">.</span></span></span></span></span></div>
+<p>π(u|x′) 是给定后继后，目标策略选择 u 的概率，须在合法集合归一化；Σ 对合法动作求和。它不需要先抽 a′ 才能构造当前目标。固定 r、x′、Q_pre、π 时，它平均掉 SARSA 的下一动作抽样分量；没有平均掉未知环境后果、估计误差或整个训练过程。一般 ES 的目标 π 可以不同于行为 b，不是始终 on-policy。<a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">教材 §6.6，式 6.9。</a></p>
+<p>Double Q 只回顾一个检查顺序：指定更新 A 支时，用 Q^A_pre 在合法动作中选最大动作索引，再用 Q^B_pre 评价<strong>同一索引</strong>，只写 A 的当前项；B 支对称。不要在另一表重选最大动作，不要一条转移两表一起写。分别维护两张表不自动统计独立，也不保证总无偏或补齐覆盖；这里不再增加一套双表数字。<a href="../RL-018/">教材 §6.7 的双估计机制与程序；原课详解见 RL-018。</a></p>
+<h2 id="section-7">4. 手算例子或更新过程</h2>
+<h3 id="section-8">4.1 原封不动复用 RL-020 的有限合同</h3>
+<p>以下全是教学条件，未抽随机数、执行 GUI 或训练。状态只有 N2、C1、z：N2 为菜单且剩余动作 h=2，C1 为确认页且 h=1，初态全部在 N2；每动作消耗一预算，任务内 h=0 真终止，也可提前退出。不引入 N1/C2 等状态。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>完整状态与合法动作</th>
+<th>后继、奖励</th>
+<th align="right">概率</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>N2：review</td>
+<td>C1，r=−1</td>
+<td align="right">1</td>
+<td>非终止，仅导航</td>
+</tr>
+<tr>
+<td>N2：exit</td>
+<td>z，r=0</td>
+<td align="right">1</td>
+<td>真终止，退出非成功</td>
+</tr>
+<tr>
+<td>C1：confirm</td>
+<td>z，r=8</td>
+<td align="right">0.9</td>
+<td>真终止，独立持久核验成功</td>
+</tr>
+<tr>
+<td>C1：confirm</td>
+<td>z，r=−4</td>
+<td align="right">0.1</td>
+<td>真终止，独立持久核验失败</td>
+</tr>
+<tr>
+<td>C1：cancel</td>
+<td>z，r=0</td>
+<td align="right">1</td>
+<td>真终止，取消非成功</td>
+</tr>
+</tbody></table></div>
+<p>γ=0.9。奖励是人为给定的无量纲效用；review 的 −1 已含其导航成本，confirm 不另扣步骤费，无额外终止加分或预算补偿。z 后续回报 0，不再选择动作，进入 z 的 8 或 −4 仍保留。教学观测提供完整状态与可信 mask，confirm 转移在独立持久核验完成后才返回结果；待核验不能擅填成功。</p>
+<p>许可先验固定 A(N2)={review,exit}、A(C1)={confirm,cancel}。delete 即使有 mask 前原始候选评分 99，也不是合法 Q 项，不入行为或目标。规则与各方法共享相同 mask；这是任务设计者提供的约束，不是学出来的安全能力，confirm 仍可能失败。</p>
+<p>reset 只在任务间准备新 N2，不产生任务内奖励、不扣新任务 h；真实重置时间与费用要另记。环境 reset 不自动清空 Q，也不能让新初态替代旧后继。若采集器在 review 后外部停止，原状态仍 C1，不能因此改成真终止；QL 有效旧后继加 mask 可构当前目标，SARSA 还需有效选定且可沿用的 a′，否则留待核、不补动作。<a href="https://gymnasium.farama.org/tutorials/gymnasium_basics/handling_time_limits/">任务内期限和外部截断的区别见官方说明。</a></p>
+<h3 id="section-9">4.2 两份相同 fresh pre，先核对实际动作</h3>
+<p>SARSA 与 Q-learning 各从下面独立副本开始，α=0.5、ε=0.2、有效写入计数 N 全为 0。不继承 RL-020 的最终表：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>合法项</th>
+<th align="right">fresh Q_pre</th>
+<th align="right">N</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>N2,review</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>N2,exit</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>C1,confirm</td>
+<td align="right">4</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>C1,cancel</td>
+<td align="right">−2</td>
+<td align="right">0</td>
+</tr>
+</tbody></table></div>
+<p>沿用全合法均匀探索与均匀最大平局。两个合法且唯一最大时，贪心概率 1−ε+ε/2=0.9，另一个 0.1；并列最大各 0.5，仅一合法为 1。未知或非终止空 mask 不硬抽动作。两份初表给 review/exit 为 0.9/0.1，C1 给 confirm/cancel 为 0.9/0.1；delete 为 0。<a href="https://gymnasium.farama.org/tutorials/training_agents/action_masking_taxi/">动作过滤必须同时作用于探索、利用和后继 max。</a></p>
+<p>两条人工轨迹都先 review，看到 r=−1、C1、d=0。SARSA 先按行为规则选定 cancel，再构造当前目标并 carry；QL 当前目标不需 a′，但其下一实际动作也人为指定 cancel。第一步只写 N2，C1 未变，所以本例两种选动作时机的 C1 概率一致。这里没有真实抽到一次 0.1 事件。</p>
+<h3 id="section-10">4.3 同转移的两种目标，两步完成后的表</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>第一步</th>
+<th align="right">SARSA 独立副本</th>
+<th align="right">Q-learning 独立副本</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>当前项 pre</td>
+<td align="right">1</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td>后继项</td>
+<td align="right">已选 cancel 的 −2</td>
+<td align="right">合法 max(4,−2)=4</td>
+</tr>
+<tr>
+<td>y</td>
+<td align="right">−1+0.9×(−2)=−2.8</td>
+<td align="right">−1+0.9×4=2.6</td>
+</tr>
+<tr>
+<td>δ</td>
+<td align="right">−3.8</td>
+<td align="right">1.6</td>
+</tr>
+<tr>
+<td>Nreview 的 post</td>
+<td align="right">−0.9</td>
+<td align="right">1.8</td>
+</tr>
+</tbody></table></div>
+<p>读取的 4 是 confirm 的估计，不是它的环境期望 6.8 或成功奖励 8。两列独立，不串写，也不因为目标读取 confirm 就补一条成功反馈。</p>
+<p>第二步实际执行同一个 cancel，r=0、到 z、d=1。两表 Ccancel 的 pre 都仍 −2，y=0，δ=2，post=−2+0.5×2=−1，不再选下一动作，也不回改第一步。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>两步后的合法项</th>
+<th align="right">SARSA</th>
+<th align="right">Q-learning</th>
+<th align="right">每份有效写入 N</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>N2,review</td>
+<td align="right">−0.9</td>
+<td align="right">1.8</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td>N2,exit</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>C1,confirm</td>
+<td align="right">4</td>
+<td align="right">4</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>C1,cancel</td>
+<td align="right">−1</td>
+<td align="right">−1</td>
+<td align="right">1</td>
+</tr>
+</tbody></table></div>
+<p>两条奖励都是 −1、0，所以完整 G=−1+0.9×0=−1，均非成功。post 不是回报，未写入两项仍是初值；此处不构成训练效果或风险排序。</p>
+<h3 id="section-11">4.4 第三份独立 ES 对照，只平均下一动作</h3>
+<p>再从同一<strong>原始 pre</strong>另开第三份表，固定相同 review 后继及 π=b=(confirm 0.9,cancel 0.1)：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>ES 对照量</th>
+<th>计算与结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>后继动作均值</td>
+<td>0.9×4+0.1×(−2)=3.4</td>
+</tr>
+<tr>
+<td>y_ES</td>
+<td>−1+0.9×3.4=2.06</td>
+</tr>
+<tr>
+<td>δ_ES</td>
+<td>2.06−1=1.06</td>
+</tr>
+<tr>
+<td>Nreview 的 post</td>
+<td>1+0.5×1.06=1.53</td>
+</tr>
+</tbody></table></div>
+<p>1.53 不接在 −0.9 或 1.8 后继续写入。若仅随机下一动作，SARSA 的 y 以 0.9 为 2.6、0.1 为 −2.8，其条件均值恰为 2.06；ES 精确求这个动作平均。没有对全部后继、奖励分布或未知真实价值做求和，更没有宣称总误差为零或更好收敛。</p>
+<p>ES 目标不需预抽 a′；若再人为续接实际 cancel，Ccancel 同样从 −2 到 −1，完整 G 仍 −1。此续接是独立教学对照，不加入两张主表，不表示求和中的 confirm 已被执行。</p>
+<h3 id="section-12">4.5 保留一个模型参照，避免把数字混在一起</h3>
+<p>RL-020 的先验规则流程是 review→confirm，不是上述 cancel 轨迹。已知核中 confirm 期望奖励为 0.9×8+0.1×(−4)=6.8；它优于 cancel 的 0，review 的期望 −1+0.9×6.8=5.12 优于 exit 的 0，所以这个规则是<strong>该明确受限 MDP 内</strong>的最优参照。</p>
+<p>成功路径 G=6.2，失败路径 G=−4.6；模型期望为 0.9×6.2+0.1×(−4.6)=5.12，成功概率 0.9。最大化的是合法动作，不是挑最大奖励分支、忽略失败。5.12 既不是成功 G，也不是当前 Q、一次 TD 目标或真实 GUI 成功率。规则拥有流程先验，模型计算还知道概率；不得拿它和初始化加两次写入直接排名算法性能。</p>
+<h2 id="section-13">5. 与前一种方法的关系：本周机制如何连起来</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>方法/环节</th>
+<th>取什么后继信息</th>
+<th>改变了什么、未解决什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SARSA</td>
+<td>已选实际 a′ 的 pre 估计</td>
+<td>把探索动作纳入当前目标，需有效动作链</td>
+</tr>
+<tr>
+<td>Q-learning</td>
+<td>后继合法估计 max</td>
+<td>目标按当前贪心后续，行为仍可探索并付代价</td>
+</tr>
+<tr>
+<td>Expected SARSA</td>
+<td>已知目标 π 的动作加权</td>
+<td>消除指定条件下的下一动作抽样分量，增加求和与概率需求</td>
+</tr>
+<tr>
+<td>Double Q</td>
+<td>一表选索引、另一表评价</td>
+<td>分离选择评价，增加独立维护与分支记录，不自动统计独立</td>
+</tr>
+<tr>
+<td>探索与覆盖</td>
+<td>初态、路径、mask、行为及实际计数</td>
+<td>决定数据机会，目标公式不能创造未观测反馈</td>
+</tr>
+<tr>
+<td>收敛与评价</td>
+<td>问题、样本、步长、长期访问与独立测试</td>
+<td>各有适用条件，短日志或较大目标不能替代</td>
+</tr>
+</tbody></table></div>
+<p>SARSA 的目标机制不构成所有 GUI 上的“安全保证”，QL 的最优目标也不构成当前探索行为最优。Expected 或 Double 处理估计的一部分问题，仍需状态、反馈、许可与成本合同。</p>
+<p>复习经典边界时，先确认有限平稳完整表格、有界奖励、合适折扣与按对步长，再问所有合法对是否无限获得有效更新。SARSA 到最优值的常用 GLIE 条件还含极限贪心；ε→0 不能替代无限探索。QL 的行为不强制 GLIE，但覆盖与其余条件仍要满足。固定 α=0.5、有限两步不能调用一个完整 a.s. 最优保证；不满足这组充分条件也不等于所有运行必发散。详细命题回查 <a href="../RL-019/">RL-019</a>，不把单表结论盖到所有方法或神经网络。</p>
+<h2 id="section-14">6. 一个主要研究应用：检查 GUI 控制比较是否成立</h2>
+<p>主要应用是<strong>多步 GUI 中，区分策略学到了什么与任务真正完成了什么</strong>。单张截图定位先比较监督定位；若动作改变后续画面、允许动作与持久结果，再判断是否需要多步控制。N2/C1 是教学完整状态，不替代真实截图、历史与隐藏状态分析。</p>
+<p>研究资料仍未知，以下各项均<strong>【待确认】</strong>。复习课将字段压缩到一张合同表，不能靠缩写省掉必要信息：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>合同项</th>
+<th>真实任务需要填写并检查什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>观测与状态</td>
+<td>【待确认】目标指令、画面/结构信息、历史、登录焦点与剩余预算，表示是否充分且版本稳定</td>
+</tr>
+<tr>
+<td>动作、mask 与先验</td>
+<td>【待确认】动作粒度、许可/权限依据及版本、规则流程知道什么、空/未知 mask 如何处理；所有方法同范围</td>
+</tr>
+<tr>
+<td>行为与目标</td>
+<td>【待确认】b/π、ε 与计时单位、平局、Q_pre、α/按对计数、SARSA a′/carry 或 Double 分支；实际动作与目标分别记录</td>
+</tr>
+<tr>
+<td>奖励与独立反馈</td>
+<td>【待确认】成功/失败/取消和时间/误操作代价、单位及 γ；由谁何时验证持久输出/记录，核验缺失或待定如何保存</td>
+</tr>
+<tr>
+<td>多步与结束</td>
+<td>【待确认】动作如何影响未来、任务内预算、真终止、外部截断的独立标志；保留有效原后继，不用新任务拼接</td>
+</tr>
+<tr>
+<td>初态、reset 与恢复</td>
+<td>【待确认】任务分布、可达性、隔离副本、恢复与重置成本，状态能否续接，Q 是否跨任务保留</td>
+</tr>
+<tr>
+<td>数据与覆盖</td>
+<td>【待确认】真实 x,a,r,x′、mask、结果、版本、行为概率、pre/y/post、各对访问/有效写入及分母；保留失败取消截断和缺失</td>
+</tr>
+<tr>
+<td>指标与评价</td>
+<td>【待确认】持久成功率、回报、许可违规/错误后果、取消、步数/时延、覆盖空缺与不确定性；训练探索与冻结评价分开</td>
+</tr>
+<tr>
+<td>采集与训练成本</td>
+<td>【待确认】交互、标注/反馈核验、重置、恢复、重复与调参训练，表格更新便宜不表示经验便宜</td>
+</tr>
+<tr>
+<td>推理与执行成本</td>
+<td>【待确认】视觉编码、候选生成、mask 校验、Q 查询/求和/双表、等待和结果核验的完整任务时延与资源</td>
+</tr>
+<tr>
+<td>非 RL 基线与公平性</td>
+<td>【待确认】固定流程、监督定位加流程、示范策略等；匹配任务/输入/权限/预算/成功判据并披露先验，分开训练、调参和测试</td>
+</tr>
+</tbody></table></div>
+<p>点击命中、控件定位正确或成功提示出现，都不能自动替代独立持久结果。比较方法时，目标更大、δ 更小、某次 post 更接近模型参照，也不能单独证明业务收益。需要记录真实行为成本和冻结评价协议，保留失败与缺失，而非只选成功完整轨迹。</p>
+<p>一个可验证但<strong>尚未运行的研究假设</strong>是：完整区分行为、目标和持久反馈，能否帮助识别“数值在变化，但目标仍未完成”的 GUI 失败？它需要真实任务、非 RL 基线与独立评价；本课只有拟议检查方案，<strong>NOT_RUN</strong>。</p>
+<p>模态路由的真实输入来源、标签语义、动作与错误成本仍【待确认】，不能借其他任务标签或把单次选择硬写成多步。SR 先明确早停、迭代或计算分配等真实决策与质量—成本目标；普通单次重建先用监督与固定处理基线。本周表格机制不自动证明三方向适配。</p>
+<h2 id="section-15">7. 常见误解、失败条件和适用边界</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>本周常见混淆</th>
+<th>最短核查动作</th>
+<th>返回单元</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>先用 cancel 构目标，执行时改 confirm</td>
+<td>核 a′ 与下一条实际动作是否一致</td>
+<td><a href="../RL-015/">RL-015</a></td>
+</tr>
+<tr>
+<td>max 读取 confirm 就代表执行/观察了它</td>
+<td>分开估计 4、实际动作和实际奖励</td>
+<td><a href="../RL-016/">RL-016</a></td>
+</tr>
+<tr>
+<td>ε=0.2 就有 0.2 非贪心，或正概率就是覆盖</td>
+<td>重算合法分母，再看初态路径与实际逐对计数</td>
+<td><a href="../RL-017/">RL-017</a></td>
+</tr>
+<tr>
+<td>ES 平均了所有不确定性，Double 两表必独立</td>
+<td>写出条件、选择/评价表及唯一写入支</td>
+<td><a href="../RL-018/">RL-018</a></td>
+</tr>
+<tr>
+<td>值稳定、1/n 或退火就能证明有限训练最优</td>
+<td>核完整 MDP、每对访问、步长与算法条件</td>
+<td><a href="../RL-019/">RL-019</a></td>
+</tr>
+<tr>
+<td>有 mask 就安全，到确认页就完成</td>
+<td>核许可来源与持久后果，失败/待核分别记录</td>
+<td><a href="../RL-020/">RL-020</a></td>
+</tr>
+</tbody></table></div>
+<p>还要区分任务内 h=0 与外部停止。真实后继或 mask 缺失就保留原因并跳过无法核实的写入；不能取空 max、伪造 a′、用 reset 图补旧后继，或将待核验一律标成成功。旧 H/F、冻结 X/Y 和当前 N2/C1 的核、策略与分母不互换。</p>
+<p>这些是条件自查，不是对个人薄弱点的诊断。材料生成、发布和附有答案，都不等于任何读者已经阅读或理解。表格结论也不直接迁移为下一阶段的深度函数近似保证。</p>
+<h2 id="section-16">8. 三道理解题</h2>
+<p><strong>题 1｜同一转移，三个目标。</strong> 从本课三份相同 fresh pre 出发：人为 review、r=−1 到 C1，SARSA 已选且实际沿用 cancel；ES 使用 π=b=(0.9,0.1)。分别计算 SARSA、QL、独立 ES 的后继项、y、δ、post。再按实际 cancel、r=0 到 z，给两张主表最终值、有效计数与完整 G。能否把三列顺序写入同表，或拿模型期望 6.8 替换估计 4？</p>
+<p><strong>题 2｜控制、覆盖和数值含义。</strong> 判断并说明理由：①SARSA 若本次选中 confirm，就与 Q-learning 在整个训练等价；②ε→0 且 Q 看起来稳定，有限日志已证明最优；③off-policy 无需覆盖；④Double 两张数组自动独立；⑤规则参照 5.12 是成功轨迹 G，可与 post 排名效果。请分别指出正确对象、必要条件或应返回的单元。</p>
+<p><strong>题 3｜GUI 日志与真实判据。</strong> 采集器在 review 后停止，旧 C1 与 mask 有效，但无已选 a′，随后 reset 到新 N2；QL、SARSA、给定有效 π 的 ES 各能否构当前目标？若旧后继或 mask 也丢失呢？列四项真实合同、一个独立持久成功判据、一个非 RL 基线与训练/推理各一项成本，并说明当前证据能支持什么。</p>
+<h2 id="section-17">9. 下一单元与待复习问题</h2>
+<p>下一单元为 <strong>RL-022《DQN：用神经网络近似动作价值》</strong>，将从表格 Q 过渡到 Q 网络。今天只预告表示发生变化，不展开新损失、训练技巧或实验，也不把本周表格保证直接带过去。</p>
+<p>建议复习路线是按错因返回，而非把六篇全文重读一遍：先不看答案完成题 1；若错在 a′，回 015，错在 max/实际动作回 016；能算但将概率当覆盖，回 017；将动作平均或双表当万能修复，回 018；将有限结果当长期保证，回 019；真实成功和边界说不清，回 020。然后再回本课，用一张原始表重算并用一句话说明“这一步读谁、写谁、真正执行谁、能证明什么”。</p>
+<p>完成材料与确认理解是不同状态。以上路线供自主复习，不据无反馈推断已掌握，也不替读者作学习确认。</p>
+<h2 id="section-18">10. 可核查的参考来源与证据说明</h2>
+<ol>
+<li><strong>Sutton、Barto，<em>Reinforcement Learning: An Introduction</em>，第二版原稿。</strong><a href="https://www.andrew.cmu.edu/course/10-703/textbook/BartoSutton.pdf">CMU 官方课程托管 PDF</a>。2026-11-06 实际选读印刷页 129～131（SARSA、QL 的式 6.7/6.8 与动作顺序）、133～136（ES 的式 6.9、策略范围与 Double 选择/评价及单表写入）。实验图只用于识别原文范围，不借来宣布真实 GUI 排名。548 页缓存当日重新校验，43,634,706 字节，SHA-256 为 <code>f1df4739245b64b2411932d76f3f996e687f674cc51040f84f0fb1ff02fb4e4d</code>；原 URL 当日 HEAD 为 200，未重下或通读全书。缓存保留二版原稿的排版占位，不称已核对最终出版排版。</li>
+<li><strong>Farama Foundation，Gymnasium 官方机制说明。</strong><a href="https://gymnasium.farama.org/tutorials/gymnasium_basics/handling_time_limits/">Handling Time Limits</a> 支持任务内期限与外部截断的区别；<a href="https://gymnasium.farama.org/tutorials/training_agents/action_masking_taxi/">Action Masking in the Taxi Environment</a> 的概念段支持探索、利用及后继 max 的合法范围。2026-11-06 当次核读相关定义/处理段，不采用完整训练程序、Taxi 效果或安全宣称；页面兼容版本不代表本机安装或执行该版本。</li>
+<li><strong>本课程第三周稳定归档。</strong>本课第 1 节回链 RL-015～020。N2/C1/z、许可先验和模型参照直接复用 <a href="../RL-020/">RL-020</a>；覆盖、按对步长与算法差异的完整限定回查 <a href="../RL-019/">RL-019</a>。这些内部讲义用于课程一致性，不能替代原始来源或实际研究证据。</li>
+</ol>
+<p><strong>已发表知识与官方机制：</strong>对应目标、动作链、动作平均、双估计及结束/许可处理。<strong>教学假设与精确算术：</strong>fresh pre、人工轨迹、ES 独立对照与已知模型参照。<strong>工程推断与研究假设：</strong>真实 GUI 合同与拟议比较，业务资料仍待确认。<strong>实际实验结果：</strong>无，<strong>未运行（NOT_RUN）</strong>；没有随机采样、研究训练、真实 GUI、GPU 或服务器实验，没有实际安全、收敛或性能提升结论。</p>
+<details class="answers" id="section-19"><summary>参考答案（练习完成后再看）</summary><p><strong>题 1 参考答案。</strong> 三份当前 pre 都为 1。SARSA 后继 −2，y=−2.8，δ=−3.8，post=−0.9，并 carry cancel；QL 后继合法 max=4，y=2.6，δ=1.6，post=1.8，实际仍可 cancel；第三份 ES 后继均值 3.4，y=2.06，δ=1.06，post=1.53。三列来自同一原始 pre 的独立副本，不串写。估计 4 不改成已知模型期望 6.8 或奖励 8，也没有观察 confirm 的结果。</p>
+<p>第二步两张主表都执行 cancel，pre=−2、r=0、d=1，y=0、δ=2、post=−1，不选下一动作、不回写 N。按 Nreview、Nexit、Cconfirm、Ccancel 排列，SARSA 为 (−0.9,0,4,−1)，QL 为 (1.8,0,4,−1)，各自有效计数 (1,0,0,1)。实际奖励 −1、0，G=−1，均非成功；未访问项仍是初值。ES 若独立续接同样 cancel，也得 Ccancel=−1、G=−1，不加入两主表。ES 只对给定条件下的下一动作求平均，不保证总误差消失、最优或真实效果。</p>
+<p><strong>题 2 参考答案。</strong> 五项都不能按原说法成立。①选 confirm 时，SARSA 这一次读取的最大值 4 与 QL 相同，但不能推出后续动作链、平局、顺序和整个训练等价，回 015～016。②ε→0 只描述参数，稳定可能来自缺数据或小步长；需问题、覆盖、反馈、按对步长等条件，有限数据不能证明无限访问。SARSA 到最优值的 GLIE 还含无限探索与极限贪心，回 017～019。③QL 的行为不强制 GLIE，但覆盖与其余条件仍要检查；off-policy 不会产生缺失反馈，回 016、019。④两表分别存储不自动统计独立，需分清选择、评价、分支和相关性，回 018。</p>
+<p>⑤规则成功路径 G=6.2、失败路径 G=−4.6；5.12 为它们按 0.9/0.1 加权的模型期望，并是这个受限 MDP 内的最优参照，不是某条 G、当前 Q 或训练后实测。规则与模型参照的先验信息也不同于 fresh Q，不能直接和 −0.9、1.8 排名效果，回 020。固定 α=0.5、两步人工记录没有普遍收敛保证，也不因此断言所有运行必发散。</p>
+<p><strong>题 3 参考答案。</strong> 这是外部截断而非任务内终止。旧 C1/mask 有效且同一问题时，QL 可从旧 pre 取合法 max；ES 若给定有效归一化目标 π，也可加权，不需 a′ 或真正续接。SARSA 缺少有效选定 a′ 时按本课合同留待核，不用新 N2 的动作补；若旧任务已有有效 a′ 并可沿用续接，保存动作链且恢复前核状态/许可。旧后继或 mask 也缺失时，保留原因并跳过无法核实的非终止目标和有效写入计数，不伪标终止、不接 reset 图。</p>
+<p>真实合同可列状态/历史与预算、许可及版本、行为/目标/pre、奖励与反馈、结束/reset、覆盖分母和评价协议。独立成功判据应核实目标对应的持久记录或输出，具体接口【待确认】，不能只看点击命中或成功提示。非 RL 基线可用固定流程或监督定位加流程，匹配任务、输入、权限、预算与成功判据并披露先验。训练成本包括采集、核验、重置/恢复或调参；推理成本包括视觉编码、候选/mask、动作选择、等待和结果验证。当前只有教材机制、教学算术与拟议合同，研究 NOT_RUN，不证明实际安全、覆盖、收敛或性能改善。</p>
+</details></article></div><section class="pdf-preview wrap" aria-labelledby="pdf-preview-title"><h2 id="pdf-preview-title">同内容伴随 PDF · 阅读版</h2><p>本课 PDF 使用与 PPT 相同的源内容，经独立排版用于阅读，非 PowerPoint 原生导出；可编辑汇报请使用 PPT。手机或浏览器未显示时，可<a href="./RL-021.pdf" style="text-decoration:underline">直接打开 PDF 阅读版</a>。</p><iframe src="./RL-021.pdf#toolbar=1" title="RL-021 同内容伴随 PDF 阅读版" loading="lazy"></iframe></section><div class="lesson-navigation wrap"><a href="../RL-020/"><span>← 上一单元 · RL-020</span><strong>应用：小型GUI导航中的安全探索与控制</strong></a><a class="next" href="../RL-022/"><span>下一单元 · RL-022 →</span><strong>DQN：用神经网络近似动作价值</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>
