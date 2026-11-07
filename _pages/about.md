@@ -42,9 +42,9 @@ latest_posts:
 <div id="rl-learning-recent" aria-label="强化学习最近更新">
   <h3>最近更新</h3>
   <ul>
+    <li><time datetime="2026-11-07">2026-11-07</time> · <a href="{{ '/research/rl-learning/lessons/RL-022/' | relative_url }}">RL-022｜DQN：用神经网络近似动作价值</a></li>
     <li><time datetime="2026-11-06">2026-11-06</time> · <a href="{{ '/research/rl-learning/lessons/RL-021/' | relative_url }}">RL-021｜复习：SARSA与Q-learning到底差在哪？</a></li>
     <li><time datetime="2026-11-05">2026-11-05</time> · <a href="{{ '/research/rl-learning/lessons/RL-020/' | relative_url }}">RL-020｜应用：小型GUI导航中的安全探索与控制</a></li>
-    <li><time datetime="2026-11-04">2026-11-04</time> · <a href="{{ '/research/rl-learning/lessons/RL-019/' | relative_url }}">RL-019｜表格控制的边界：收敛条件与数据覆盖</a></li>
   </ul>
 </div>
 <!-- RL_LEARNING_RECENT_END -->

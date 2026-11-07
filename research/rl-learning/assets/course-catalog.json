@@ -942,13 +942,13 @@
       "previous_unit": "RL-021",
       "next_unit": "RL-023",
       "revision": "1.0.0",
-      "created_date": null,
-      "content_updated_date": null,
+      "created_date": "2026-11-07",
+      "content_updated_date": "2026-11-07",
       "url": "lessons/RL-022/",
       "availability": {
-        "lecture": false,
-        "pptx": false,
-        "pdf": false
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
       }
     },
     {
