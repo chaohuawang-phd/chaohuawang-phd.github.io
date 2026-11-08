@@ -1,3 +1,409 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151a17"><meta name="description" content="解释回放机制，并连接本阶段的前置概念。"><meta name="color-scheme" content="light"><title>RL-023｜经验回放：旧数据如何帮助训练 · 王超华</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%23151a17'/%3E%3Cpath d='M31 14a13 13 0 1 0 0 20' fill='none' stroke='%23c8f45b' stroke-width='5'/%3E%3Ccircle cx='32' cy='24' r='3' fill='%23c8f45b'/%3E%3C/svg%3E"><link rel="stylesheet" href="../../styles.css"><link rel="stylesheet" href="../../assets/katex/katex.min.css"><script src="../../script.js" defer></script></head>
-<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-023</span></div><section class="lesson-hero"><p class="eyebrow">RL-023 · WEEK 04 · 新知识</p><h1>经验回放：旧数据如何帮助训练</h1><p class="lesson-summary">解释回放机制，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">深度价值学习</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>计划课 · 未生成</span></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="计划课目录"><h2>本课计划</h2><ol><li><a href="#planned-objectives">学习目标</a></li><li><a href="#planned-concepts">核心概念</a></li><li><a href="#planned-prerequisites">前置单元</a></li><li><a href="#planned-format">交付结构</a></li></ol></aside><article class="lecture planned-content"><p class="planned-label">课程计划 · 材料尚未生成</p><div class="planned-state"><p>这是 RL-023 的稳定归档入口。目前只有课程计划，讲义、PPT 与参考资料尚未生成；后续材料将在此页面更新。</p></div><h2 id="planned-objectives">学习目标</h2><ol><li>解释回放机制</li><li>分析均匀采样的局限</li><li>识别历史数据的偏移</li></ol><h2 id="planned-concepts">核心概念</h2><div class="concepts"><span>replay buffer</span><span>相关性</span><span>采样分布</span><span>覆盖</span></div><h2 id="planned-prerequisites">前置单元</h2><ul><li><a href="../RL-022/">RL-022 · DQN：用神经网络近似动作价值</a></li></ul><h2 id="planned-format">交付结构</h2><p>本单元计划提供问题与前置关系、学习目标、直觉与公式、手算或更新示例、方法关系、主要应用分析、适用边界、3 道练习与文末答案，以及可核查的参考来源。</p><p>配套 PPT 使用统一模板，目标 10～14 页。实际生成后才提供下载与预览入口；目前没有研究实验结果。</p></article></div><div class="lesson-navigation wrap"><a href="../RL-022/"><span>← 上一单元 · RL-022</span><strong>DQN：用神经网络近似动作价值</strong></a><a class="next" href="../RL-024/"><span>下一单元 · RL-024 →</span><strong>目标网络：为什么不用自己追自己</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>
+<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="https://chaohuawang-phd.github.io/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="https://chaohuawang-phd.github.io/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="https://chaohuawang-phd.github.io/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-023</span></div><section class="lesson-hero"><p class="eyebrow">RL-023 · WEEK 04 · 新知识</p><h1>经验回放：旧数据如何帮助训练</h1><p class="lesson-summary">解释回放机制，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">深度价值学习</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>讲义 · PPT 可用</span></div><div class="button-row"><a class="button small" href="./lecture.md" download>讲义下载 · MD</a><a class="button small" href="./RL-023.pptx" download>PPT 下载</a><a class="button small" href="./RL-023.pdf">PDF 阅读版</a></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="本课目录"><h2>本课目录</h2><ol><li><a href="#section-1">1. 今天解决什么问题，与前面哪些单元有关</a></li><li><a href="#section-2">2. 学习目标</a></li><li><a href="#section-3">3. 直觉、定义和必要公式</a></li><li><a href="#section-7">4. 手算例子或更新过程</a></li><li><a href="#section-13">5. 与前一种方法的关系</a></li><li><a href="#section-14">6. 一个主要研究应用：GUI 旧操作日志能否用于训练</a></li><li><a href="#section-15">7. 常见误解、失败条件和适用边界</a></li><li><a href="#section-16">8. 三道理解题</a></li><li><a href="#section-17">9. 下一单元与待复习问题</a></li><li><a href="#section-18">10. 可核查的参考来源与证据说明</a></li><li><a href="#section-19">参考答案（练习完成后再看）</a></li></ol></aside><article class="lecture"><p>课程：强化学习学习与应用 · 第 4 周 / 单元 23<br>课程版本：1.0.0 · 内容版本：1.0.0 · 日期：2026-11-08（Asia/Shanghai）<br>预计学习：30～45 分钟 · 汇报：10～15 分钟<br>前置：<a href="../RL-022/">RL-022：DQN与一次固定目标回归</a>。需能区分环境记录、TD 目标、共享参数与停止梯度；按需回查 <a href="../RL-019/">RL-019</a> 的覆盖边界和 <a href="../RL-020/">RL-020</a> 的 GUI 反馈合同。<br>证据说明：经验回放机制依据 DQN 原始论文；以下缓冲区、选择的批次和线性梯度均为<strong>教学假设与精确手算</strong>，真实 GUI 方案为工程推断。随机抽样、研究训练、真实 GUI、GPU 或服务器实验均<strong>未运行（NOT_RUN）</strong>。</p>
+<p>建议节奏：保存与抽样 9 分钟 → 同 pre 批量手算 14 分钟 → 历史数据边界与应用 9 分钟 → 三题及核对 8 分钟。</p>
+<h2 id="section-1">1. 今天解决什么问题，与前面哪些单元有关</h2>
+<p>上一课用一条转移做了一次参数更新。若每次只紧跟最新交互来更新，相邻画面与动作常常相似，获得反馈的成本又可能远高于一次计算。能否保存已经发生的转移，稍后打散顺序、再次用于优化？</p>
+<p>经验回放（experience replay）把“获得环境经验”和“使用经验更新参数”分开：<strong>真实交互产生记录 → 存入 replay buffer → 按声明的规则抽取 minibatch → 构造目标并更新。</strong>同一记录可以被再次使用，但不会因此多出一次环境访问、一个独立奖励样本或未选动作的反馈。</p>
+<p>今天只讲均匀转移回放、批量均值和历史数据的范围。沿用 RL-022 的固定目标接口，不深入下一课的目标网络维护，也不展开 Double、Dueling 或新的优先采样算法。一个可复算的小缓冲区不是完整 DQN 训练实验。</p>
+<h2 id="section-2">2. 学习目标</h2>
+<ol>
+<li>能解释缓冲区容量、当前有效记录数、逐记录均匀抽样与批大小，区分按转移均匀和按任务均匀、有放回和无放回。</li>
+<li>能在同一 pre 参数与目标快照下，计算两条记录的目标、损失、梯度均值和一次参数写入，不误写成两次顺序 SGD。</li>
+<li>能说明回放对相关性、覆盖和历史分布能做什么、不能做什么，为真实 GUI 明确版本、反馈、指标、成本与非 RL 基线。</li>
+</ol>
+<h2 id="section-3">3. 直觉、定义和必要公式</h2>
+<h3 id="section-4">3.1 buffer 保存经验，不保存新的世界</h3>
+<p>一条基础记录可写作 e_i=(s_i,a_i,r_i,s′_i,d_i)，其中 s_i 为动作前完整状态，a_i 是已执行动作，r_i 为即时奖励，s′_i 是原任务真实后继，d_i=1 表示真终止。下标 i 是记录 ID，不是当前训练迭代。真实应用还需保存任务/时间、许可 mask、结束原因、反馈与版本等元数据。</p>
+<p>令当前可用缓冲区为 D={e_1,…,e_N}，N 是当前有效记录数；容量 C 是最多保留多少条，N≤C。容量、已收集的历史总条数和当前 N 是不同数量。常见有限队列只保留最近 C 条，满后新记录替换最旧记录；保留范围是明确的数据选择，会影响稀有路径和旧版本占比。<a href="https://arxiv.org/pdf/1312.5602">原始 DQN 在有限 replay memory 中保存近期转移并随机取样，见 2013 第 4～5 页与 2015 Methods。</a></p>
+<p>buffer 保存的是实际转移及其反馈，不把某次 y 当作永久真实标签。训练使用某条旧记录时，可以按本次声明的目标参数重新构造 y；反馈 r 与结束事实不能为了让目标好看而重写。需要改变任务或奖励语义时，应另记版本和转换依据，而不是悄改原始记录。</p>
+<h3 id="section-5">3.2 均匀的单位是存储记录</h3>
+<p>逐记录均匀意味着一次单条抽取时，每个记录 ID 的概率是 1/N；不意味着每个状态动作、任务、成功类别或当前策略都得到相同权重。同一状态动作若有更多真实记录，会占更多概率质量。</p>
+<p>本课指定批大小 B、<strong>批内无放回</strong>，且 B≤N；每个 B 元子集等概率。于是任一记录被纳入本批的概率为：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>Pr</mi><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>e</mi><mi>i</mi></msub><mo>∈</mo><mi mathvariant="script">B</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mi>B</mi><mi>N</mi></mfrac><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\Pr(e_i\in\mathcal B)=\frac{B}{N}.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop">Pr</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathcal" style="margin-right:0.03041em;">B</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.0463em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord">.</span></span></span></span></span></div>
+<p>𝓑 表示抽到的批次集合，Pr 表示在此抽样规则下的概率。单次抽取概率 1/N 与整批纳入概率 B/N 不是同一个分母。无放回时批内记录 ID 不重复，抽取之间也不是独立的；下一次更新可再次抽到以前用过的 ID。</p>
+<p>有放回也是一种可声明的实现选择，同一批可能重复 ID，其纳入概率要另算。原论文的“随机 minibatch”不替我们规定所有实现细节；本课无放回是教学约定。N&lt;B 时应等待足够有效数据或另行定义协议，不补造记录凑批。</p>
+<p>打散抽取能降低紧跟时间相邻记录更新的倾向，但不保证任意一批都没有相邻转移，更不会把已收集的相关轨迹变成独立环境样本。缓冲区可能仍有重复画面、稀有路径空缺和历史偏向。</p>
+<h3 id="section-6">3.3 从单条损失到批量均值</h3>
+<p>延续 RL-022，θ 是本次优化前的当前参数，bar θ 是本步固定目标快照，γ 为折扣；A(s′_i) 是原任务后继的合法动作集合。对每条有效记录：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>=</mo><mrow><mo fence="true">{</mo><mtable rowspacing="0.36em" columnalign="left left" columnspacing="1em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><msub><mi>r</mi><mi>i</mi></msub><mo separator="true">,</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><msub><mi>d</mi><mi>i</mi></msub><mo>=</mo><mn>1</mn><mo separator="true">,</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><msub><mi>r</mi><mi>i</mi></msub><mo>+</mo><mi>γ</mi><msub><mrow><mi>max</mi><mo>⁡</mo></mrow><mrow><mi>u</mi><mo>∈</mo><mi>A</mi><mo stretchy="false">(</mo><msubsup><mi>s</mi><mi>i</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msubsup><mo stretchy="false">)</mo></mrow></msub><mi>Q</mi><mo stretchy="false">(</mo><msubsup><mi>s</mi><mi>i</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msubsup><mo separator="true">,</mo><mi>u</mi><mo separator="true">;</mo><mover accent="true"><mi>θ</mi><mo>ˉ</mo></mover><mo stretchy="false">)</mo><mo separator="true">,</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><msub><mi>d</mi><mi>i</mi></msub><mo>=</mo><mn>0</mn><mo separator="true">,</mo></mrow></mstyle></mtd></mtr></mtable></mrow><mspace width="2em"/><msub><mi mathvariant="normal">ℓ</mi><mi>i</mi></msub><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">(</mo><mi>Q</mi><mo stretchy="false">(</mo><msub><mi>s</mi><mi>i</mi></msub><mo separator="true">,</mo><msub><mi>a</mi><mi>i</mi></msub><mo separator="true">;</mo><mi>θ</mi><mo stretchy="false">)</mo><mo>−</mo><mi mathvariant="normal">SG</mi><mo>⁡</mo><mo stretchy="false">[</mo><msub><mi>y</mi><mi>i</mi></msub><mo stretchy="false">]</mo><msup><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">)</mo><mn>2</mn></msup><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">y_i=\begin{cases}
+r_i,&amp;d_i=1,\\
+r_i+\gamma\max_{u\in A(s&#x27;_i)}Q(s&#x27;_i,u;\bar\theta),&amp;d_i=0,
+\end{cases}
+\qquad
+\ell_i(\theta)=\frac12\big(Q(s_i,a_i;\theta)-\operatorname{SG}[y_i]\big)^2.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:3em;vertical-align:-1.25em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size4">{</span></span><span class="mord"><span class="mtable"><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.69em;"><span style="top:-3.69em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span></span></span><span style="top:-2.25em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop"><span class="mop">max</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3448em;"><span style="top:-2.5198em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">u</span><span class="mrel mtight">∈</span><span class="mord mathnormal mtight">A</span><span class="mopen mtight">(</span><span class="mord mtight"><span class="mord mathnormal mtight">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.7416em;"><span style="top:-2.1777em;margin-left:0em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathnormal mtight">i</span></span></span><span style="top:-2.8448em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3223em;"><span></span></span></span></span></span></span><span class="mclose mtight">)</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.4058em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">Q</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.7519em;"><span style="top:-2.4413em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2587em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">u</span><span class="mpunct">;</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8312em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span></span><span style="top:-3.2634em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">ˉ</span></span></span></span></span></span></span><span class="mclose">)</span><span class="mpunct">,</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.19em;"><span></span></span></span></span></span><span class="arraycolsep" style="width:1em;"></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.69em;"><span style="top:-3.69em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">1</span><span class="mpunct">,</span></span></span><span style="top:-2.25em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">0</span><span class="mpunct">,</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.19em;"><span></span></span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord">ℓ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.0074em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord"><span class="delimsizing size1">(</span></span><span class="mord mathnormal">Q</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">;</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.404em;vertical-align:-0.35em;"></span><span class="mop"><span class="mord mathrm">SG</span></span><span class="mopen">[</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">]</span><span class="mord"><span class="mord"><span class="delimsizing size1">)</span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.054em;"><span style="top:-3.3029em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mord">.</span></span></span></span></span></div>
+<p>u 是候选合法动作；Q 是价值估计，不是动作概率。SG 为停止梯度：前向用 y_i，反向不对目标求导。真终止的目标直接取进入终态的 r_i，不查询终止空动作表；外部采集停止不自动等于真终止，reset 后新状态不能补旧 s′。</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>L</mi><mi mathvariant="script">B</mi></msub><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac><munder><mo>∑</mo><mrow><mi>i</mi><mo>∈</mo><mi mathvariant="script">B</mi></mrow></munder><msub><mi mathvariant="normal">ℓ</mi><mi>i</mi></msub><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><mspace width="2em"/><msub><mi mathvariant="normal">∇</mi><mi>θ</mi></msub><msub><mi>L</mi><mi mathvariant="script">B</mi></msub><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac><munder><mo>∑</mo><mrow><mi>i</mi><mo>∈</mo><mi mathvariant="script">B</mi></mrow></munder><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">(</mo><mi>Q</mi><mo stretchy="false">(</mo><msub><mi>s</mi><mi>i</mi></msub><mo separator="true">,</mo><msub><mi>a</mi><mi>i</mi></msub><mo separator="true">;</mo><mi>θ</mi><mo stretchy="false">)</mo><mo>−</mo><msub><mi>y</mi><mi>i</mi></msub><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">)</mo><msub><mi mathvariant="normal">∇</mi><mi>θ</mi></msub><mi>Q</mi><mo stretchy="false">(</mo><msub><mi>s</mi><mi>i</mi></msub><mo separator="true">,</mo><msub><mi>a</mi><mi>i</mi></msub><mo separator="true">;</mo><mi>θ</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><mspace width="2em"/><msub><mi>θ</mi><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow></msub><mo>=</mo><mi>θ</mi><mo>−</mo><mi>η</mi><msub><mi mathvariant="normal">∇</mi><mi>θ</mi></msub><msub><mi>L</mi><mi mathvariant="script">B</mi></msub><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">L_{\mathcal B}(\theta)=\frac1B\sum_{i\in\mathcal B}\ell_i(\theta),
+\qquad
+\nabla_\theta L_{\mathcal B}
+=\frac1B\sum_{i\in\mathcal B}
+\big(Q(s_i,a_i;\theta)-y_i\big)\nabla_\theta Q(s_i,a_i;\theta),
+\qquad
+\theta_{\mathrm{new}}=\theta-\eta\nabla_\theta L_{\mathcal B}.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathcal mtight" style="margin-right:0.03041em;">B</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.6431em;vertical-align:-1.3217em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.8557em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mrel mtight">∈</span><span class="mord mathcal mtight" style="margin-right:0.03041em;">B</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.3217em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord">ℓ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord">∇</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">θ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathcal mtight" style="margin-right:0.03041em;">B</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.6431em;vertical-align:-1.3217em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.8557em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mrel mtight">∈</span><span class="mord mathcal mtight" style="margin-right:0.03041em;">B</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.3217em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="delimsizing size1">(</span></span><span class="mord mathnormal">Q</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">;</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.2em;vertical-align:-0.35em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="delimsizing size1">)</span></span><span class="mord"><span class="mord">∇</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">θ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathnormal">Q</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">;</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight" style="margin-right:0.01389em;">new</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">η</span><span class="mord"><span class="mord">∇</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">θ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathcal mtight" style="margin-right:0.03041em;">B</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">.</span></span></span></span></span></div>
+<p>L_𝓑 是本课的<strong>批量半平方损失均值</strong>；∇_θ 为参数梯度，η 是优化步长。所有 y、当前预测与梯度先读取同一 pre 快照，最后只写一次参数。不是先用 e_1 更新 θ，再用新 θ 计算 e_2；也不是把平均误差当成每个不同特征的梯度。损失用 sum 或 mean 会改变尺度，本课必须除以 B。<a href="https://storage.googleapis.com/deepmind-media/dqn/DQNNaturePaper.pdf">本课的半平方系数与均值写法明确声明，回放和 minibatch 的基础机制见 2015 Algorithm 1。</a></p>
+<p>固定缓冲区、θ、bar θ、所有目标和本课抽样规则时，对可能批次求期望，批均值梯度等于全缓冲区经验目标的梯度。这是<strong>对已存记录的条件采样性质</strong>，不是无偏估计真实 Q*、当前策略价值或原环境总体的保证；后者还取决于收集、覆盖、反馈和任务条件。</p>
+<h2 id="section-7">4. 手算例子或更新过程</h2>
+<h3 id="section-8">4.1 同一 GUI 核、同一特征，新的独立计算起点</h3>
+<p>本课仍用 RL-020～022 的 N2/C1/z 教学 MDP：N2 为菜单、剩余动作 h=2，C1 为确认页、h=1，初态 N2；每动作耗一预算，h=0 真终止，也可提前退出。γ=0.9，核与奖励不改：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>合法状态动作</th>
+<th>后继与即时奖励</th>
+<th align="right">概率</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>N2,review</td>
+<td>C1，−1</td>
+<td align="right">1</td>
+<td>非终止</td>
+</tr>
+<tr>
+<td>N2,exit</td>
+<td>z，0</td>
+<td align="right">1</td>
+<td>终止，退出</td>
+</tr>
+<tr>
+<td>C1,confirm</td>
+<td>z，8</td>
+<td align="right">0.9</td>
+<td>终止，独立持久核验成功</td>
+</tr>
+<tr>
+<td>C1,confirm</td>
+<td>z，−4</td>
+<td align="right">0.1</td>
+<td>终止，独立持久核验失败</td>
+</tr>
+<tr>
+<td>C1,cancel</td>
+<td>z，0</td>
+<td align="right">1</td>
+<td>终止，取消</td>
+</tr>
+</tbody></table></div>
+<p>奖励是无量纲教学效用，review 的 −1 已含其成本；不另加 confirm 步骤费、终止奖励或预算补偿。z 后续为零但进入奖励保留。reset 只开始新任务，不计任务内奖励，不把新图接到旧转移；真实重置成本另记。</p>
+<p>固定全局 ID 仍为 (0review,1exit,2confirm,3cancel)，N2 mask=(1,1,0,0)，C1 mask=(0,0,1,1)；delete 不在该许可字典。mask 是教学先验，confirm 仍有失败风险。观测直接给完整状态与可信 mask；真实截图和反馈是否充分仍待确认。</p>
+<p>复用线性教学函数 Q(s,a;θ)=k(s,a)w+b，θ=(w,b)，k 表如下；它不是深度网络：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>k(s,a)</th>
+<th align="right">review</th>
+<th align="right">exit</th>
+<th align="right">confirm</th>
+<th align="right">cancel</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>N2</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>C1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">4</td>
+<td align="right">−2</td>
+</tr>
+</tbody></table></div>
+<p><strong>重新从 θ₀=(1,0) 开始</strong>，不承接 RL-022 的 θ₁；bar θ=θ₀ 在本次批更新期间固定，η=0.1。合法初始 Q 顺序 Nreview、Nexit、Cconfirm、Ccancel 为 (1,0,4,−2)。非法输出一律屏蔽，目标只取合法 max。</p>
+<h3 id="section-9">4.2 三条记录来自两个完整任务</h3>
+<p>下面是<strong>人为给定的教学日志</strong>，没有真实采集或随机抽样。缓冲区容量 C=3，当前有效 N=3；任务 A 先 review 再 cancel，任务 B 一开始 exit：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>ID / 任务内步</th>
+<th>状态</th>
+<th>已执行动作</th>
+<th align="right">r</th>
+<th>原任务后继</th>
+<th align="right">d</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>e_1 / A1</td>
+<td>N2</td>
+<td>review</td>
+<td align="right">−1</td>
+<td>C1</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>e_2 / A2</td>
+<td>C1</td>
+<td>cancel</td>
+<td align="right">0</td>
+<td>z</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td>e_3 / B1</td>
+<td>N2</td>
+<td>exit</td>
+<td align="right">0</td>
+<td>z</td>
+<td align="right">1</td>
+</tr>
+</tbody></table></div>
+<p>A 与 B 之间有任务 reset，不把 B 的初态当作 e_2 的后继。唯一环境记录 ID 是三个，不是两个任务，也不是更新时读了多少次；confirm 的实际反馈条数为 0。</p>
+<p>每条单次抽取概率 1/3，因此任务 A 的记录的概率质量占 2/3、B 占 1/3；逐记录均匀不是任务各半。取 B=2、无放回，可能批次 {e_1,e_2}、{e_1,e_3}、{e_2,e_3} 各为 1/3；每条整批纳入概率 2/3。若计有顺序的两次抽取，则每个不同 ID 的有序序列概率为 1/6，不和子集概率混用。</p>
+<p>本次<strong>人工指定</strong> 𝓑={e_1,e_2}，没有运行采样器。它恰好包含相邻的 A1、A2，直观说明随机回放不保证每一批都去除相关性。计算期间不新增、淘汰或修改这三条记录。</p>
+<h3 id="section-10">4.3 两条梯度都在 θ₀ 读取，再求均值</h3>
+<p>线性函数的预测梯度为 ∇Q=(k,1)。下表全部使用同一 θ₀ 与固定 bar θ，不把第一行 post 带进第二行：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>量</th>
+<th align="right">e_1：Nreview</th>
+<th align="right">e_2：Ccancel</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>当前 k / 预测 q</td>
+<td align="right">1 / 1</td>
+<td align="right">−2 / −2</td>
+</tr>
+<tr>
+<td>目标 y</td>
+<td align="right">−1+0.9×max(4,−2)=2.6</td>
+<td align="right">真终止，y=0</td>
+</tr>
+<tr>
+<td>δ=y−q</td>
+<td align="right">1.6</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td>单条半平方损失</td>
+<td align="right">1.28</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td>∇Q</td>
+<td align="right">(1,1)</td>
+<td align="right">(−2,1)</td>
+</tr>
+<tr>
+<td>损失梯度 (q−y)∇Q</td>
+<td align="right">(−1.6,−1.6)</td>
+<td align="right">(4,−2)</td>
+</tr>
+</tbody></table></div>
+<p>终止的 e_2 不取 max，不因为 z 后续为零而改写实际奖励；本次 r 本来就是 0。e_1 目标中的 4 仍为估计，不是 confirm 的环境期望或实际成功奖励；读取它不产生 confirm 数据。</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>L</mi><mi mathvariant="script">B</mi></msub><mo stretchy="false">(</mo><msub><mi>θ</mi><mn>0</mn></msub><mo stretchy="false">)</mo><mo>=</mo><mfrac><mrow><mn>1.28</mn><mo>+</mo><mn>2</mn></mrow><mn>2</mn></mfrac><mo>=</mo><mn>1.64</mn><mo separator="true">,</mo><mspace width="2em"/><mi mathvariant="normal">∇</mi><msub><mi>L</mi><mi mathvariant="script">B</mi></msub><mo stretchy="false">(</mo><msub><mi>θ</mi><mn>0</mn></msub><mo stretchy="false">)</mo><mo>=</mo><mfrac><mrow><mo stretchy="false">(</mo><mo>−</mo><mn>1.6</mn><mo separator="true">,</mo><mo>−</mo><mn>1.6</mn><mo stretchy="false">)</mo><mo>+</mo><mo stretchy="false">(</mo><mn>4</mn><mo separator="true">,</mo><mo>−</mo><mn>2</mn><mo stretchy="false">)</mo></mrow><mn>2</mn></mfrac><mo>=</mo><mo stretchy="false">(</mo><mn>1.2</mn><mo separator="true">,</mo><mo>−</mo><mn>1.8</mn><mo stretchy="false">)</mo><mo separator="true">,</mo><mspace width="2em"/><msub><mi>θ</mi><mn>1</mn></msub><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo separator="true">,</mo><mn>0</mn><mo stretchy="false">)</mo><mo>−</mo><mn>0.1</mn><mo stretchy="false">(</mo><mn>1.2</mn><mo separator="true">,</mo><mo>−</mo><mn>1.8</mn><mo stretchy="false">)</mo><mo>=</mo><mo stretchy="false">(</mo><mn>0.88</mn><mo separator="true">,</mo><mn>0.18</mn><mo stretchy="false">)</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">L_{\mathcal B}(\theta_0)=\frac{1.28+2}{2}=1.64,
+\qquad
+\nabla L_{\mathcal B}(\theta_0)
+=\frac{(-1.6,-1.6)+(4,-2)}{2}=(1.2,-1.8),
+\qquad
+\theta_1=(1,0)-0.1(1.2,-1.8)=(0.88,0.18).</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathcal mtight" style="margin-right:0.03041em;">B</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.0074em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1.28</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1.64</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">∇</span><span class="mord"><span class="mord mathnormal">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathcal mtight" style="margin-right:0.03041em;">B</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.113em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.427em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mopen">(</span><span class="mord">−</span><span class="mord">1.6</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">−</span><span class="mord">1.6</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mopen">(</span><span class="mord">4</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">−</span><span class="mord">2</span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1.2</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">−</span><span class="mord">1.8</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.1</span><span class="mopen">(</span><span class="mord">1.2</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">−</span><span class="mord">1.8</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">0.88</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0.18</span><span class="mclose">)</span><span class="mord">.</span></span></span></span></span></div>
+<p>两行的梯度方向可以部分抵消；不能把 δ 的平均值 1.8 直接乘某个共同特征。这是一次批更新，不是两次顺序 SGD。其目标及本次归一化由合同决定，不从结果大小推优劣。</p>
+<h3 id="section-11">4.4 重算预测与同一批固定目标损失</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>合法项</th>
+<th align="right">θ₀ 预测</th>
+<th align="right">θ₁ 预测</th>
+<th align="right">这个 buffer 中的环境记录数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>N2,review</td>
+<td align="right">1</td>
+<td align="right">0.88+0.18=1.06</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td>N2,exit</td>
+<td align="right">0</td>
+<td align="right">0.18</td>
+<td align="right">1，当前批未选</td>
+</tr>
+<tr>
+<td>C1,confirm</td>
+<td align="right">4</td>
+<td align="right">4×0.88+0.18=3.7</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>C1,cancel</td>
+<td align="right">−2</td>
+<td align="right">−2×0.88+0.18=−1.58</td>
+<td align="right">1</td>
+</tr>
+</tbody></table></div>
+<p>保持本批 y_1=2.6、y_2=0，两个新半平方损失分别为 1.1858、1.2482，所以批均值为 <strong>1.217</strong>，小于原来的 1.64。这里所有输出变化都是共享参数代数，confirm 没有新增反馈；当前批没选到的 exit 也可以改变。损失下降不说明实际成功率、回报或全体价值误差提升。</p>
+<p>再看均匀抽样的分母：e_3 的初始预测和终止目标都是 0，故其损失、梯度均为 0。对三条全缓冲区取平均，初始经验损失为 (1.28+2+0)/3=82/75≈1.09333，梯度为 (0.8,−1.2)，并不要求等于本次选定批的 1.64 和 (1.2,−1.8)。</p>
+<p>三个可能批次的同 pre 梯度分别为 (1.2,−1.8)、(−0.8,−0.8)、(2,−1)；按各 1/3 加权才得到 (0.8,−1.2)。这验证的是固定 D、θ₀ 和目标下，批梯度平均对应全 buffer 经验目标；不是对原环境或当前策略的无条件保证。</p>
+<h3 id="section-12">4.5 重复使用、容量与覆盖的计数</h3>
+<p>以后若再次抽到 e_1 或 e_2，增加的是抽取/损失使用次数、优化次数；环境记录 ID、奖励事实和 confirm 覆盖不会因此增加。目标可在未来优化时按明确快照协议重算，不意味着环境给了新奖励，也不意味着永久固定本次 2.6。</p>
+<p>如果再假设发生第四条新事件 e_4：任务 C 的 Nreview、−1 到 C1，容量为 3 的先进先出队列会从 (e_1,e_2,e_3) 变为 (e_2,e_3,e_4)。历史总事件变为 4，当前存储仍为 3；e_4 与 e_1 内容相同也属于不同事件，需不同 ID。这个数据结构说明不参与上面的更新，也没有实际采集第四条记录。稀有记录若被淘汰，后续回放不再提供它的机会。</p>
+<h2 id="section-13">5. 与前一种方法的关系</h2>
+<p>RL-022 给定一条记录，解释如何构造固定目标并更新共享参数。本课增加的是经验选择与复用：训练样本不必总是最新一条，同一条也能多次用于优化。改变的是更新的数据来源和权重，不是凭空改变任务核或获得更多独立反馈。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>紧跟新记录更新</th>
+<th>均匀经验回放</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>数据选择</td>
+<td>跟随采集时间顺序</td>
+<td>从当前存储记录抽取</td>
+</tr>
+<tr>
+<td>相关性</td>
+<td>可能持续看到邻近状态</td>
+<td>可降低相邻更新的倾向，但有限 buffer 和批仍可能相关</td>
+</tr>
+<tr>
+<td>使用次数</td>
+<td>常见一次或少量</td>
+<td>可重复使用，不增加环境记录</td>
+</tr>
+<tr>
+<td>目标数据范围</td>
+<td>近期行为产生的经验</td>
+<td>多个历史行为的混合，非当前策略的天然均匀分布</td>
+</tr>
+<tr>
+<td>新成本</td>
+<td>交互、前后向计算</td>
+<td>再加存储、读取、采样与更多更新计算</td>
+</tr>
+</tbody></table></div>
+<p>行为策略变化不必然意味着环境本身变了。对同一平稳任务、相同状态动作奖励语义，off-policy 的 Q-learning 目标允许使用与当前行为不同的数据；但这不提供任意离线数据的覆盖保证。</p>
+<p>若奖励、界面/后端规律、动作编号、许可或状态编码版本发生变化，旧转移可能不再代表当前问题。需要核查版本、隔离不兼容记录，或明确有依据的重建方案；不能改一下标签就说历史经验已校正。均匀抽旧数据既不自动消除这种漂移，也不自动代表最新流量。上述边界与 <a href="../RL-019/">RL-019</a> 的“覆盖、样本和问题定义”相接。</p>
+<p>完整 2015 DQN 包含回放与目标网络；当前只给定固定目标快照，目标维护留 RL-024。也不能将 2013 与 2015 的目标网络配置混成同一版本，更不以一个 batch 算例宣称稳定训练定理。</p>
+<h2 id="section-14">6. 一个主要研究应用：GUI 旧操作日志能否用于训练</h2>
+<p>主应用是<strong>在明确任务与许可下，复用多步 GUI 转移日志</strong>。若只是独立截图定位，先建立监督定位；若操作改变后续状态和持久结果，再判断是否需要长期价值控制。现有业务资料未给全，下列各项都是<strong>【待确认】</strong>，不是已经可训练的数据集：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>合同项</th>
+<th>必须补齐的真实定义与检查</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>观测与状态</td>
+<td>【待确认】指令、截图/结构、必要历史、焦点登录与预算；历史表示是否能重建，截图不自动等于完整状态</td>
+</tr>
+<tr>
+<td>动作、权限与 mask</td>
+<td>【待确认】稳定 ID/控件语义、许可版本、旧后继合法集合；未知、失效或空 mask 如何留待核，不用新页面候选替代</td>
+</tr>
+<tr>
+<td>奖励与独立反馈</td>
+<td>【待确认】成功失败/取消及时间/误操作代价的单位、γ；谁何时核验持久输出，缺失/延迟反馈不能补成成功提示</td>
+</tr>
+<tr>
+<td>多步与结束</td>
+<td>【待确认】任务内预算、真终止、外部截断、reset 和原后继的独立标志，轨迹拼接是否真实</td>
+</tr>
+<tr>
+<td>初态与恢复</td>
+<td>【待确认】任务分布、可达性、隔离副本、重置/恢复成本；环境 reset 与模型参数保存分开</td>
+</tr>
+<tr>
+<td>记录与版本</td>
+<td>【待确认】唯一事件 ID、任务/步骤/时间、状态动作奖励后继、结果/缺失、行为和环境/奖励/编码/许可版本；不只保留成功</td>
+</tr>
+<tr>
+<td>回放协议</td>
+<td>【待确认】容量、有效 N、淘汰规则、按什么单位抽、放回方式、B、数据不足处理、去除重复入库与记录使用计数</td>
+</tr>
+<tr>
+<td>目标与优化</td>
+<td>【待确认】本批 pre/目标快照、stop-gradient、mean/sum、η、更新次数与新交互数的比值，不把回放使用数当样本增长</td>
+</tr>
+<tr>
+<td>覆盖与评价</td>
+<td>【待确认】逐状态动作实际事件数、当前 buffer/历史覆盖空缺、持久成功率/回报、错误后果、步数时延及不确定性；探索与冻结评价分开</td>
+</tr>
+<tr>
+<td>采集与训练成本</td>
+<td>【待确认】交互/核验/标注、reset、调参和重复；图像存储、读取、解码/编码、前后向、内存/显存与更新耗时</td>
+</tr>
+<tr>
+<td>推理与执行成本</td>
+<td>【待确认】历史/视觉编码、候选与 mask、模型前向、等待、恢复和持久结果核验；训练用回放不等于部署每步也要抽历史样本</td>
+</tr>
+<tr>
+<td>非 RL 基线与公平性</td>
+<td>【待确认】固定流程、监督定位加流程或示范策略；匹配任务、输入、权限、先验、交互/计算预算和成功判据，训练/调参/测试按独立任务划分</td>
+</tr>
+</tbody></table></div>
+<p>同一任务的相邻转移或重复使用记录若跨训练与测试，会造成泄漏；应先按独立任务及场景划分再设计 buffer，具体边界依真实数据确定。比较回放方案时同时报告独立环境事件、更新次数、读取/计算与核验成本；只匹配“更新一万次”不能说明用了同样的数据预算。</p>
+<p>一个待检验的<strong>研究假设</strong>是：在有限真实交互预算下，版本一致且可核验的旧 GUI 日志能否减少额外交互需求，同时避免重复放大历史偏向？它需要非 RL 对照、独立评价与真实成本记录，本课尚未验证，<strong>NOT_RUN</strong>。</p>
+<p>模态路由的实际输入、标签语义、动作和错误成本仍待确认，不移植其他任务标签；单次路由先匹配监督或单步反馈基线。SR 先明确迭代、早停或计算分配等真实决策与质量—成本目标，普通单次重建先用监督及固定处理基线，不强套经验回放控制。</p>
+<h2 id="section-15">7. 常见误解、失败条件和适用边界</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>误解或失败</th>
+<th>本课检查</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>“每条均匀就等于每个任务/动作均匀”</td>
+<td>核抽样单位与记录频率，本例 A 占 2/3，不是任务各半</td>
+</tr>
+<tr>
+<td>“无放回也可当批内 IID，回放保证独立环境样本”</td>
+<td>区分索引抽样与原轨迹相关性，主批还含相邻 e_1/e_2</td>
+</tr>
+<tr>
+<td>“用过 100 次就是 100 条新经验”</td>
+<td>按事件 ID、环境步、使用数、更新数分别计数</td>
+</tr>
+<tr>
+<td>“两条误差求均值就等于批梯度”</td>
+<td>各自乘预测梯度，再同 pre 求均值并一次写入</td>
+</tr>
+<tr>
+<td>“随机打散后一定覆盖成功或所有动作”</td>
+<td>本 buffer 没有 confirm 结果，重放不会补出来</td>
+</tr>
+<tr>
+<td>“batch mean 应等于 buffer mean，或能证明原环境无偏”</td>
+<td>一次批可能偏离；条件期望只针对固定经验目标</td>
+</tr>
+<tr>
+<td>“off-policy 所以任何旧版本都能混用”</td>
+<td>分清行为变了与问题语义/反馈机制变了</td>
+</tr>
+<tr>
+<td>“只选完整成功日志更干净”</td>
+<td>它改变数据选择；失败、取消、截断和待核原因需保留</td>
+</tr>
+</tbody></table></div>
+<p>回放不是环境模型，不会重新生成未观察到的随机后果；抽到旧 confirm 记录也只能用那一次实际反馈，而非自动获得新的独立成功/失败样本。低训练损失、更多使用次数或更大的容量，都不是有限覆盖、当前效果、稳定性或表格收敛的证书。</p>
+<h2 id="section-16">8. 三道理解题</h2>
+<p><strong>题 1｜抽样与计数。</strong> D={e_1,e_2,e_3}，任务 A 有 e_1/e_2，任务 B 有 e_3。单条均匀概率、B=2 无放回时的三个子集概率、每条整批纳入概率各是什么？为何任务不是各半、每个批不一定去掉相邻性？重复取同一条记录会增加什么、不会增加什么？</p>
+<p><strong>题 2｜一次批更新。</strong> 按本课 θ₀、bar θ、η、k 与指定批 {e_1,e_2}，计算两条的 y、q、δ、半平方损失、预测梯度和损失梯度，再给批均值、θ₁、四个合法新预测及固定目标新批损失。为何不能先更新第一条再算第二条？全缓冲区经验梯度为何可与本次批不同？</p>
+<p><strong>题 3｜旧 GUI 数据能否直接训练。</strong> 有人把同一成功轨迹复制十份入库，混入旧动作 ID/旧奖励版本，再随机拆转移到训练与测试，声称均匀回放已获得新独立覆盖和当前策略保证。指出问题；列四项真实合同、一个独立持久成功判据、一个非 RL 基线及训练/推理各一项成本。外部截断后若只有 reset 新图，能否补旧目标？</p>
+<h2 id="section-17">9. 下一单元与待复习问题</h2>
+<p>下一单元是 <strong>RL-024《目标网络：为什么不用自己追自己》</strong>，进一步讨论用于生成目标的估计怎样维护。今天只声明本次 bar θ 固定，不教复制周期、软更新或其他后续算法。</p>
+<p>若梯度方向或共享输出仍混淆，回 RL-022；若把重复记录当覆盖，回 RL-019；若无法解释真终止、独立核验或 reset，回 RL-020。复习时先用同一 pre 算两条梯度，再分别说出“当前有几个环境事件、buffer 存几条、这次用几条、写几次参数”。材料可用与个人理解确认分开，这些是自查入口，不是掌握诊断。</p>
+<h2 id="section-18">10. 可核查的参考来源与证据说明</h2>
+<ol>
+<li><strong>Mnih 等，<em>Playing Atari with Deep Reinforcement Learning</em>，2013。</strong><a href="https://arxiv.org/abs/1312.5602">arXiv 原始记录</a>，<a href="https://arxiv.org/pdf/1312.5602">原文 PDF</a>。2026-11-08 实际复读 PDF 第 4～5 页：跨任务存转移、随机 minibatch、Algorithm 1、最近 N 条与均匀抽样的限制。只据这些段落解释回放；不把其全部架构、优化或效果宣称移作本课 GUI 证据。</li>
+<li><strong>Mnih 等，<em>Human-level control through deep reinforcement learning</em>，Nature 518，529～533，2015，DOI 10.1038/nature14236。</strong><a href="https://storage.googleapis.com/deepmind-media/dqn/DQNNaturePaper.pdf">作者团队公开原文 PDF</a>。2026-11-08 实际复读 PDF 第 7 页 Methods 的 replay 段与 Algorithm 1，核查存储、均匀抽取、有限容量和终止分支；目标网络部分只确认完整算法边界，不在本课实现。原始两版配置不混用，也不复现 Atari 训练或实验。</li>
+</ol>
+<p>当日重新校验已有原始 PDF 缓存：2013 为 9 页、483,443 字节，SHA-256 <code>8db04120cace173151c77e0faa6f3eaa4207009da66b9417597dc70bfee56d9c</code>；2015 为 13 页、4,600,582 字节，SHA-256 <code>3ae04e292f2882483ad539e24cd532743165afce51d45df4e31bd1e3ed9753bb</code>。两原始 URL 当日 HEAD 均为 200；arXiv 记录与作者 PDF 可读。元数据访问不等于语义阅读，实际范围以上述选页为准，不声称重下或通读全文。</p>
+<p><strong>已发表机制：</strong>存储转移、回放、随机 minibatch 与有限历史样本的范围。<strong>教学假设与精确算术：</strong>无放回 B=2、三个事件、线性函数与一次均值梯度、FIFO 例子；这些不是论文实测。<strong>工程推断与研究假设：</strong>GUI 数据、版本、成本与独立比较，真实资料待确认。<strong>实际研究结果：</strong>无，<strong>未运行（NOT_RUN）</strong>；没有随机抽样、研究训练、真实 GUI、GPU 或服务器实验，没有性能、覆盖或收敛改善结论。</p>
+<details class="answers" id="section-19"><summary>参考答案（练习完成后再看）</summary><p><strong>题 1 参考答案。</strong> 单次每个 ID 为 1/3；三个无序二元批各 1/3，每条整批纳入概率为 2/3。有序的不同两 ID 序列各 1/6，不与子集概率互换。逐记录均匀给 A 的记录的概率质量 2/3、B 为 1/3，不是按任务各半。无放回使批内 ID 不重复，但抽取不是独立的；{e_1,e_2} 仍是相邻转移。回放可增加使用次数与更新计算，不增加三个唯一环境事件，不产生 confirm 反馈或新独立奖励；下一批仍可再次选旧 ID。</p>
+<p><strong>题 2 参考答案。</strong> e_1 的 y=2.6、q=1、δ=1.6、ℓ=1.28，∇Q=(1,1)，损失梯度 (−1.6,−1.6)。e_2 真终止 y=0、q=−2、δ=2、ℓ=2，∇Q=(−2,1)，损失梯度 (4,−2)。批损失均值 1.64，梯度均值 (1.2,−1.8)，θ₁=(0.88,0.18)。按 Nreview、Nexit、Cconfirm、Ccancel，新预测 (1.06,0.18,3.7,−1.58)；后三项的变化不改变事件计数，confirm 仍 0 条反馈。</p>
+<p>保持 y=(2.6,0)，新单条损失为 1.1858、1.2482，批均值 1.217。所有梯度先读同一 pre，再一次写入；顺序两次更新会在不同参数处算梯度，已换算法步骤。e_3 初始损失和梯度为 0，所以全 D 平均损失 82/75，梯度 (0.8,−1.2)。三个批梯度各按 1/3 平均才等于全 D 梯度；单批不必相等，这也不是对真实环境、当前策略价值或 Q* 的无条件无偏保证。损失下降只证明教学算术，不证明真实效果。</p>
+<p><strong>题 3 参考答案。</strong> 复制同一事件十份只是重复加权，不是十次独立交互；要保留唯一事件 ID 和使用计数，避免重复入库伪增数据。旧行为与当前行为不同可以是 off-policy 设定的一部分，但旧动作语义、奖励或环境版本不兼容不能自动混用，需核查并隔离或明确可验证转换。相邻转移或同一任务复制记录跨训练/测试会泄漏，应按独立任务/场景先划分。均匀抽样只均匀当前记录，不能校正所有偏向或补未见结果。</p>
+<p>合同可列观测历史与预算、固定动作 ID/许可 mask、独立反馈与奖励单位、结束/reset、唯一事件与版本、容量/淘汰/抽样、覆盖评价和计算成本。持久成功应核目标记录或输出，不能只看提示；具体接口【待确认】。非 RL 基线可用固定流程或监督定位加流程，匹配信息、任务、权限、预算和成功判据。训练成本含交互核验、存储读取及反向更新；推理成本含编码、前向、等待与结果验证，不要求部署时也抽训练 buffer。只有 reset 新图不是真实旧后继，不能补旧非终止目标；保留截断与缺失原因，跳过无法核实的更新。当前真实研究仍 NOT_RUN。</p>
+</details></article></div><section class="pdf-preview wrap" aria-labelledby="pdf-preview-title"><h2 id="pdf-preview-title">同内容伴随 PDF · 阅读版</h2><p>本课 PDF 使用与 PPT 相同的源内容，经独立排版用于阅读，非 PowerPoint 原生导出；可编辑汇报请使用 PPT。手机或浏览器未显示时，可<a href="./RL-023.pdf" style="text-decoration:underline">直接打开 PDF 阅读版</a>。</p><iframe src="./RL-023.pdf#toolbar=1" title="RL-023 同内容伴随 PDF 阅读版" loading="lazy"></iframe></section><div class="lesson-navigation wrap"><a href="../RL-022/"><span>← 上一单元 · RL-022</span><strong>DQN：用神经网络近似动作价值</strong></a><a class="next" href="../RL-024/"><span>下一单元 · RL-024 →</span><strong>目标网络：为什么不用自己追自己</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>
