@@ -1,0 +1,95 @@
+<!DOCTYPE html> <html lang="zh-CN"> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <title> DreamSR CVPR 2026 论文精读 | 王超华 · 个人研究主页 </title> <meta name="author" content="王超华 "> <meta name="description" content="从双分支多模态控制、感受野增强与两阶段推理分析 DreamSR 的超高分辨率证据边界。"> <meta name="keywords" content="王超华, Chaohua Wang, 计算机视觉, 多模态大模型, 图像恢复, 超分辨率, 端侧部署"> <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; media-src 'self' https:; frame-src 'self' https:; connect-src 'self' https:;"> <style>
+  :root {
+    --max-content-width: 930px;
+  }
+</style> <link rel="stylesheet" href="/assets/css/tailwind.css?v=50c64c15cbb9fd1ce6056fdb8bcb4b62"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css" integrity="sha256-MVopmdyC2tYTiJ8wlktf0uh0v4NgT+vNdyVFepi7Q0c=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/academicons@1.9.5/css/academicons.min.css" integrity="sha256-SzrCOBJbGVFMahewkgjwnApaV2+av1DwMAA+/QGLyZw=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/scholar-icons@1.0.3/css/scholar-icons.css" integrity="sha256-VY3hHVj/hNX3fYG6wtbA6TcKJQl7+FthzGSyIB64klY=" crossorigin="anonymous"> <link defer rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons&amp;display=swap"> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-github.css?v=591dab5a4e56573bf4ef7fd332894c99" media="" id="highlight_theme_light"> <link rel="shortcut icon" href="data:image/svg+xml,&lt;svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22&gt;&lt;text%20y=%22.9em%22%20font-size=%2290%22&gt;%E2%9A%9B%EF%B8%8F&lt;/text&gt;&lt;/svg&gt;"> <link rel="stylesheet" href="/assets/css/main.css?v=3116ba77db9ee1581d05bb3e86fbf7f1"> <link rel="canonical" href="https://chaohuawang-phd.github.io/research/image-sr/2026-11/dreamsr-cvpr-2026/"> <script src="/assets/js/theme.js?v=5286c3e4c334d0ecb8fc0c40ff4fa7ec"></script> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-native.css?v=5847e5ed4a4568527aa6cfab446049ca" media="none" id="highlight_theme_dark"> <script>
+    initTheme();
+  </script> </head> <body class="fixed-top-nav sticky-bottom-footer"> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <a class="navbar-brand title font-weight-lighter" href="/"> 王超华 · 个人研究主页 </a> <button class="navbar-toggler collapsed navbar-toggler-main" type="button" data-nav-toggle="navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse navbar-collapse-main" id="navbarNav"> <ul class="navbar-nav navbar-menu-list flex-nowrap"> <li class="nav-item "> <a class="nav-link" href="/">关于我 </a> </li> <li class="nav-item active"> <a class="nav-link" href="/research/">研究方向 <span class="sr-only">(current)</span> </a> </li> <li class="nav-item "> <a class="nav-link" href="/publications/">论文成果 </a> </li> <li class="nav-item "> <a class="nav-link" href="/projects/">研究项目 </a> </li> <li class="nav-item "> <a class="nav-link" href="/cv/">教育与经历 </a> </li> <li class="nav-item active"> <a class="nav-link" href="/research/image-sr/">图像超分辨论文调研 <span class="sr-only">(current)</span> </a> </li> <li class="nav-item"> <button id="search-toggle" type="button" title="Search" aria-label="Open search"> <span class="nav-link">ctrl k <i class="fa-solid fa-magnifying-glass"></i></span> </button> </li> <li class="toggle-container"> <button id="light-toggle" type="button" title="Change theme" aria-label="Change color theme"> <i class="fa-half-sun-moon" id="light-toggle-system"></i> <i class="fa-solid fa-moon" id="light-toggle-dark"></i> <i class="fa-solid fa-sun" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="container mt-5" role="main"> <div class="post"> <header class="post-header"> <h1 class="post-title">DreamSR CVPR 2026 论文精读</h1> <p class="post-description">从双分支多模态控制、感受野增强与两阶段推理分析 DreamSR 的超高分辨率证据边界。</p> </header> <article> <p>DreamSR 面向超高分辨率真实世界图像的核心难题：分块推理虽然能控制显存，却容易让每个 patch 只凭局部文本过度生成，造成跨块语义漂移和细节不连续。它用局部与全局提示的双分支多模态 ControlNet 扩大有效感受野，再用一步退化去除 LoRA 加 16 步纹理生成，在 2K 级输出上取得较强感知指标，但代价仍是 86 秒级推理和对 FLUX、LLaVA 与大规模带描述训练数据的依赖。</p> <h1 id="论文身份与证据范围">论文身份与证据范围</h1> <ul> <li> <strong>论文</strong>：Linwei Dong 等，<em>DreamSR: Towards Ultra-High-Resolution Image Super-Resolution via a Receptive-Field Enhanced Diffusion Framework</em>，CVPR 2026，页 38258–38269。</li> <li> <strong>正式证据</strong>：<a href="https://openaccess.thecvf.com/content/CVPR2026/html/Dong_DreamSR_Towards_Ultra-High-Resolution_Image_Super-Resolution_via_a_Receptive-Field_Enhanced_Diffusion_CVPR_2026_paper.html" rel="external nofollow noopener" target="_blank">CVPR 论文页</a>、<a href="https://openaccess.thecvf.com/content/CVPR2026/papers/Dong_DreamSR_Towards_Ultra-High-Resolution_Image_Super-Resolution_via_a_Receptive-Field_Enhanced_Diffusion_CVPR_2026_paper.pdf" rel="external nofollow noopener" target="_blank">正式 PDF</a> 与补充材料。</li> <li>本页核验了正文的架构、训练损失、五个真实世界数据集、消融与 2K 计时，也读取了补充材料的退化流程、训练伪代码、用户研究与 4K 级视觉对比。定性 4K 图支持“能处理超高分辨率案例”，不能替代大规模有真值 4K 基准。</li> </ul> <figure> <a href="/research/image-sr/2026-11/assets/dreamsr-cvpr-2026/fig1-problem-examples.png" target="_blank" rel="noopener"><img class="img-fluid" src="/research/image-sr/2026-11/assets/dreamsr-cvpr-2026/fig1-problem-examples.png" alt="DreamSR 原图 1：分块推理造成局部语义漂移的长颈鹿与建筑案例" width="1500" height="690" loading="lazy" decoding="async"></a> <figcaption><strong>原图 1｜分块推理的局部过生成案例。</strong>来源：<a href="https://openaccess.thecvf.com/content/CVPR2026/papers/Dong_DreamSR_Towards_Ultra-High-Resolution_Image_Super-Resolution_via_a_Receptive-Field_Enhanced_Diffusion_CVPR_2026_paper.pdf#page=2" rel="external nofollow noopener" target="_blank">Dong 等，CVPR 2026，Figure 1，PDF 第 2 页</a>。点击查看原尺寸；保留裁框、方法名与英文图注。</figcaption> </figure> <p>图 1（原论文 Figure 1，PDF 第 2 页）：同一 patch 在长颈鹿背景和古建筑细节上，现有方法出现局部语义漂移；DreamSR 示例更接近全局场景。红框展示局部错误，黄色框展示细粒度恢复。该图说明问题与代表性结果，不证明误生成已被完全消除。</p> <h1 id="方法链条">方法链条</h1> <h2 id="局部与全局提示的双分支控制">局部与全局提示的双分支控制</h2> <p>DreamSR 以 FLUX DiT 为骨干。局部分支从低分辨率 patch 生成局部文本提示，负责细粒度纹理；全局分支使用整图描述维持场景语义和跨 patch 一致性。ControlNet 同时输出图像控制特征与文本控制特征，通过交叉注意力注入冻结的扩散主干。</p> <p>若把一个 patch 的查询写成 $Q=[1,0]$，两个全局键为 $K_1=[1,0]$、$K_2=[0,1]$，对应值 $V_1=1$、$V_2=3$，缩放点积为 $[1/\sqrt2,0]$。softmax 权重约为 $[0.67,0.33]$，融合值约 $1.66$。这个小例子说明局部 token 会按相关性吸收全局上下文；真实模型在多头、高维 token 上计算。</p> <figure> <a href="/research/image-sr/2026-11/assets/dreamsr-cvpr-2026/fig2-architecture.png" target="_blank" rel="noopener"><img class="img-fluid" src="/research/image-sr/2026-11/assets/dreamsr-cvpr-2026/fig2-architecture.png" alt="DreamSR 原图 2：一步退化去除、多步纹理生成和双分支控制架构" width="1500" height="1040" loading="lazy" decoding="async"></a> <figcaption><strong>原图 2｜DreamSR 总体架构与交叉注意力。</strong>来源：<a href="https://openaccess.thecvf.com/content/CVPR2026/papers/Dong_DreamSR_Towards_Ultra-High-Resolution_Image_Super-Resolution_via_a_Receptive-Field_Enhanced_Diffusion_CVPR_2026_paper.pdf#page=3" rel="external nofollow noopener" target="_blank">Dong 等，CVPR 2026，Figure 2，PDF 第 3 页</a>。点击查看原尺寸；保留模块、图例与英文图注。</figcaption> </figure> <p>图 2（原论文 Figure 2，PDF 第 3 页）：左侧把输入分成一步退化去除和多步纹理生成两阶段，中间双分支 MM-ControlNet 同时控制图像与文本特征，右侧是上下文交叉注意力。该图支持数据流与模块位置；效果大小需要看消融。</p> <h2 id="一步去退化与多步生纹理">一步去退化与多步生纹理</h2> <p>训练把退化潜变量 $z_{dr}$ 与噪声 $\epsilon$ 连接为</p> \[z_t=(1-t)z_{dr}+t\epsilon.\] <p>若 $z_{dr}=1.2$、$\epsilon=-0.4$、$t=0.25$，则 $z_t=0.8$。模型预测速度后，先用 Restoration Acceleration LoRA 做一步退化去除，再用 16 步主干生成细节，总计 $1+16$ 步。速度损失为 $L_v=|v_p-v_{gt}|_2^2$；靠近干净端点时再加入像素和 LPIPS 约束，LoRA 阶段还加入 GAN 项。</p> <p>训练使用 16 张 H20、批量 64、学习率 $5\times10^{-6}$；先单独训练 MM-ControlNet 20K 步，再交替训练约 100K 步。训练集由约 58 万通用高质量图像和 12 万人脸图像组成，并配有文本描述；这意味着“更强细节”不能只归因于架构，也受底座和数据规模影响。</p> <h1 id="实验如何读">实验如何读</h1> <table> <thead> <tr> <th>证据</th> <th style="text-align: right">论文报告</th> <th>能支持什么</th> <th>不能支持什么</th> </tr> </thead> <tbody> <tr> <td>2560×1440、单张 H20</td> <td style="text-align: right">$1+16$ 步，86 s</td> <td>比 StableSR 156 s、SeeSR 119 s、SUPIR 124 s 快</td> <td>仍慢于 FaithDiff 30 s，也不是实时或移动端结果</td> </tr> <tr> <td>RealSR</td> <td style="text-align: right">MUSIQ 70.5560；MANIQA 0.5731；CLIPIQA+ 0.7318</td> <td>无参考感知指标在该表中强</td> <td>PSNR 20.9305、LPIPS 0.4079 较弱，不能称全面恢复最准</td> </tr> <tr> <td>双分支消融 RealDeg</td> <td style="text-align: right">完整：MUSIQ 45.6234；仅全局 41.6816；仅局部 41.5523</td> <td>局部与全局联合控制有效</td> <td>未隔离所有数据与参数增长因素</td> </tr> <tr> <td>感受野增强训练</td> <td style="text-align: right">完整 MUSIQ 45.6234；去掉 RFE 43.5546</td> <td>混合 512/1024 训练策略有贡献</td> <td>不证明任意超大图都无接缝或无漂移</td> </tr> </tbody> </table> <figure> <a href="/research/image-sr/2026-11/assets/dreamsr-cvpr-2026/fig4-qualitative.png" target="_blank" rel="noopener"><img class="img-fluid" src="/research/image-sr/2026-11/assets/dreamsr-cvpr-2026/fig4-qualitative.png" alt="DreamSR 原图 4：鸟羽、花蕊和四千像素建筑文字的多方法视觉对比" width="1500" height="1320" loading="lazy" decoding="async"></a> <figcaption><strong>原图 4｜1K 与 4K 真实图像视觉对比。</strong>来源：<a href="https://openaccess.thecvf.com/content/CVPR2026/papers/Dong_DreamSR_Towards_Ultra-High-Resolution_Image_Super-Resolution_via_a_Receptive-Field_Enhanced_Diffusion_CVPR_2026_paper.pdf#page=7" rel="external nofollow noopener" target="_blank">Dong 等，CVPR 2026，Figure 4，PDF 第 7 页</a>。点击查看原尺寸；保留输入、裁框、方法名与英文图注。</figcaption> </figure> <p>图 3（原论文 Figure 4，PDF 第 7 页）：1K 鸟羽、花蕊与 4K 建筑文字的多方法对比。应同时看细纹理与语义是否一致；DreamSR 的细节更丰富，但没有高分辨率真值的样本不能判定每根纹理都是真实恢复。</p> <figure> <a href="/research/image-sr/2026-11/assets/dreamsr-cvpr-2026/fig5-6-ablation.png" target="_blank" rel="noopener"><img class="img-fluid" src="/research/image-sr/2026-11/assets/dreamsr-cvpr-2026/fig5-6-ablation.png" alt="DreamSR 原图 5 与 6：局部全局提示和感受野增强训练的消融对比" width="1500" height="950" loading="lazy" decoding="async"></a> <figcaption><strong>原图 5–6｜双分支提示与训练策略消融。</strong>来源：<a href="https://openaccess.thecvf.com/content/CVPR2026/papers/Dong_DreamSR_Towards_Ultra-High-Resolution_Image_Super-Resolution_via_a_Receptive-Field_Enhanced_Diffusion_CVPR_2026_paper.pdf#page=8" rel="external nofollow noopener" target="_blank">Dong 等，CVPR 2026，Figures 5–6，PDF 第 8 页</a>。点击查看原尺寸；保留表格、裁框、模块标签与英文图注。</figcaption> </figure> <p>图 4（原论文 Figures 5–6，PDF 第 8 页）：左侧比较只用全局提示、只用局部提示和双分支；右侧比较去掉图像到图像退化、去掉感受野增强训练与完整模型。可见和表格同方向的差异支持组件贡献，但图例仍是少量代表性样本。</p> <h1 id="判断与局限">判断与局限</h1> <ol> <li> <strong>真正的新意是把分块 SR 的“上下文缺失”当作多模态控制问题处理。</strong> 局部提示负责细节，全局提示约束场景，双分支在 RealDeg 的三项无参考指标上都优于单分支。</li> <li> <strong>“超高分辨率”证据主要是可扩展推理与定性结果。</strong> 正文含 4K 案例，补充材料还给出约 4380×2880 和 7036×2880 输出；但缺少大规模成对 4K 真值基准，细节真实性需谨慎表述。</li> <li> <strong>感知分数与参考分数显著冲突。</strong> RealSR 上 DreamSR 的无参考分数领先，而 PSNR/SSIM/LPIPS 并不领先。论文补充材料也展示传统参考指标可能偏好平滑结果；这支持分开报告协议，不支持简单否定所有参考指标。</li> <li> <strong>依赖与成本很重。</strong> FLUX DiT、LLaVA 生成的提示、约 70 万训练图像、16 张 H20 训练以及 86 秒 2K 推理，使其更像离线高质量系统，而非通用部署解。</li> <li> <strong>尚未充分回答的失败模式</strong>包括极端重复纹理、跨 patch 接缝、错误文本提示、少数语言文字与长边远超训练裁剪尺寸时的稳定性。</li> </ol> <h1 id="可复现检查清单">可复现检查清单</h1> <ul> <li>保留固定 patch 尺寸与重叠策略，分别关闭局部提示、全局提示和文本特征分支。</li> <li>对 512 与 1024 混合训练做等步数、等数据预算对照，避免把更大裁剪直接算作架构收益。</li> <li>2K/4K 计时必须注明 GPU、精度、I/O、VAE 编解码和峰值显存。</li> <li>除无参考指标外，加入人工输入一致性审查；文字、建筑直线、重复纹理和人物面部单列失败率。</li> </ul> <p>方法说明：全文与补充材料的证据边界、公式拆解和协议核查流程参考 Kassis 等人的 <a href="https://arxiv.org/abs/2609.00065" rel="external nofollow noopener" target="_blank">Scientific Agent Skills</a>（arXiv:2609.00065，2026）。</p> </article> </div> </div> <footer class="sticky-bottom mt-5" role="contentinfo"> <div class="container"> © Copyright 2026 王超华 . 基于 <a href="https://github.com/alshedivat/al-folio" rel="external nofollow noopener" target="_blank">al-folio</a> 构建，由 <a href="https://pages.github.com/" rel="external nofollow noopener" target="_blank">GitHub Pages</a> 托管。 </div> </footer> <script>
+  window.alFolio = {
+    compatBootstrap: false
+  };
+</script> <script src="/assets/js/nav-toggle.js?v=141bd79a73ebc0f0b6ea58e440ae79fc"></script> <script defer src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js" integrity="sha256-Nn1q/fx0H7SNLZMQ5Hw5JLaTRZp0yILA/FRexe19VdI=" crossorigin="anonymous"></script> <script defer src="https://cdn.jsdelivr.net/npm/imagesloaded@5.0.0/imagesloaded.pkgd.min.js" integrity="sha256-htrLFfZJ6v5udOG+3kNLINIKh2gvoKqwEhHYfTTMICc=" crossorigin="anonymous"></script> <script defer src="/assets/js/masonry.js?v=e49affc7bd2646f6acdad1dbe02c2359" type="text/javascript"></script> <script defer type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script> <script src="/assets/al_math/js/mathjax-setup.js"></script> <script src="/assets/js/tooltips-setup.js?v=fe487e99db6c43751e6e7bdb2d6a0611"></script> <script src="/assets/js/no_defer.js?v=53b1b1a645525975c963ce8bf8bfefcf"></script> <script defer src="/assets/js/common.js?v=87baac90f765f2f3362dcf6aaf312a8a"></script> <script defer src="/assets/js/copy_code.js?v=c8a01c11a92744d44b093fc3bda915df" type="text/javascript"></script> <script defer src="/assets/js/jupyter_new_tab.js?v=896d254890d9b47f0281f63bfccf0dee"></script> <script defer src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script> <script defer src="/assets/al_img_tools/js/zoom.js"></script> <script defer src="/assets/js/progress-bar.js?v=499464c5c63ced6cf7ad62509f1e2610" type="text/javascript"></script> <script src="https://cdn.jsdelivr.net/npm/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js" integrity="sha256-uMJJ3EoTyfRBoTbR+lrfu1uRQ87RZG8AR3cVNuQVeFg=" crossorigin="anonymous"></script> <script>
+    addBackToTop();
+  </script> <script type="module" src="/assets/al_search/js/search/ninja-keys.min.js"></script> <ninja-keys hidebreadcrumbs noautoloadmdicons placeholder="Type to start searching"></ninja-keys> <script src="/assets/al_search/js/search-setup.js"></script> <script>
+// get the ninja-keys element
+const ninja = document.querySelector('ninja-keys');
+
+// add the home and posts menu items
+ninja.data = [{
+    id: "nav-关于我",
+    title: "关于我",
+    section: "Navigation",
+    handler: () => {
+      window.location.href = "/";
+    },
+  },{id: "nav-研究方向",
+          title: "研究方向",
+          description: "从视觉感知到多模态理解，关注模型能力与实际应用之间的连接。",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/research/";
+          },
+        },{id: "nav-论文成果",
+          title: "论文成果",
+          description: "视频去模糊研究论文与开源代码。",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/publications/";
+          },
+        },{id: "nav-研究项目",
+          title: "研究项目",
+          description: "围绕多模态交互、视觉恢复与模型部署开展研究和工程实践。",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/projects/";
+          },
+        },{id: "nav-教育与经历",
+          title: "教育与经历",
+          description: "教育背景、工作经历与研究工程能力。",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/cv/";
+          },
+        },{id: "nav-图像超分辨论文调研",
+          title: "图像超分辨论文调研",
+          description: "从顶刊顶会论文中梳理图像超分辨方法、实验条件与证据边界，按调研月份持续归档。",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/research/image-sr/";
+          },
+        },{
+        id: 'social-github',
+        title: 'GitHub',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://github.com/chaohuawang-phd", "_blank");
+        },
+      },{
+      id: 'light-theme',
+      title: 'Change theme to light',
+      description: 'Change the theme of the site to Light',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("light");
+      },
+    },
+    {
+      id: 'dark-theme',
+      title: 'Change theme to dark',
+      description: 'Change the theme of the site to Dark',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("dark");
+      },
+    },
+    {
+      id: 'system-theme',
+      title: 'Use system default theme',
+      description: 'Change the theme of the site to System Default',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("system");
+      },
+    },];
+
+</script> <script src="/assets/al_search/js/shortcut-key.js"></script> </body> </html>
