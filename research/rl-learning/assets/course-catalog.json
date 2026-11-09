@@ -1024,13 +1024,13 @@
       "previous_unit": "RL-023",
       "next_unit": "RL-025",
       "revision": "1.0.0",
-      "created_date": null,
-      "content_updated_date": null,
+      "created_date": "2026-11-09",
+      "content_updated_date": "2026-11-09",
       "url": "lessons/RL-024/",
       "availability": {
-        "lecture": false,
-        "pptx": false,
-        "pdf": false
+        "lecture": true,
+        "pptx": true,
+        "pdf": true
       }
     },
     {
