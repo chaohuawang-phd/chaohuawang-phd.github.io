@@ -26,17 +26,17 @@ DreamSR 以局部与全局提示的双分支控制缓解分块扩散的语义漂
 
 候选分成不能直接合并排名的两条路线。HAT、SRFormer、DAT、ATD 和 MambaIRv2 关注经典重建与高效上下文建模；SeeSR、TSD-SR、VOSR 和 DreamSR 关注真实世界生成式复原与推理成本。
 
-| 候选                                                                                                                                                                                           | 正式来源  | 核查重点                                  | 当前状态               |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ----------------------------------------- | ---------------------- |
-| [HAT](https://openaccess.thecvf.com/content/CVPR2023/html/Chen_Activating_More_Pixels_in_Image_Super-Resolution_Transformer_CVPR_2023_paper.html)                                              | CVPR 2023 | 方法、预训练与配置解释缺口                | 正文与补充已精读       |
-| [SRFormer](https://openaccess.thecvf.com/content/ICCV2023/html/Zhou_SRFormer_Permuted_Self-Attention_for_Single_Image_Super-Resolution_ICCV_2023_paper.html)                                   | ICCV 2023 | 窗口、通道与成本取舍                      | 待全文精读             |
-| [DAT](https://openaccess.thecvf.com/content/ICCV2023/html/Chen_Dual_Aggregation_Transformer_for_Image_Super-Resolution_ICCV_2023_paper.html)                                                   | ICCV 2023 | 空间与通道聚合的等预算贡献                | 待全文精读             |
-| [ATD](https://openaccess.thecvf.com/content/CVPR2024/html/Zhang_Transcending_the_Limit_of_Local_Window_Advanced_Super-Resolution_Transformer_with_CVPR_2024_paper.html)                        | CVPR 2024 | 自适应字典与图像内部先验                  | 待全文精读             |
-| [SeeSR](https://openaccess.thecvf.com/content/CVPR2024/html/Wu_SeeSR_Towards_Semantics-Aware_Real-World_Image_Super-Resolution_CVPR_2024_paper.html)                                           | CVPR 2024 | 语义提示、幻觉与采样成本                  | 待全文精读             |
-| [TSD-SR](https://openaccess.thecvf.com/content/CVPR2025/html/Dong_TSD-SR_One-Step_Diffusion_with_Target_Score_Distillation_for_Real-World_Image_CVPR_2025_paper.html)                          | CVPR 2025 | 一步蒸馏的质量与速度协议                  | 待全文精读             |
-| [MambaIRv2](https://openaccess.thecvf.com/content/CVPR2025/html/Guo_MambaIRv2_Attentive_State_Space_Restoration_CVPR_2025_paper.html)                                                          | CVPR 2025 | 非因果状态空间与长程交互                  | 待全文精读             |
-| [VOSR](https://openaccess.thecvf.com/content/CVPR2026/html/Wu_VOSR_A_Vision-Only_Generative_Model_for_Image_Super-Resolution_CVPR_2026_paper.html)                                             | CVPR 2026 | 双视觉条件、引导与一步蒸馏                | 正文、补充与原图已精读 |
-| [DreamSR](https://openaccess.thecvf.com/content/CVPR2026/html/Dong_DreamSR_Towards_Ultra-High-Resolution_Image_Super-Resolution_via_a_Receptive-Field_Enhanced_Diffusion_CVPR_2026_paper.html) | CVPR 2026 | 双分支控制、感受野与超高分辨率证据边界  | 正文、补充与原图已精读 |
+| 候选                                                                                                                                                                                           | 正式来源  | 核查重点                               | 当前状态               |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | -------------------------------------- | ---------------------- |
+| [HAT](https://openaccess.thecvf.com/content/CVPR2023/html/Chen_Activating_More_Pixels_in_Image_Super-Resolution_Transformer_CVPR_2023_paper.html)                                              | CVPR 2023 | 方法、预训练与配置解释缺口             | 正文与补充已精读       |
+| [SRFormer](https://openaccess.thecvf.com/content/ICCV2023/html/Zhou_SRFormer_Permuted_Self-Attention_for_Single_Image_Super-Resolution_ICCV_2023_paper.html)                                   | ICCV 2023 | 窗口、通道与成本取舍                   | 待全文精读             |
+| [DAT](https://openaccess.thecvf.com/content/ICCV2023/html/Chen_Dual_Aggregation_Transformer_for_Image_Super-Resolution_ICCV_2023_paper.html)                                                   | ICCV 2023 | 空间与通道聚合的等预算贡献             | 待全文精读             |
+| [ATD](https://openaccess.thecvf.com/content/CVPR2024/html/Zhang_Transcending_the_Limit_of_Local_Window_Advanced_Super-Resolution_Transformer_with_CVPR_2024_paper.html)                        | CVPR 2024 | 自适应字典与图像内部先验               | 待全文精读             |
+| [SeeSR](https://openaccess.thecvf.com/content/CVPR2024/html/Wu_SeeSR_Towards_Semantics-Aware_Real-World_Image_Super-Resolution_CVPR_2024_paper.html)                                           | CVPR 2024 | 语义提示、幻觉与采样成本               | 待全文精读             |
+| [TSD-SR](https://openaccess.thecvf.com/content/CVPR2025/html/Dong_TSD-SR_One-Step_Diffusion_with_Target_Score_Distillation_for_Real-World_Image_CVPR_2025_paper.html)                          | CVPR 2025 | 一步蒸馏的质量与速度协议               | 待全文精读             |
+| [MambaIRv2](https://openaccess.thecvf.com/content/CVPR2025/html/Guo_MambaIRv2_Attentive_State_Space_Restoration_CVPR_2025_paper.html)                                                          | CVPR 2025 | 非因果状态空间与长程交互               | 待全文精读             |
+| [VOSR](https://openaccess.thecvf.com/content/CVPR2026/html/Wu_VOSR_A_Vision-Only_Generative_Model_for_Image_Super-Resolution_CVPR_2026_paper.html)                                             | CVPR 2026 | 双视觉条件、引导与一步蒸馏             | 正文、补充与原图已精读 |
+| [DreamSR](https://openaccess.thecvf.com/content/CVPR2026/html/Dong_DreamSR_Towards_Ultra-High-Resolution_Image_Super-Resolution_via_a_Receptive-Field_Enhanced_Diffusion_CVPR_2026_paper.html) | CVPR 2026 | 双分支控制、感受野与超高分辨率证据边界 | 正文、补充与原图已精读 |
 
 下一轮按 ATD、SeeSR、TSD-SR、MambaIRv2、SRFormer 和 DAT 继续，并补查 ECCV、TPAMI、IJCV、NeurIPS、ICML、ICLR 及 2022 年来源。VOSR 与 DreamSR 已按官方论文编号、标准化标题和版本关系去重，没有把 arXiv 长版本重复计数。
 
@@ -45,4 +45,3 @@ DreamSR 以局部与全局提示的双分支控制缓解分块扩散的语义漂
 当前已核验上表 9 篇 CVPR/ICCV 官方记录，完成其中 3 篇全文与补充精读。ECCV、TPAMI、IJCV、NeurIPS、ICML、ICLR 以及 2022 年来源仍待系统补查；没有据此推断这些来源缺少合格工作。
 
 [查看调研范围与比较标准]({{ '/research/image-sr/' | relative_url }}) · [返回栏目首页]({{ '/research/image-sr/' | relative_url }})
-

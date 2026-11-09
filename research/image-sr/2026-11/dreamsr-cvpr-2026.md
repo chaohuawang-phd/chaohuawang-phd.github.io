@@ -11,7 +11,7 @@ DreamSR 面向超高分辨率真实世界图像的核心难题：分块推理虽
 
 # 论文身份与证据范围
 
-- **论文**：Linwei Dong 等，*DreamSR: Towards Ultra-High-Resolution Image Super-Resolution via a Receptive-Field Enhanced Diffusion Framework*，CVPR 2026，页 38258–38269。
+- **论文**：Linwei Dong 等，_DreamSR: Towards Ultra-High-Resolution Image Super-Resolution via a Receptive-Field Enhanced Diffusion Framework_，CVPR 2026，页 38258–38269。
 - **正式证据**：[CVPR 论文页](https://openaccess.thecvf.com/content/CVPR2026/html/Dong_DreamSR_Towards_Ultra-High-Resolution_Image_Super-Resolution_via_a_Receptive-Field_Enhanced_Diffusion_CVPR_2026_paper.html)、[正式 PDF](https://openaccess.thecvf.com/content/CVPR2026/papers/Dong_DreamSR_Towards_Ultra-High-Resolution_Image_Super-Resolution_via_a_Receptive-Field_Enhanced_Diffusion_CVPR_2026_paper.pdf) 与补充材料。
 - 本页核验了正文的架构、训练损失、五个真实世界数据集、消融与 2K 计时，也读取了补充材料的退化流程、训练伪代码、用户研究与 4K 级视觉对比。定性 4K 图支持“能处理超高分辨率案例”，不能替代大规模有真值 4K 基准。
 
@@ -49,12 +49,12 @@ $$z_t=(1-t)z_{dr}+t\epsilon.$$
 
 # 实验如何读
 
-| 证据 | 论文报告 | 能支持什么 | 不能支持什么 |
-|---|---:|---|---|
-| 2560×1440、单张 H20 | $1+16$ 步，86 s | 比 StableSR 156 s、SeeSR 119 s、SUPIR 124 s 快 | 仍慢于 FaithDiff 30 s，也不是实时或移动端结果 |
-| RealSR | MUSIQ 70.5560；MANIQA 0.5731；CLIPIQA+ 0.7318 | 无参考感知指标在该表中强 | PSNR 20.9305、LPIPS 0.4079 较弱，不能称全面恢复最准 |
-| 双分支消融 RealDeg | 完整：MUSIQ 45.6234；仅全局 41.6816；仅局部 41.5523 | 局部与全局联合控制有效 | 未隔离所有数据与参数增长因素 |
-| 感受野增强训练 | 完整 MUSIQ 45.6234；去掉 RFE 43.5546 | 混合 512/1024 训练策略有贡献 | 不证明任意超大图都无接缝或无漂移 |
+| 证据                |                                            论文报告 | 能支持什么                                     | 不能支持什么                                        |
+| ------------------- | --------------------------------------------------: | ---------------------------------------------- | --------------------------------------------------- |
+| 2560×1440、单张 H20 |                                     $1+16$ 步，86 s | 比 StableSR 156 s、SeeSR 119 s、SUPIR 124 s 快 | 仍慢于 FaithDiff 30 s，也不是实时或移动端结果       |
+| RealSR              |       MUSIQ 70.5560；MANIQA 0.5731；CLIPIQA+ 0.7318 | 无参考感知指标在该表中强                       | PSNR 20.9305、LPIPS 0.4079 较弱，不能称全面恢复最准 |
+| 双分支消融 RealDeg  | 完整：MUSIQ 45.6234；仅全局 41.6816；仅局部 41.5523 | 局部与全局联合控制有效                         | 未隔离所有数据与参数增长因素                        |
+| 感受野增强训练      |                完整 MUSIQ 45.6234；去掉 RFE 43.5546 | 混合 512/1024 训练策略有贡献                   | 不证明任意超大图都无接缝或无漂移                    |
 
 <figure>
   <a href="{{ '/research/image-sr/2026-11/assets/dreamsr-cvpr-2026/fig4-qualitative.png' | relative_url }}" target="_blank" rel="noopener"><img class="img-fluid" src="{{ '/research/image-sr/2026-11/assets/dreamsr-cvpr-2026/fig4-qualitative.png' | relative_url }}" alt="DreamSR 原图 4：鸟羽、花蕊和四千像素建筑文字的多方法视觉对比" width="1500" height="1320" loading="lazy" decoding="async"></a>
@@ -86,4 +86,3 @@ $$z_t=(1-t)z_{dr}+t\epsilon.$$
 - 除无参考指标外，加入人工输入一致性审查；文字、建筑直线、重复纹理和人物面部单列失败率。
 
 方法说明：全文与补充材料的证据边界、公式拆解和协议核查流程参考 Kassis 等人的 [Scientific Agent Skills](https://arxiv.org/abs/2609.00065)（arXiv:2609.00065，2026）。
-

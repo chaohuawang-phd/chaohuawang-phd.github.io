@@ -11,7 +11,7 @@ VOSR 是一条刻意绕开文本到图像扩散底座的真实世界超分辨路
 
 # 论文身份与证据范围
 
-- **论文**：Ruiyang Wu 等，*VOSR: A Vision-Only Generative Model for Image Super-Resolution*，CVPR 2026，页 16311–16321。
+- **论文**：Ruiyang Wu 等，_VOSR: A Vision-Only Generative Model for Image Super-Resolution_，CVPR 2026，页 16311–16321。
 - **正式证据**：[CVPR 论文页](https://openaccess.thecvf.com/content/CVPR2026/html/Wu_VOSR_A_Vision-Only_Generative_Model_for_Image_Super-Resolution_CVPR_2026_paper.html)、[正式 PDF](https://openaccess.thecvf.com/content/CVPR2026/papers/Wu_VOSR_A_Vision-Only_Generative_Model_for_Image_Super-Resolution_CVPR_2026_paper.pdf) 与补充材料。
 - 本页核验了正文、附录中的蒸馏细节、训练配方、视觉语义编码器和部分条件消融、用户研究及补充视觉对比。正文与补充材料能支持论文内部比较，不能自动推出跨硬件、跨数据或未匹配训练预算下的普遍领先。
 
@@ -57,12 +57,12 @@ $$v_{guide}=v_{pcond}+s\bigl(v_{cond}-v_{pcond}\bigr).$$
 
 # 实验如何读
 
-| 证据 | 论文报告 | 能支持什么 | 不能支持什么 |
-|---|---:|---|---|
-| 512×512、A100 FP16，一步推理 | 0.5B 0.094 s；1.4B 0.095 s | 同表实现下的一步速度具有竞争力 | 不能外推到任意显卡、分辨率或端到端 I/O |
-| RealSR，VOSR-1.4B 多步 | MUSIQ 70.4718；PSNR 25.2886 | 感知分数强，同时维持一定失真保真度 | PSNR 不是表中最高，不能称全面领先 |
-| RealSR，VOSR-1.4B 一步 | MUSIQ 70.5813；LPIPS 0.2732 | 一步版本仍保持较强感知质量 | 不证明所有视觉细节都是真实恢复 |
-| 视觉语义编码器消融 | 无 SVE：MUSIQ 63.74；DINOv2：68.23 | 视觉语义条件在该训练设定下有效 | 编码器自身预训练成本未被消除 |
+| 证据                         |                           论文报告 | 能支持什么                         | 不能支持什么                           |
+| ---------------------------- | ---------------------------------: | ---------------------------------- | -------------------------------------- |
+| 512×512、A100 FP16，一步推理 |         0.5B 0.094 s；1.4B 0.095 s | 同表实现下的一步速度具有竞争力     | 不能外推到任意显卡、分辨率或端到端 I/O |
+| RealSR，VOSR-1.4B 多步       |        MUSIQ 70.4718；PSNR 25.2886 | 感知分数强，同时维持一定失真保真度 | PSNR 不是表中最高，不能称全面领先      |
+| RealSR，VOSR-1.4B 一步       |        MUSIQ 70.5813；LPIPS 0.2732 | 一步版本仍保持较强感知质量         | 不证明所有视觉细节都是真实恢复         |
+| 视觉语义编码器消融           | 无 SVE：MUSIQ 63.74；DINOv2：68.23 | 视觉语义条件在该训练设定下有效     | 编码器自身预训练成本未被消除           |
 
 <figure>
   <a href="{{ '/research/image-sr/2026-11/assets/vosr-cvpr-2026/fig3-qualitative.png' | relative_url }}" target="_blank" rel="noopener"><img class="img-fluid" src="{{ '/research/image-sr/2026-11/assets/vosr-cvpr-2026/fig3-qualitative.png' | relative_url }}" alt="VOSR 原图 3：多步与一步模型在桥梁和字符上的视觉对比" width="1500" height="720" loading="lazy" decoding="async"></a>
@@ -93,4 +93,3 @@ $$v_{guide}=v_{pcond}+s\bigl(v_{cond}-v_{pcond}\bigr).$$
 - 复现时注明 VAE、视觉编码器及其权重来源；不要把“vision-only”误写成“从零训练”。
 
 方法说明：全文与补充材料的证据边界、公式拆解和协议核查流程参考 Kassis 等人的 [Scientific Agent Skills](https://arxiv.org/abs/2609.00065)（arXiv:2609.00065，2026）。
-
