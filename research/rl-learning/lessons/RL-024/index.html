@@ -1,3 +1,380 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151a17"><meta name="description" content="解释移动目标问题，并连接本阶段的前置概念。"><meta name="color-scheme" content="light"><title>RL-024｜目标网络：为什么不用自己追自己 · 王超华</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%23151a17'/%3E%3Cpath d='M31 14a13 13 0 1 0 0 20' fill='none' stroke='%23c8f45b' stroke-width='5'/%3E%3Ccircle cx='32' cy='24' r='3' fill='%23c8f45b'/%3E%3C/svg%3E"><link rel="stylesheet" href="../../styles.css"><link rel="stylesheet" href="../../assets/katex/katex.min.css"><script src="../../script.js" defer></script></head>
-<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-024</span></div><section class="lesson-hero"><p class="eyebrow">RL-024 · WEEK 04 · 新知识</p><h1>目标网络：为什么不用自己追自己</h1><p class="lesson-summary">解释移动目标问题，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">深度价值学习</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>计划课 · 未生成</span></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="计划课目录"><h2>本课计划</h2><ol><li><a href="#planned-objectives">学习目标</a></li><li><a href="#planned-concepts">核心概念</a></li><li><a href="#planned-prerequisites">前置单元</a></li><li><a href="#planned-format">交付结构</a></li></ol></aside><article class="lecture planned-content"><p class="planned-label">课程计划 · 材料尚未生成</p><div class="planned-state"><p>这是 RL-024 的稳定归档入口。目前只有课程计划，讲义、PPT 与参考资料尚未生成；后续材料将在此页面更新。</p></div><h2 id="planned-objectives">学习目标</h2><ol><li>解释移动目标问题</li><li>对照更新频率的影响</li><li>核对终止转移的目标</li></ol><h2 id="planned-concepts">核心概念</h2><div class="concepts"><span>target network</span><span>冻结目标</span><span>硬更新</span><span>软更新</span></div><h2 id="planned-prerequisites">前置单元</h2><ul><li><a href="../RL-023/">RL-023 · 经验回放：旧数据如何帮助训练</a></li></ul><h2 id="planned-format">交付结构</h2><p>本单元计划提供问题与前置关系、学习目标、直觉与公式、手算或更新示例、方法关系、主要应用分析、适用边界、3 道练习与文末答案，以及可核查的参考来源。</p><p>配套 PPT 使用统一模板，目标 10～14 页。实际生成后才提供下载与预览入口；目前没有研究实验结果。</p></article></div><div class="lesson-navigation wrap"><a href="../RL-023/"><span>← 上一单元 · RL-023</span><strong>经验回放：旧数据如何帮助训练</strong></a><a class="next" href="../RL-025/"><span>下一单元 · RL-025 →</span><strong>Double DQN：选择动作与评估动作分开</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>
+<body><a class="skip-link" href="#main">跳到正文</a><header class="site-header"><div class="header-inner wrap"><a class="brand" href="https://chaohuawang-phd.github.io/" aria-label="王超华，返回个人主页"><span class="brand-symbol" aria-hidden="true">cw<span>·</span></span><span class="brand-name">CHAO<span>HUA</span> WANG</span></a><nav class="header-nav" aria-label="学习栏目导航"><a href="https://chaohuawang-phd.github.io/">个人主页</a><a href="../../">学习中心</a><a href="../../#directory">课程目录</a></nav></div></header><main id="main"><div class="wrap"><div class="breadcrumb"><a href="https://chaohuawang-phd.github.io/">个人主页</a><span aria-hidden="true">/</span><a href="../../">强化学习学习与应用</a><span aria-hidden="true">/</span><span>RL-024</span></div><section class="lesson-hero"><p class="eyebrow">RL-024 · WEEK 04 · 新知识</p><h1>目标网络：为什么不用自己追自己</h1><p class="lesson-summary">解释移动目标问题，并连接本阶段的前置概念。</p><div class="tags"><span class="tag">深度价值学习</span></div><div class="lesson-meta"><span>30～45 分钟学习</span><span>10～15 分钟汇报</span><span>内容版本 1.0.0</span><span>讲义 · PPT 可用</span></div><div class="button-row"><a class="button small" href="./lecture.md" download>讲义下载 · MD</a><a class="button small" href="./RL-024.pptx" download>PPT 下载</a><a class="button small" href="./RL-024.pdf">PDF 阅读版</a></div></section></div><div class="lesson-layout wrap"><aside class="toc" aria-label="本课目录"><h2>本课目录</h2><ol><li><a href="#section-1">1. 今天解决什么问题，与前面哪些单元有关</a></li><li><a href="#section-2">2. 学习目标</a></li><li><a href="#section-3">3. 直觉、定义和必要公式</a></li><li><a href="#section-8">4. 手算例子或更新过程</a></li><li><a href="#section-14">5. 与前一种方法的关系</a></li><li><a href="#section-15">6. 一个主要研究应用：GUI 日志中的目标版本是否可追溯</a></li><li><a href="#section-16">7. 常见误解、失败条件和适用边界</a></li><li><a href="#section-17">8. 三道理解题</a></li><li><a href="#section-18">9. 下一单元与待复习问题</a></li><li><a href="#section-19">10. 可核查的参考来源与证据说明</a></li><li><a href="#section-20">参考答案（练习完成后再看）</a></li></ol></aside><article class="lecture"><p>课程：强化学习学习与应用 · 第 4 周 / 单元 24<br>课程版本：1.0.0 · 内容版本：1.0.0 · 日期：2026-11-09（Asia/Shanghai）<br>预计学习：30～45 分钟 · 汇报：10～15 分钟<br>前置：<a href="../RL-023/">RL-023：经验回放与批量更新</a>，并能回忆 <a href="../RL-022/">RL-022</a> 的固定目标、停止梯度和共享参数。<br>证据说明：目标网络硬复制依据原始 DQN，软更新式依据作者原始论文；以下线性模型与固定记录为<strong>教学假设和精确手算</strong>，GUI 合同为工程推断。研究训练、随机采样、真实 GUI、GPU 或服务器实验均<strong>未运行（NOT_RUN）</strong>。</p>
+<p>建议节奏：移动目标与两个时间尺度 10 分钟 → 硬复制和软维护 9 分钟 → 数值复算 12 分钟 → 应用与三题 9 分钟。</p>
+<h2 id="section-1">1. 今天解决什么问题，与前面哪些单元有关</h2>
+<p>上一课已经把数据放进 buffer，也声明每次优化期间目标固定。接下来的问题是：<strong>这一次固定的目标，下一次还用哪组参数计算？</strong>如果刚更新在线预测，就马上用新预测当下一次的参考，参考也会跟着变化；网络不仅在拟合一个值，还在持续改变以后要拟合的值。</p>
+<p>目标网络（target network）单独保存生成 TD 目标的参数。在线网络（online network）接受损失梯度更新，目标网络按另一套明确的维护规则跟随。这样可以延迟或平滑估计变化传入后续目标的速度，但不是获得了真实答案，更不是把两个网络变成统计独立或保证训练收敛。</p>
+<p>今天区分两件事：<strong>本次反向传播在哪里停止；多次优化之间目标参数何时变化。</strong>前者是 stop-gradient，后者是 hard copy 或 soft update。本课不引入下一单元的 Double DQN，也不改变旧 GUI 的任务、许可或奖励。</p>
+<h2 id="section-2">2. 学习目标</h2>
+<ol>
+<li>能解释移动目标与参数共享的联系，区分本步目标停止梯度和跨优化步维护目标网络。</li>
+<li>能按明确计数单位和先后顺序复算硬复制、软更新，说明 τ 的权重约定及“复制影响下一目标”的含义。</li>
+<li>能正确处理终止、外部截断和旧反馈，判断目标滞后不能修复的覆盖、估计与业务问题，并补齐 GUI 评价和成本合同。</li>
+</ol>
+<h2 id="section-3">3. 直觉、定义和必要公式</h2>
+<h3 id="section-4">3.1 一次优化内固定，与优化之间滞后</h3>
+<p>Q(s,a;θ) 是在线参数 θ 对完整状态 s、合法动作 a 的价值估计；Q(s,a;bar θ) 用目标参数 bar θ 作同样的前向预测。二者通常架构兼容、参数分别保存。目标参数可从在线参数复制初始化，初值相同合法，但复制后应能独立维护，不能只是指向同一份可变权重。</p>
+<p>给定记录 (s_i,a_i,r_i,s′_i,d_i)，i 是记录编号，r_i 为即时奖励，d_i=1 为原任务真终止。令 j 表示已经完成的在线优化次数，θ_j、bar θ_j 为第 j+1 次优化开始前的两组参数；γ 是折扣，A(s′_i) 是有效后继的合法集合：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msubsup><mi>y</mi><mi>i</mi><mrow><mo stretchy="false">(</mo><mi>j</mi><mo stretchy="false">)</mo></mrow></msubsup><mo>=</mo><mrow><mo fence="true">{</mo><mtable rowspacing="0.36em" columnalign="left left" columnspacing="1em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><msub><mi>r</mi><mi>i</mi></msub><mo separator="true">,</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><msub><mi>d</mi><mi>i</mi></msub><mo>=</mo><mn>1</mn><mo separator="true">,</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><msub><mi>r</mi><mi>i</mi></msub><mo>+</mo><mi>γ</mi><msub><mrow><mi>max</mi><mo>⁡</mo></mrow><mrow><mi>u</mi><mo>∈</mo><mi>A</mi><mo stretchy="false">(</mo><msubsup><mi>s</mi><mi>i</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msubsup><mo stretchy="false">)</mo></mrow></msub><mi>Q</mi><mo stretchy="false">(</mo><msubsup><mi>s</mi><mi>i</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msubsup><mo separator="true">,</mo><mi>u</mi><mo separator="true">;</mo><msub><mover accent="true"><mi>θ</mi><mo>ˉ</mo></mover><mi>j</mi></msub><mo stretchy="false">)</mo><mo separator="true">,</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><msub><mi>d</mi><mi>i</mi></msub><mo>=</mo><mn>0</mn><mo separator="true">,</mo></mrow></mstyle></mtd></mtr></mtable></mrow><mspace width="2em"/><msub><mi>L</mi><mi>j</mi></msub><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac><munder><mo>∑</mo><mrow><mi>i</mi><mo>∈</mo><mi mathvariant="script">B</mi></mrow></munder><mfrac><mn>1</mn><mn>2</mn></mfrac><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">(</mo><mi>Q</mi><mo stretchy="false">(</mo><msub><mi>s</mi><mi>i</mi></msub><mo separator="true">,</mo><msub><mi>a</mi><mi>i</mi></msub><mo separator="true">;</mo><mi>θ</mi><mo stretchy="false">)</mo><mo>−</mo><mi mathvariant="normal">SG</mi><mo>⁡</mo><mo stretchy="false">[</mo><msubsup><mi>y</mi><mi>i</mi><mrow><mo stretchy="false">(</mo><mi>j</mi><mo stretchy="false">)</mo></mrow></msubsup><mo stretchy="false">]</mo><msup><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">)</mo><mn>2</mn></msup><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">y_i^{(j)}=\begin{cases}
+r_i,&amp;d_i=1,\\
+r_i+\gamma\max_{u\in A(s&#x27;_i)}Q(s&#x27;_i,u;\bar\theta_j),&amp;d_i=0,
+\end{cases}
+\qquad
+L_j(\theta)=\frac1B\sum_{i\in\mathcal B}
+\frac12\big(Q(s_i,a_i;\theta)-\operatorname{SG}[y_i^{(j)}]\big)^2.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.3217em;vertical-align:-0.2769em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.0448em;"><span style="top:-2.4231em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span><span style="top:-3.2198em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mopen mtight">(</span><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span><span class="mclose mtight">)</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2769em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:3em;vertical-align:-1.25em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size4">{</span></span><span class="mord"><span class="mtable"><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.69em;"><span style="top:-3.69em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span></span></span><span style="top:-2.25em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop"><span class="mop">max</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3448em;"><span style="top:-2.5198em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">u</span><span class="mrel mtight">∈</span><span class="mord mathnormal mtight">A</span><span class="mopen mtight">(</span><span class="mord mtight"><span class="mord mathnormal mtight">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.7416em;"><span style="top:-2.1777em;margin-left:0em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathnormal mtight">i</span></span></span><span style="top:-2.8448em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3223em;"><span></span></span></span></span></span></span><span class="mclose mtight">)</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.4058em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">Q</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.7519em;"><span style="top:-2.4413em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2587em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">u</span><span class="mpunct">;</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8312em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span></span><span style="top:-3.2634em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">ˉ</span></span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mpunct">,</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.19em;"><span></span></span></span></span></span><span class="arraycolsep" style="width:1em;"></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.69em;"><span style="top:-3.69em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">1</span><span class="mpunct">,</span></span></span><span style="top:-2.25em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">0</span><span class="mpunct">,</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.19em;"><span></span></span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.6431em;vertical-align:-1.3217em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.8557em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mrel mtight">∈</span><span class="mord mathcal mtight" style="margin-right:0.03041em;">B</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.3217em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord"><span class="delimsizing size1">(</span></span><span class="mord mathnormal">Q</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">;</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.404em;vertical-align:-0.35em;"></span><span class="mop"><span class="mord mathrm">SG</span></span><span class="mopen">[</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.0448em;"><span style="top:-2.4231em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span><span style="top:-3.2198em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mopen mtight">(</span><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span><span class="mclose mtight">)</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2769em;"><span></span></span></span></span></span></span><span class="mclose">]</span><span class="mord"><span class="mord"><span class="delimsizing size1">)</span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.054em;"><span style="top:-3.3029em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mord">.</span></span></span></span></span></div>
+<p>𝓑 是本次批次，B 是批大小，u 遍历合法候选。SG 前向保留 y、反向不对目标求导；本课用半平方损失的批均值。优化器以学习率 η 只更新在线 θ，从 θ_j 写到 θ_(j+1)，目标网络不接受这次损失的梯度。</p>
+<p>这仍然是自举：bar θ 的输出也是估计，不是真实 Q*。stop-gradient 只界定当前反向路径，不能单独说明下一次目标是否会变；即便每步都停止目标梯度，也可能在每次优化后立即重建一个跟着在线参数变化的目标。</p>
+<h3 id="section-5">3.2 硬复制：先优化，再按计数维护</h3>
+<p>本课定义 H 为正整数（H≥1）的<strong>硬复制间隔，单位是成功完成的在线优化器 step</strong>。全局计数 c 从 0 开始；每次真实完成一次在线参数写入后 c 加 1，若 c 为 H 的倍数，再把这次 post 在线参数完整复制给目标参数。计数不在复制后清零，后续按倍数触发。</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mover accent="true"><mi>θ</mi><mo>ˉ</mo></mover><mrow><mi>j</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mrow><mo fence="true">{</mo><mtable rowspacing="0.36em" columnalign="left left" columnspacing="1em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><msub><mi>θ</mi><mrow><mi>j</mi><mo>+</mo><mn>1</mn></mrow></msub><mo separator="true">,</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><mo stretchy="false">(</mo><mi>j</mi><mo>+</mo><mn>1</mn><mo stretchy="false">)</mo><mtext> </mtext><mo lspace="0.22em" rspace="0.22em"><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow></mo><mtext> </mtext><mi>H</mi><mo>=</mo><mn>0</mn><mo separator="true">,</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><msub><mover accent="true"><mi>θ</mi><mo>ˉ</mo></mover><mi>j</mi></msub><mo separator="true">,</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><mtext>其他情况</mtext><mi mathvariant="normal">.</mi></mrow></mstyle></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">\bar\theta_{j+1}=\begin{cases}
+\theta_{j+1},&amp;(j+1)\bmod H=0,\\
+\bar\theta_j,&amp;\text{其他情况}.
+\end{cases}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.1173em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8312em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span></span><span style="top:-3.2634em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">ˉ</span></span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:3em;vertical-align:-1.25em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size4">{</span></span><span class="mord"><span class="mtable"><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.69em;"><span style="top:-3.69em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mpunct">,</span></span></span><span style="top:-2.25em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8312em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span></span><span style="top:-3.2634em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">ˉ</span></span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mpunct">,</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.19em;"><span></span></span></span></span></span><span class="arraycolsep" style="width:1em;"></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.69em;"><span style="top:-3.69em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.05724em;">j</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.0556em;"></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin"><span class="mord"><span class="mord mathrm">mod</span></span></span><span class="mspace" style="margin-right:0.0556em;"></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">0</span><span class="mpunct">,</span></span></span><span style="top:-2.25em;"><span class="pstrut" style="height:3.008em;"></span><span class="mord"><span class="mord text"><span class="mord cjk_fallback">其他情况</span></span><span class="mord">.</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.19em;"><span></span></span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></div>
+<p>式中 mod 表示余数；公式对应初始 c=0、每次成功优化恰加一次的连续情形。先使用 pre 目标算本次 y，更新在线网络，再检查复制；复制后的 bar θ 用于<strong>下一次</strong>目标，不回头改刚才已使用的 y、损失或梯度。</p>
+<p>H 不等于上一课 buffer 容量 C，c 不等于环境步、记录使用次数或任务内预算 h。一个 B=2 的批只完成一次 optimizer step，c 只加 1；只采集环境而没有优化，c 不加。若实现采用其他计时单位，必须另行注明并换算，不能沿用同一个数字假装频率相同。<a href="https://storage.googleapis.com/deepmind-media/dqn/DQNNaturePaper.pdf">2015 DQN Methods 明确描述复制在线网络生成目标，Algorithm 1 将复制放在梯度步骤之后。</a></p>
+<p>H=1 表示每次在线优化后复制；它没有取消当前步骤的 stop-gradient，但不保留跨优化步的参数滞后。H 大一些意味着更久使用旧参数，也可能更慢传播新估计，复制时仍可能出现跳变。没有脱离任务、学习率和数据条件的通用最佳 H。</p>
+<h3 id="section-6">3.3 软更新：明确 τ 乘的是谁</h3>
+<p>另一种参数维护方式是在每次在线优化之后执行：</p>
+<div class="math-scroll" role="group" aria-label="数学公式"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mover accent="true"><mi>θ</mi><mo>ˉ</mo></mover><mrow><mi>j</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>τ</mi><mo stretchy="false">)</mo><msub><mover accent="true"><mi>θ</mi><mo>ˉ</mo></mover><mi>j</mi></msub><mo>+</mo><mi>τ</mi><msub><mi>θ</mi><mrow><mi>j</mi><mo>+</mo><mn>1</mn></mrow></msub><mo separator="true">,</mo><mspace width="2em"/><mn>0</mn><mo>≤</mo><mi>τ</mi><mo>≤</mo><mn>1.</mn></mrow><annotation encoding="application/x-tex">\bar\theta_{j+1}
+=(1-\tau)\bar\theta_j+\tau\theta_{j+1},
+\qquad 0\le\tau\le1.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.1173em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8312em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span></span><span style="top:-3.2634em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">ˉ</span></span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.1173em;vertical-align:-0.2861em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mclose">)</span><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8312em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span></span><span style="top:-3.2634em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">ˉ</span></span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.9805em;vertical-align:-0.2861em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1.</span></span></span></span></span></div>
+<p>本课 τ 是<strong>新在线参数的权重</strong>；旧目标参数的权重为 1−τ。τ 小时每次只跟随一部分，τ=0 永远不动，τ=1 等于每次优化后直接复制。某些实现用另一个系数表示旧参数保留率，必须看乘法位置，不能只对比配置名或数值。</p>
+<p>这是参数插值，不是奖励平均、两个独立学习者投票或自动降低价值误差。一般非线性网络中，平均参数后的输出不等于旧/新网络输出的加权平均；本课线性替身可以手算，不能据此推广非线性等式。</p>
+<p>该软目标式可在 Lillicrap 等的作者原始论文中核查；本课只引用参数维护式，不展开其 DDPG 主算法，也不把软更新说成 2015 DQN 原始硬复制配置。<a href="https://arxiv.org/pdf/1509.02971v6">原始论文所读版本的第 4 页。</a></p>
+<h3 id="section-7">3.4 最短执行顺序</h3>
+<pre><code class="language-text">分别保存 online θ 和 target barθ；初始化 barθ 为 θ 的参数副本；c=0
+取一个资料有效的批，读取本次 pre θ 与 pre barθ
+用 pre barθ 构造目标；真终止直接用实际奖励；目标停止梯度
+按声明的半平方/均值损失，只完成一次 online optimizer.step
+c += 1
+若选硬维护且 c 是 H 的倍数：复制 post θ 到 barθ
+若选软维护：barθ = (1-tau)*旧 barθ + tau*post θ
+保存 pre/post 版本、目标来源和维护事件；下一次才重建新目标
+</code></pre>
+<p>硬维护与软维护是本课的两条替代分支，不是每次都先硬再软。资料缺失、没有完成在线写入时应记录跳过原因，不把它计为一次成功 optimizer step。这里是机制伪代码，未执行任何训练。</p>
+<h2 id="section-8">4. 手算例子或更新过程</h2>
+<h3 id="section-9">4.1 任务、数据与独立初值</h3>
+<p>仍是 RL-020～023 的有限教学 GUI：状态仅 N2（菜单，h=2）、C1（确认页，h=1）、z（终止），初态 N2；每动作耗一预算，h=0 真终止，也可提前结束。γ=0.9，核不改：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>状态动作</th>
+<th>后继与奖励</th>
+<th align="right">概率</th>
+<th>结束</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>N2,review</td>
+<td>C1，−1</td>
+<td align="right">1</td>
+<td>否</td>
+</tr>
+<tr>
+<td>N2,exit</td>
+<td>z，0</td>
+<td align="right">1</td>
+<td>是，退出</td>
+</tr>
+<tr>
+<td>C1,confirm</td>
+<td>z，8</td>
+<td align="right">0.9</td>
+<td>是，独立持久核验成功</td>
+</tr>
+<tr>
+<td>C1,confirm</td>
+<td>z，−4</td>
+<td align="right">0.1</td>
+<td>是，独立持久核验失败</td>
+</tr>
+<tr>
+<td>C1,cancel</td>
+<td>z，0</td>
+<td align="right">1</td>
+<td>是，取消</td>
+</tr>
+</tbody></table></div>
+<p>奖励是无量纲教学效用，review 的 −1 已含其成本；无额外 confirm 步骤费、终止加分或预算补偿。z 后续零，进入奖励仍保留。reset 只准备新 N2，不构成旧后继或新任务的预算扣减；真实重置成本另记。</p>
+<p>全局 ID 为 (0review,1exit,2confirm,3cancel)，N2 mask=(1,1,0,0)，C1 mask=(0,0,1,1)；所有行为与目标都过滤非法输出，delete 不在该字典。教学观测给出完整状态和可信 mask，不代表真实截图具备同样条件。</p>
+<p>线性替身 Q(s,a;θ)=k(s,a)w+b，θ=(w,b)，不是深度网络。完整 k 表延续前课：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>k(s,a)</th>
+<th align="right">review</th>
+<th align="right">exit</th>
+<th align="right">confirm</th>
+<th align="right">cancel</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>N2</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>C1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">4</td>
+<td align="right">−2</td>
+</tr>
+</tbody></table></div>
+<p>本课<strong>独立重新初始化</strong>在线 θ₀=目标 bar θ₀=(1,0)，c=0，η=0.1；不承接上一课最终参数。复用前课三条教学记录：e_1 为 Nreview、−1 到 C1 非终止；e_2 为 Ccancel、0 到 z 真终止；e_3 为 Nexit、0 到 z 真终止。始终手工指定批 {e_1,e_2}，B=2；e_3 不参与本次两步梯度。没有运行采样器、重新交互或深度训练。</p>
+<h3 id="section-10">4.2 共同第 1 次优化，再分开看目标维护</h3>
+<p>在 θ₀/bar θ₀，两个目标为 (2.6,0)，预测为 (1,−2)，单条损失梯度为 (−1.6,−1.6)、(4,−2)。同 pre 求批均值后一次写入：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>共同第 1 步</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>批均值梯度</td>
+<td>(1.2,−1.8)</td>
+</tr>
+<tr>
+<td>post 在线 θ₁</td>
+<td>(0.88,0.18)</td>
+</tr>
+<tr>
+<td>在线 Q(C1,confirm;θ₁)</td>
+<td>4×0.88+0.18=3.7</td>
+</tr>
+<tr>
+<td>post 优化器计数</td>
+<td>c=1，只加一次</td>
+</tr>
+</tbody></table></div>
+<p>这次仍用半平方损失的均值，和 RL-023 的相同初值算术一致；不是将两条顺序更新。现在在<strong>相同 θ₁ 边界</strong>比较下一次目标：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>维护选择</th>
+<th>第 1 次维护后的目标参数</th>
+<th align="right">下一非终止 Nreview 目标</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>硬 H=2，c=1 未触发</td>
+<td>(1,0)，保持旧目标</td>
+<td align="right">−1+0.9×4=2.6</td>
+</tr>
+<tr>
+<td>每步复制 H=1 的对照</td>
+<td>(0.88,0.18)</td>
+<td align="right">−1+0.9×3.7=2.33</td>
+</tr>
+<tr>
+<td>独立软分支 τ=0.1</td>
+<td>0.9×(1,0)+0.1×(0.88,0.18)=(0.988,0.018)</td>
+<td align="right">−1+0.9×3.97=2.573</td>
+</tr>
+</tbody></table></div>
+<p>软目标的 3.97 来自 4×0.988+0.018。这里只比较同一首步 post 之后的目标来源，不把这些不同目标都塞回刚才的 loss。在线更新使参考值在本例向下移动；方向本身不说明稳定或效果好坏。</p>
+<p>H=1 和软分支若继续优化，会产生各自后续轨迹；本课不继续它们。特别不能把下面硬 H=2 的 θ₂ 当成软分支或 H=1 分支的第二步结果，也不按 2.6、2.33、2.573 的大小给算法排名。</p>
+<h3 id="section-11">4.3 只继续硬 H=2 分支的第 2 次优化</h3>
+<p>硬分支此时 bar θ₁=(1,0) 未变，所以第 2 次仍用目标 (2.6,0)。当前在线 θ₁ 已变，两条预测与梯度要重新计算：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>第 2 步的量</th>
+<th align="right">e_1：Nreview</th>
+<th align="right">e_2：Ccancel</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>当前预测</td>
+<td align="right">1.06</td>
+<td align="right">−1.58</td>
+</tr>
+<tr>
+<td>本次固定目标</td>
+<td align="right">2.6</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td>q−y</td>
+<td align="right">−1.54</td>
+<td align="right">−1.58</td>
+</tr>
+<tr>
+<td>预测梯度</td>
+<td align="right">(1,1)</td>
+<td align="right">(−2,1)</td>
+</tr>
+<tr>
+<td>损失梯度</td>
+<td align="right">(−1.54,−1.54)</td>
+<td align="right">(3.16,−1.58)</td>
+</tr>
+</tbody></table></div>
+<p>批均值梯度为 (0.81,−1.56)，因此在线写入 θ₂=(0.88,0.18)−0.1×(0.81,−1.56)=(0.799,0.336)。此刻 c 从 1 到 2，<strong>完成本次在线优化之后</strong>才触发复制 bar θ₂←θ₂。</p>
+<p>新目标网络的 Q(C1,confirm)=4×0.799+0.336=3.532，另一个合法 cancel 为 −1.262，所以合法最大仍是 confirm 的 3.532。若下一次再读同一 Nreview 记录，其目标将为 −1+0.9×3.532=<strong>2.1788</strong>。</p>
+<p>这不是第 2 次已经使用的目标；第 2 次始终使用 2.6。c 仍保留为 2，下一次硬复制在成功完成第 4 次优化之后。每批两条、两次优化总共使用四次记录，不等于新采了四次环境交互；原 buffer 的唯一事件仍三条，confirm 反馈仍零条。</p>
+<h3 id="section-12">4.4 软维护的含义与局限</h3>
+<p>独立软分支只演示共同第 1 次优化后的那一次维护：bar θ 从 (1,0) 跟到 (0.988,0.018)。τ=0.1 的 0.1 乘新在线 θ₁，不是乘旧目标；若反过来会是不同规则。较小 τ 往往让参数每次变化更少，也会增加滞后，不能据此无条件承诺更快学习或更高真实回报。</p>
+<p>参数变化平滑，不代表所有状态的 max 目标、贪心动作或真实误差都平滑。非线性网络、动作最大值切换及数据变化都可能改变结果。本课线性式恰能直接计算目标值，不把参数插值等同于一般输出平均；hard 或 soft 都可能持续传播错误的估计。</p>
+<h3 id="section-13">4.5 终止与外部停止保持原合同</h3>
+<p>批中的 e_2 真终止且实际 r=0，所以每次 y=0；若有另一条独立成功记录 Cconfirm、r=8 到 z，则 y=8，失败实际 −4 则 y=−4。它们都不依赖 bar θ，目标维护不能抹掉进入终态的奖励。本课没有新增这些 confirm 记录或额外梯度。</p>
+<p>如果采集器在 review 后外部停止，原任务仍 C1，且旧后继/mask 有效，应按当时声明的目标参数 bootstrap。比如硬分支 c=1 的 bar θ 仍 (1,0)，目标为 2.6；没有已选下一行为动作也可构这个 max 目标。若只有 reset 新图或旧 mask 缺失，保存原因并跳过无法核实的更新，不伪标真终止。</p>
+<h2 id="section-14">5. 与前一种方法的关系</h2>
+<p>RL-023 解决从哪些已存转移构造批次；本课解决这些转移中的后继值由哪组参数、按什么时钟提供。两者作用不同：随机回放不自动固定目标，目标滞后也不生成新的独立记录或修复采样偏向。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>机制</th>
+<th>控制哪一部分</th>
+<th>新代价与限制</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>回放</td>
+<td>数据使用顺序与频率</td>
+<td>存储、读取、历史版本与覆盖仍需核查</td>
+</tr>
+<tr>
+<td>stop-gradient</td>
+<td>当前 loss 的反向路径</td>
+<td>不规定下一次用哪组目标参数</td>
+</tr>
+<tr>
+<td>硬复制</td>
+<td>分段保持，再按间隔整组复制</td>
+<td>旧估计滞后，复制边界可能跳变，需要明确时钟</td>
+</tr>
+<tr>
+<td>软维护</td>
+<td>每次把目标参数向 post 在线参数移动一部分</td>
+<td>增加平滑也增加滞后，τ 语义与频率不能省略</td>
+</tr>
+</tbody></table></div>
+<p>目标网络通常增加一份参数存储和目标前向计算；维护还要复制或逐参数混合。它不是第二个独立学习过程，也不自动有真值监督。过大间隔或过小 τ 可能让有用更新传播太慢，过小间隔或较大 τ 又减少滞后；具体效果需在相同数据、优化与评价条件下检验。</p>
+<p>原始 DQN 使用目标网络缓解移动目标问题，但不是任意非线性函数、任意任务和有限数据都收敛的定理。任务表示不充分、反馈错误、非法动作混入、记录版本不兼容或未访问动作缺数据，都不会因维护一份 bar θ 自动解决。</p>
+<h2 id="section-15">6. 一个主要研究应用：GUI 日志中的目标版本是否可追溯</h2>
+<p>主应用是<strong>多步 GUI 价值学习中，对齐每次更新的数据、在线版本和目标版本</strong>。若任务只是独立控件定位，仍先建立监督定位或固定流程；若当前动作影响后续画面与持久结果，再讨论长期价值控制。实际系统字段均<strong>【待确认】</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>合同项</th>
+<th>真实研究必须补齐的内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>观测与状态</td>
+<td>【待确认】指令、截图/结构、历史、焦点登录及预算，状态是否充分且编码版本稳定</td>
+</tr>
+<tr>
+<td>动作与许可</td>
+<td>【待确认】稳定 ID/控件映射、权限与 mask 的来源/版本，后继空或未知集合如何留待核；行为与目标同样过滤</td>
+</tr>
+<tr>
+<td>奖励与独立反馈</td>
+<td>【待确认】成功失败/取消、步骤时间与误操作成本、单位及 γ；谁何时独立验证持久结果，提示不能自动充当完成</td>
+</tr>
+<tr>
+<td>多步、初态与结束</td>
+<td>【待确认】动作后果、任务分布和可达性、预算、真终止/外部截断/reset 的独立标志，保留真实旧后继和恢复成本</td>
+</tr>
+<tr>
+<td>数据与回放版本</td>
+<td>【待确认】唯一事件、任务步骤、状态动作奖励后继、许可/反馈/环境版本、失败与缺失；逐对覆盖、抽样与复用次数</td>
+</tr>
+<tr>
+<td>两网络初始化与保存</td>
+<td>【待确认】online/target 的架构、权重及模型状态如何对应，初始复制与分别存储，保存/恢复时是否保留目标版本</td>
+</tr>
+<tr>
+<td>维护规则与时钟</td>
+<td>【待确认】硬/软选择、H 的计数单位、τ 乘法位置、维护频率和发生在 step 前还是后；跳过更新与恢复计数怎样记录</td>
+</tr>
+<tr>
+<td>梯度与优化</td>
+<td>【待确认】pre online、pre target、y、stop-gradient、损失系数/mean、学习率和真正 optimizer step；target 不由当前损失写入</td>
+</tr>
+<tr>
+<td>评价与诊断</td>
+<td>【待确认】冻结评价策略的持久成功率/回报、错误/违规、步数时延、覆盖和不确定性；目标漂移/复制跳变、loss 与 Q 尺度只作诊断</td>
+</tr>
+<tr>
+<td>采集与训练成本</td>
+<td>【待确认】交互、核验标注、reset、重复调参，以及两网络存储、目标前向、复制/混合、反向与训练耗时</td>
+</tr>
+<tr>
+<td>推理与执行成本</td>
+<td>【待确认】实际部署用哪组参数、编码/候选/mask/前向、交互等待、恢复和结果核验；目标训练副本不等于必须额外执行 GUI 动作</td>
+</tr>
+<tr>
+<td>非 RL 基线与公平性</td>
+<td>【待确认】固定流程、监督定位加流程、示范策略等，匹配任务、输入、先验、许可、交互/计算预算和成功判据，独立划分训练/调参与测试</td>
+</tr>
+</tbody></table></div>
+<p>研究可以提出一个<strong>尚未验证的假设</strong>：可追溯的目标版本与维护事件，能否帮助发现“离线 loss 变化来自目标同步，而非真实任务改善”的 GUI 失败？它仍需真实日志、非 RL 对照、独立评价和成本记录。本课没有验证硬/软更新谁更好，状态 <strong>NOT_RUN</strong>。</p>
+<p>模态路由的实际输入、标签语义、动作和错误成本仍待确认，单次选择先对比监督或单步反馈基线。SR 先有迭代、早停或计算分配等真实决策与质量—成本目标；普通一次重建先用监督及固定处理基线，不强套目标网络控制。</p>
+<h2 id="section-16">7. 常见误解、失败条件和适用边界</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>误解或失败</th>
+<th>本课核查</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>“目标 detach 了，就已经有滞后网络”</td>
+<td>查看跨优化步 bar θ 是否独立保持或被立即替换</td>
+</tr>
+<tr>
+<td>“H=2 是读两条样本或做两个 GUI 动作”</td>
+<td>本课只按成功 optimizer step，B=2 的一批只加一次</td>
+</tr>
+<tr>
+<td>“先 copy post 参数，再回改本次 loss”</td>
+<td>当前目标先固定；维护只影响下一次目标构造</td>
+</tr>
+<tr>
+<td>“硬复制后 c 清零，或 reset 环境就重置所有时钟”</td>
+<td>本课 c 为保留的全局优化计数，恢复协议需另行明确</td>
+</tr>
+<tr>
+<td>“τ 越小总越好，或者 τ 是旧参数的系数”</td>
+<td>看清 τ 乘新 online，并考虑维护频率与滞后</td>
+</tr>
+<tr>
+<td>“软参数平均就是所有 Q 输出平均”</td>
+<td>一般非线性网络没有这个等式，还可能发生 max 动作切换</td>
+</tr>
+<tr>
+<td>“两个网络就独立、收敛或覆盖更充分”</td>
+<td>数据与估计相关性仍在，confirm 没新增反馈</td>
+</tr>
+<tr>
+<td>“表里的硬 θ₂ 也可以当软分支 θ₂”</td>
+<td>不同下一目标会改变后续优化，分支不能拼接</td>
+</tr>
+</tbody></table></div>
+<p>如果参数对象实际共享引用，所谓 target 可能随 online 即时变化；如果复制漏掉影响预测的模型状态，版本也可能对不上。这些是应检查的工程失败条件，不能仅看两个变量名就宣布目标已冻结。终止、许可和持久反馈错误则要从任务日志修复，而非靠调整 H 或 τ 掩盖。</p>
+<h2 id="section-17">8. 三道理解题</h2>
+<p><strong>题 1｜两种时间尺度。</strong> stop-gradient 与目标网络维护分别约束什么？本课 H=2、B=2、c 从 0 开始时，完成第一批与第二批后何时复制，分别影响哪次目标？只交互但没有优化，或资料无效而跳过 step，c 应如何处理？为何不能把 buffer 容量、环境步和预算 h 混用？</p>
+<p><strong>题 2｜硬两步与独立软对照。</strong> 从本课 fresh θ₀/bar θ₀ 与固定批出发，复算第一步 θ₁、硬 H=2 维护后的 bar 与下一目标；在相同 θ₁ 边界，H=1 的目标与 τ=0.1 的软 bar/下一目标各是多少？然后只沿硬 H=2 继续第二步，给两条梯度、均值、θ₂、复制事件及下一次目标。能否把第二步目标改成 2.1788，或把硬 θ₂ 移到软分支？</p>
+<p><strong>题 3｜结束与真实 GUI。</strong> 在硬分支 c=1、bar θ=(1,0) 时，Cconfirm 实际 r=8 真终止的目标是什么？review 后只外部停止、旧 C1/mask 有效时呢；若只有 reset 新图又怎么办？列四项真实合同、一个独立持久判据、一个非 RL 基线和训练/推理各一项成本；能否以目标更慢变化证明真实成功率提高或训练收敛？</p>
+<h2 id="section-18">9. 下一单元与待复习问题</h2>
+<p>下一单元是 <strong>RL-025《Double DQN：选择动作与评估动作分开》</strong>。今天只完成目标版本维护，不提前给它的公式或把“有两个参数副本”自动叫作下一种算法。</p>
+<p>若不清楚同 pre 批均值，回 RL-023；若梯度位置与共享输出混淆，回 RL-022；若把反复读旧记录当新覆盖，回 RL-019。自查时画出“pre 目标 → online step → 计数 → 维护 → 下一目标”的顺序，并为每个数写上网络版本。材料可用与理解确认分开，不据此诊断个人掌握。</p>
+<h2 id="section-19">10. 可核查的参考来源与证据说明</h2>
+<ol>
+<li><strong>Mnih 等，<em>Human-level control through deep reinforcement learning</em>，Nature 518，529～533，2015，DOI 10.1038/nature14236。</strong><a href="https://storage.googleapis.com/deepmind-media/dqn/DQNNaturePaper.pdf">作者团队公开原文 PDF</a>。2026-11-09 实际复读 PDF 第 7 页 Methods 的固定目标、目标网络复制段及 Algorithm 1，查看原页图像；本课将计数和顺序显式声明为 optimizer step 后，参数/损失细节为教学约定，不声称复现完整 Atari 配置或实验。</li>
+<li><strong>Lillicrap 等，<em>Continuous control with deep reinforcement learning</em>，ICLR 2016。</strong><a href="https://arxiv.org/abs/1509.02971">arXiv 原始作者记录</a>，<a href="https://arxiv.org/pdf/1509.02971v6">本次实际读取的 v6 PDF</a>。该工作首次 arXiv 提交为 2015-09-09，本次所读 v6 修订日期为 2019-07-05，不将首次提交年、会议年和修订年混写。实际选读 PDF 第 4 页软目标参数式及相邻解释，并查看原图；第 3 页仅作章节范围识别。本课只取参数维护式，不教授或验证 DDPG 的主算法，不把它的实验收益移到当前 GUI。</li>
+</ol>
+<p>当日原始来源可读：DQN 作者 PDF 的 HEAD 为 200，重新校验 13 页、4,600,582 字节缓存，SHA-256 <code>3ae04e292f2882483ad539e24cd532743165afce51d45df4e31bd1e3ed9753bb</code>；DDPG v6 当日 GET 200，14 页、663,643 字节，SHA-256 <code>34ef677ecdee8c2a72721c70c7d849191be72af39ac8691a12e8c2979a28feda</code>。元数据或全文下载不代表通读全文，语义核查范围限上述选页。</p>
+<p><strong>已发表机制：</strong>滞后目标网络、硬复制与软参数维护式。<strong>教学假设与算术：</strong>固定 replay 批、线性函数、H=2、η/τ 数字、硬两步与软单次分支，不是深度训练实测。<strong>工程推断与研究假设：</strong>GUI 版本、维护时钟、成本和独立比较，业务资料待确认。<strong>实际研究结果：</strong>无，<strong>未运行（NOT_RUN）</strong>；没有随机采样、研究训练、真实 GUI、GPU 或服务器实验，没有稳定性、覆盖、成功率或收敛改善结论。</p>
+<details class="answers" id="section-20"><summary>参考答案（练习完成后再看）</summary><p><strong>题 1 参考答案。</strong> stop-gradient 限制本次求导路径，y 不对当前 θ 反传；维护规则决定后续步骤使用哪组 bar θ，两者不同。初始 c=0，第一批成功 step 后 c=1，不复制；第二批 step 后 c=2，复制本次 post θ₂，作用于第三次目标。c 不清零，下次触发在 c=4。每批虽两条，只算一次 optimizer step；只有环境交互、数据无效或没有完成在线写入不加 c。环境预算 h 描述任务剩余动作，buffer 容量描述存储，环境步描述交互，不能与优化时钟互换。</p>
+<p><strong>题 2 参考答案。</strong> 首步目标 (2.6,0)，均值梯度 (1.2,−1.8)，θ₁=(0.88,0.18)。硬 H=2 在 c=1 保留 bar=(1,0)，下一目标 2.6；共同 θ₁ 边界的 H=1 对照复制后，后继最大 3.7，下一目标 2.33。独立软维护以 τ=0.1 乘新在线参数，bar=(0.988,0.018)，后继最大 3.97，下一目标 2.573。这里只比较共同首步后的维护，不继续或混合这些分支。</p>
+<p>硬 H=2 第二步依然用目标 (2.6,0)，在线预测 (1.06,−1.58)，两梯度 (−1.54,−1.54)、(3.16,−1.58)，均值 (0.81,−1.56)，在线 θ₂=(0.799,0.336)。完成后 c=2 才复制，目标网络 confirm=3.532、cancel=−1.262，下一次 Nreview 目标 2.1788。不能回改第二步已经用过的 2.6，也不能把硬分支 θ₂ 当成软分支后续结果。所有读取仍只有原有事件；参数复制和软平均不产生新环境反馈，也不保证真实误差降低。</p>
+<p><strong>题 3 参考答案。</strong> 真终止目标直接 y=8，进入奖励保留；不读终止空集合。外部停止但旧 C1/mask 有效且原任务继续，在指定 bar=(1,0) 下 y=2.6；如果只有 reset 新图或缺旧 mask，就记录截断与缺失原因，跳过无法核实的非终止更新，不补后继、不伪标终止。当前不执行这些新记录或额外梯度。</p>
+<p>合同可列观测/历史与预算、固定动作 ID 和许可、独立反馈及奖励单位、结束/reset、事件/模型版本、两网络保存与维护时钟、损失/step、评价与成本。持久判据需核目标记录或输出，具体接口【待确认】，不能只看成功提示。非 RL 基线可用固定流程或监督定位加流程，同任务、信息、权限、预算与成功判据比较。训练成本包括交互核验及两网络存储/目标前向/维护；推理成本包括编码、动作前向、等待、恢复与结果验证。目标变化更慢不等于独立、更准、真实成功或收敛；本文只有教学算术和机制，研究仍 NOT_RUN。</p>
+</details></article></div><section class="pdf-preview wrap" aria-labelledby="pdf-preview-title"><h2 id="pdf-preview-title">同内容伴随 PDF · 阅读版</h2><p>本课 PDF 使用与 PPT 相同的源内容，经独立排版用于阅读，非 PowerPoint 原生导出；可编辑汇报请使用 PPT。手机或浏览器未显示时，可<a href="./RL-024.pdf" style="text-decoration:underline">直接打开 PDF 阅读版</a>。</p><iframe src="./RL-024.pdf#toolbar=1" title="RL-024 同内容伴随 PDF 阅读版" loading="lazy"></iframe></section><div class="lesson-navigation wrap"><a href="../RL-023/"><span>← 上一单元 · RL-023</span><strong>经验回放：旧数据如何帮助训练</strong></a><a class="next" href="../RL-025/"><span>下一单元 · RL-025 →</span><strong>Double DQN：选择动作与评估动作分开</strong></a></div></main><footer class="site-footer"><div class="footer-inner wrap"><p>强化学习学习与应用 · 课程 v1.0.0 · 中文讲解与研究应用</p><a href="../../#directory">回到课程目录 ↑</a></div></footer></body></html>
