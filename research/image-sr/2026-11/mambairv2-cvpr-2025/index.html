@@ -1,0 +1,95 @@
+<!DOCTYPE html> <html lang="zh-CN"> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <title> MambaIRv2 CVPR 2025 论文精读 | 王超华 · 个人研究主页 </title> <meta name="author" content="王超华 "> <meta name="description" content="从 ASE 与 SGN 理解 MambaIRv2 的单向扫描、全局提示、长程交互与性能成本边界。"> <meta name="keywords" content="王超华, Chaohua Wang, 计算机视觉, 多模态大模型, 图像恢复, 超分辨率, 端侧部署"> <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; media-src 'self' https:; frame-src 'self' https:; connect-src 'self' https:;"> <style>
+  :root {
+    --max-content-width: 930px;
+  }
+</style> <link rel="stylesheet" href="/assets/css/tailwind.css?v=50c64c15cbb9fd1ce6056fdb8bcb4b62"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css" integrity="sha256-MVopmdyC2tYTiJ8wlktf0uh0v4NgT+vNdyVFepi7Q0c=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/academicons@1.9.5/css/academicons.min.css" integrity="sha256-SzrCOBJbGVFMahewkgjwnApaV2+av1DwMAA+/QGLyZw=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/scholar-icons@1.0.3/css/scholar-icons.css" integrity="sha256-VY3hHVj/hNX3fYG6wtbA6TcKJQl7+FthzGSyIB64klY=" crossorigin="anonymous"> <link defer rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons&amp;display=swap"> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-github.css?v=591dab5a4e56573bf4ef7fd332894c99" media="" id="highlight_theme_light"> <link rel="shortcut icon" href="data:image/svg+xml,&lt;svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22&gt;&lt;text%20y=%22.9em%22%20font-size=%2290%22&gt;%E2%9A%9B%EF%B8%8F&lt;/text&gt;&lt;/svg&gt;"> <link rel="stylesheet" href="/assets/css/main.css?v=3116ba77db9ee1581d05bb3e86fbf7f1"> <link rel="canonical" href="https://chaohuawang-phd.github.io/research/image-sr/2026-11/mambairv2-cvpr-2025/"> <script src="/assets/js/theme.js?v=5286c3e4c334d0ecb8fc0c40ff4fa7ec"></script> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-native.css?v=5847e5ed4a4568527aa6cfab446049ca" media="none" id="highlight_theme_dark"> <script>
+    initTheme();
+  </script> </head> <body class="fixed-top-nav sticky-bottom-footer"> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <a class="navbar-brand title font-weight-lighter" href="/"> 王超华 · 个人研究主页 </a> <button class="navbar-toggler collapsed navbar-toggler-main" type="button" data-nav-toggle="navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse navbar-collapse-main" id="navbarNav"> <ul class="navbar-nav navbar-menu-list flex-nowrap"> <li class="nav-item "> <a class="nav-link" href="/">关于我 </a> </li> <li class="nav-item active"> <a class="nav-link" href="/research/">研究方向 <span class="sr-only">(current)</span> </a> </li> <li class="nav-item "> <a class="nav-link" href="/publications/">论文成果 </a> </li> <li class="nav-item "> <a class="nav-link" href="/projects/">研究项目 </a> </li> <li class="nav-item "> <a class="nav-link" href="/cv/">教育与经历 </a> </li> <li class="nav-item active"> <a class="nav-link" href="/research/image-sr/">图像超分辨论文调研 <span class="sr-only">(current)</span> </a> </li> <li class="nav-item"> <button id="search-toggle" type="button" title="Search" aria-label="Open search"> <span class="nav-link">ctrl k <i class="fa-solid fa-magnifying-glass"></i></span> </button> </li> <li class="toggle-container"> <button id="light-toggle" type="button" title="Change theme" aria-label="Change color theme"> <i class="fa-half-sun-moon" id="light-toggle-system"></i> <i class="fa-solid fa-moon" id="light-toggle-dark"></i> <i class="fa-solid fa-sun" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="container mt-5" role="main"> <div class="post"> <header class="post-header"> <h1 class="post-title">MambaIRv2 CVPR 2025 论文精读</h1> <p class="post-description">从 ASE 与 SGN 理解 MambaIRv2 的单向扫描、全局提示、长程交互与性能成本边界。</p> </header> <article> <p>这篇 CVPR 2025 论文尝试修复 Mamba 用于图像复原时的两个结构性问题：因果扫描看不到后续像素，远距离贡献又随状态转移连乘而衰减。作者提出 Attentive State-space Equation（ASE）与 Semantic Guided Neighboring（SGN），在单向扫描中补入全局提示，并把同语义像素搬到序列邻域。结论应收窄为：在论文给定的超分协议和 MACs 口径下，MambaIRv2 取得了有竞争力的性能—成本折中；这不等同于已证明真实硬件延迟更低。</p> <p><strong>论文信息</strong>：Hang Guo 等，CVPR 2025，页 28124–28133。正式接收证据：<a href="https://openaccess.thecvf.com/content/CVPR2025/html/Guo_MambaIRv2_Attentive_State_Space_Restoration_CVPR_2025_paper.html" rel="external nofollow noopener" target="_blank">CVF 论文页</a> · <a href="https://openaccess.thecvf.com/content/CVPR2025/papers/Guo_MambaIRv2_Attentive_State_Space_Restoration_CVPR_2025_paper.pdf" rel="external nofollow noopener" target="_blank">正文 PDF</a> · <a href="https://openaccess.thecvf.com/content/CVPR2025/supplemental/Guo_MambaIRv2_Attentive_State_CVPR_2025_supplemental.pdf" rel="external nofollow noopener" target="_blank">补充材料</a>。本页读取正文 10 个 PDF 页面序列与补充材料 5 个页面序列。</p> <h2 id="研究问题与失败机制">研究问题与失败机制</h2> <p>作者指出三类失败：当前像素只依赖扫描序列中的前驱；多方向扫描扩大可见范围但带来额外成本与高相关冗余；状态转移矩阵的连乘会削弱远距离像素贡献。Figure 1 是机制示意，不是实验结果；Figure 2 才给出 MambaIR 的四向扫描特征相似度与控制矩阵分布。</p> <figure> <a href="/research/image-sr/2026-11/assets/mambairv2-cvpr-2025/fig1-causal-vs-attentive.png" target="_blank" rel="noopener"> <img class="img-fluid" src="/research/image-sr/2026-11/assets/mambairv2-cvpr-2025/fig1-causal-vs-attentive.png" alt="MambaIRv2 原图 1：因果状态空间扫描和注意状态空间扫描的可见范围对比" width="1240" height="720" loading="lazy" decoding="async"> </a> <figcaption><strong>原图 1｜因果扫描与注意状态空间。</strong>来源：<a href="https://openaccess.thecvf.com/content/CVPR2025/papers/Guo_MambaIRv2_Attentive_State_Space_Restoration_CVPR_2025_paper.pdf#page=1" rel="external nofollow noopener" target="_blank">Guo 等，CVPR 2025，Figure 1，正文 PDF 第 1 页</a>。点击图片查看原尺寸。</figcaption> </figure> <p><strong>读图</strong>：原论文 Figure 1，PDF 页面序列 1。左侧展示因果扫描的受限可见性，右侧展示作者期望的全图感知与单次扫描。它支持“设计动机”，不能单独证明方法已经实现全局利用。</p> <figure> <a href="/research/image-sr/2026-11/assets/mambairv2-cvpr-2025/fig2-scan-redundancy-decay.png" target="_blank" rel="noopener"> <img class="img-fluid" src="/research/image-sr/2026-11/assets/mambairv2-cvpr-2025/fig2-scan-redundancy-decay.png" alt="MambaIRv2 原图 2：四向扫描特征余弦相似度和控制矩阵分布" width="1250" height="660" loading="lazy" decoding="async"> </a> <figcaption><strong>原图 2｜多向冗余与长程衰减。</strong>来源：<a href="https://openaccess.thecvf.com/content/CVPR2025/papers/Guo_MambaIRv2_Attentive_State_Space_Restoration_CVPR_2025_paper.pdf#page=3" rel="external nofollow noopener" target="_blank">Guo 等，CVPR 2025，Figure 2，正文 PDF 第 3 页</a>。点击图片查看原尺寸。</figcaption> </figure> <p><strong>读图</strong>：原论文 Figure 2，PDF 页面序列 3。四向扫描特征在五个测试集上的余弦相似度约为 0.71–0.74；控制矩阵的经验分布集中在约 0.80 且小于 1。前者提示冗余，后者与长程衰减机制一致；两图都来自 MambaIR，不能直接当作 MambaIRv2 的性能结果。</p> <h2 id="方法">方法</h2> <p>核心状态空间方程为：</p> \[h_i=\bar{A}h_{i-1}+\bar{B}x_i,\qquad y_i=Ch_i+Dx_i\] <p>展开到第 k 步后，早期输入 x0 对 yk 的系数包含 C Ā^k B̄。补充材料给出完整递推证明。一个只用于理解的标量算例是：令 C=B̄=1、Ā=0.8、D=0、x0=2，则 x0 到 y3 的贡献为 0.8^3×2=1.024；相同幅值的邻近输入若不经过三次连乘，其贡献为 2。这个数值不是论文实验，只解释 Ā^k 的衰减。</p> <p>ASE 把输出矩阵 C 类比为线性注意力中的 Query。提示池 P=MN，其中 N 跨块共享、M 为块特定，随后用 Gumbel-Softmax 产生 one-hot 路由 R，并令实例提示 P=R𝒫，最终改写为：</p> \[y_i=(C+P)h_i+Dx_i\] <p>SGN 复用同一个路由矩阵，把同一提示类别的像素分组后展开成一维序列，再在 ASE 后逆变换回原空间。它不增加新的语义监督；所谓“语义”来自提示路由本身。</p> <figure> <a href="/research/image-sr/2026-11/assets/mambairv2-cvpr-2025/fig3-architecture.png" target="_blank" rel="noopener"> <img class="img-fluid" src="/research/image-sr/2026-11/assets/mambairv2-cvpr-2025/fig3-architecture.png" alt="MambaIRv2 原图 3：整体网络、ASSM、ASE 提示路由与 SGN 重排架构" width="2440" height="1140" loading="lazy" decoding="async"> </a> <figcaption><strong>原图 3｜整体架构、ASE 与 SGN。</strong>来源：<a href="https://openaccess.thecvf.com/content/CVPR2025/papers/Guo_MambaIRv2_Attentive_State_Space_Restoration_CVPR_2025_paper.pdf#page=4" rel="external nofollow noopener" target="_blank">Guo 等，CVPR 2025，Figure 3，正文 PDF 第 4 页</a>。点击图片查看原尺寸。</figcaption> </figure> <p><strong>读图</strong>：原论文 Figure 3，PDF 页面序列 4。上部是浅层卷积、局部 Window MHSA、全局 ASSM 与重建头；下部依次给出 ASSM、ASE 路由提示和 SGN 展开/折叠。该图支持模块关系，不能支持各模块独立贡献；独立贡献要看消融。</p> <h2 id="训练协议与可比性">训练协议与可比性</h2> <ul> <li> <p>经典 SR 使用 DF2K，轻量 SR 使用 DIV2K；经典评测为 Set5、Set14、B100、Urban100、Manga109。</p> </li> <li> <p>PSNR/SSIM 在 Y 通道计算；训练裁剪为 64×64，SR 批量 32，Adam，L1 损失，初始学习率 2×10^-4。</p> </li> <li> <p>2× 模型权重用于初始化 3×/4×，且后两者减半学习率与迭代数。</p> </li> <li> <p>补充材料与 ATD 的 2× 经典 SR 对照是混合结果：MambaIRv2 在 Set5/Manga109 略高，在 Set14/B100/Urban100 略低，因此不能写成全面胜出。</p> </li> </ul> <h2 id="关键结果">关键结果</h2> <table> <thead> <tr> <th>对照</th> <th style="text-align: right">参数量</th> <th style="text-align: right">MACs</th> <th style="text-align: right">Urban100 2× PSNR/SSIM</th> <th style="text-align: right">Manga109 2× PSNR/SSIM</th> </tr> </thead> <tbody> <tr> <td>SRFormer-light</td> <td style="text-align: right">853K</td> <td style="text-align: right">236.3G</td> <td style="text-align: right">32.91 / 0.9353</td> <td style="text-align: right">39.28 / 0.9785</td> </tr> <tr> <td>MambaIRv2-light</td> <td style="text-align: right">774K</td> <td style="text-align: right">286.3G</td> <td style="text-align: right">33.26 / 0.9378</td> <td style="text-align: right">39.35 / 0.9785</td> </tr> <tr> <td>HAT</td> <td style="text-align: right">20.8M</td> <td style="text-align: right">514.9G</td> <td style="text-align: right">34.45 / 0.9466</td> <td style="text-align: right">40.26 / 0.9809</td> </tr> <tr> <td>MambaIRv2-B</td> <td style="text-align: right">22.9M</td> <td style="text-align: right">445.8G</td> <td style="text-align: right">34.49 / 0.9468</td> <td style="text-align: right">40.42 / 0.9810</td> </tr> </tbody> </table> <p>轻量模型相对 SRFormer-light 在 Urban100 2× 高 0.35 dB、参数少 79K，但 MACs 高约 21%；“显著更高效”若只看参数成立，若看 MACs 则不成立。与 HAT 对比时，MambaIRv2-B 参数略多但 MACs 少 13.4%，Urban100/Manga109 分别高 0.04/0.16 dB。补充材料给出的不同输出尺寸 MACs 显示：256×256 时 MambaIRv2 比 HAT 低约 30%，到 1024×1024 时两者接近；这仍是理论 MACs，不是延迟或显存。</p> <figure> <a href="/research/image-sr/2026-11/assets/mambairv2-cvpr-2025/fig4-qualitative.jpg" target="_blank" rel="noopener"> <img class="img-fluid" src="/research/image-sr/2026-11/assets/mambairv2-cvpr-2025/fig4-qualitative.jpg" alt="MambaIRv2 原图 4：Urban100 和 Manga109 的四倍经典超分辨定性比较" width="2440" height="680" loading="lazy" decoding="async"> </a> <figcaption><strong>原图 4｜重复结构与纹理的定性比较。</strong>来源：<a href="https://openaccess.thecvf.com/content/CVPR2025/papers/Guo_MambaIRv2_Attentive_State_Space_Restoration_CVPR_2025_paper.pdf#page=6" rel="external nofollow noopener" target="_blank">Guo 等，CVPR 2025，Figure 4，正文 PDF 第 6 页</a>。点击图片查看原尺寸。</figcaption> </figure> <p><strong>读图</strong>：原论文 Figure 4，PDF 页面序列 6。四组 Urban100/Manga109 纹理样例比较 HR、Bicubic、SwinIR、MambaIR、CAT-A、DAT、HAT 与 MambaIRv2。作者样例中 Ours 对重复线条和纹理方向保持更接近 HR；这是经挑选的定性证据，不能替代整套数据的平均指标或盲测。</p> <h2 id="消融与负载判断">消融与负载判断</h2> <table> <thead> <tr> <th>组件</th> <th style="text-align: right">Urban100 PSNR/SSIM</th> <th style="text-align: right">Manga109 PSNR/SSIM</th> </tr> </thead> <tbody> <tr> <td>Window MHSA</td> <td style="text-align: right">32.89 / 0.9343</td> <td style="text-align: right">39.11 / 0.9772</td> </tr> <tr> <td>+ ASE</td> <td style="text-align: right">32.94 / 0.9351</td> <td style="text-align: right">39.20 / 0.9780</td> </tr> <tr> <td>+ ASE + SGN</td> <td style="text-align: right">32.97 / 0.9355</td> <td style="text-align: right">39.24 / 0.9784</td> </tr> </tbody> </table> <p>ASE 带来 +0.05/+0.09 dB，SGN 再带来 +0.03/+0.04 dB；两者都是正增益，但增量很小。提示注入位置消融中 C 的 PSNR 最佳，不过 B 在 Urban100 SSIM 略高 0.0001，因此“C 在所有指标最优”不成立。论文没有报告多随机种子或置信区间，无法判断这些小差值的统计稳定性。</p> <p>与 MambaIR 扫描数对照显示：MambaIRv2 单向扫描 774K/286G，在 Urban100 2× 为 33.26 dB；MambaIR-4 为 1.36M/568G、32.92 dB。这支持总体设计优于该基线，但不能只归因于 ASE 或 SGN，因为架构与局部注意力配置同时变化。</p> <figure> <a href="/research/image-sr/2026-11/assets/mambairv2-cvpr-2025/fig5-attentive-map.png" target="_blank" rel="noopener"> <img class="img-fluid" src="/research/image-sr/2026-11/assets/mambairv2-cvpr-2025/fig5-attentive-map.png" alt="MambaIRv2 原图 5：查询像素与提示矩阵余弦相似度的注意状态空间可视化" width="1280" height="600" loading="lazy" decoding="async"> </a> <figcaption><strong>原图 5｜注意状态空间可视化。</strong>来源：<a href="https://openaccess.thecvf.com/content/CVPR2025/papers/Guo_MambaIRv2_Attentive_State_Space_Restoration_CVPR_2025_paper.pdf#page=8" rel="external nofollow noopener" target="_blank">Guo 等，CVPR 2025，Figure 5，正文 PDF 第 8 页</a>。点击图片查看原尺寸。</figcaption> </figure> <p><strong>读图</strong>：原论文 Figure 5，PDF 页面序列 8。查询点对应提示与矩阵 C 的余弦相似图在建筑重复结构和文字轮廓上出现相关区域。作者为清晰度过滤了低相似点，因此它支持“学到结构相关性”的定性判断，不提供完整分布、因果归因或检索准确率。</p> <h2 id="局限与证据边界">局限与证据边界</h2> <ul> <li> <p>作者承认尚未测试去模糊、去雾和去雨，不能把“通用复原骨干”外推到这些任务。</p> </li> <li> <p>补充材料只报告 MACs，没有同硬件延迟、峰值显存或能耗。</p> </li> <li> <p>语义路由的可解释性主要来自可视化，未给出类别一致性或错误路由统计。</p> </li> <li> <p>经典 bicubic SR 与真实世界生成式 SR 的退化、目标和指标不同，不能与 SeeSR、TSD-SR、VOSR、DreamSR 合并排名。</p> </li> <li> <p>论文也报告 JPEG 去块和 σ=15 彩色去噪，但本页重点是图像超分辨；这些结果只说明跨任务可迁移的初步证据。</p> </li> </ul> <h2 id="检索与去重记录">检索与去重记录</h2> <p>本轮覆盖窗口为 2022-01-01 至 2026-11-17（Asia/Shanghai），沿既有队列完成 MambaIRv2 一篇深读，没有扩展新的 venue 目录。正式资格由 CVPR 2025 官方论文页与会议 PDF 确认；补充材料用于训练配置、效率、证明和局限核对。按 CVF 官方页面、标准化标题、作者与年份以及 arXiv/CVF 版本关系去重，候选总数仍为 9。ECCV、TPAMI、IJCV、NeurIPS、ICML、ICLR 与 2022 年来源仍为待检索，不能解释为零结果。</p> <h2 id="继续阅读">继续阅读</h2> <p><a href="/research/image-sr/2026-11/">本月候选与后续阅读清单</a> · <a href="/research/image-sr/">调研范围与研究路线</a> · <a href="/research/image-sr/">栏目首页</a></p> </article> </div> </div> <footer class="sticky-bottom mt-5" role="contentinfo"> <div class="container"> © Copyright 2026 王超华 . 基于 <a href="https://github.com/alshedivat/al-folio" rel="external nofollow noopener" target="_blank">al-folio</a> 构建，由 <a href="https://pages.github.com/" rel="external nofollow noopener" target="_blank">GitHub Pages</a> 托管。 </div> </footer> <script>
+  window.alFolio = {
+    compatBootstrap: false
+  };
+</script> <script src="/assets/js/nav-toggle.js?v=141bd79a73ebc0f0b6ea58e440ae79fc"></script> <script defer src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js" integrity="sha256-Nn1q/fx0H7SNLZMQ5Hw5JLaTRZp0yILA/FRexe19VdI=" crossorigin="anonymous"></script> <script defer src="https://cdn.jsdelivr.net/npm/imagesloaded@5.0.0/imagesloaded.pkgd.min.js" integrity="sha256-htrLFfZJ6v5udOG+3kNLINIKh2gvoKqwEhHYfTTMICc=" crossorigin="anonymous"></script> <script defer src="/assets/js/masonry.js?v=e49affc7bd2646f6acdad1dbe02c2359" type="text/javascript"></script> <script defer type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script> <script src="/assets/al_math/js/mathjax-setup.js"></script> <script src="/assets/js/tooltips-setup.js?v=fe487e99db6c43751e6e7bdb2d6a0611"></script> <script src="/assets/js/no_defer.js?v=53b1b1a645525975c963ce8bf8bfefcf"></script> <script defer src="/assets/js/common.js?v=87baac90f765f2f3362dcf6aaf312a8a"></script> <script defer src="/assets/js/copy_code.js?v=c8a01c11a92744d44b093fc3bda915df" type="text/javascript"></script> <script defer src="/assets/js/jupyter_new_tab.js?v=896d254890d9b47f0281f63bfccf0dee"></script> <script defer src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script> <script defer src="/assets/al_img_tools/js/zoom.js"></script> <script defer src="/assets/js/progress-bar.js?v=499464c5c63ced6cf7ad62509f1e2610" type="text/javascript"></script> <script src="https://cdn.jsdelivr.net/npm/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js" integrity="sha256-uMJJ3EoTyfRBoTbR+lrfu1uRQ87RZG8AR3cVNuQVeFg=" crossorigin="anonymous"></script> <script>
+    addBackToTop();
+  </script> <script type="module" src="/assets/al_search/js/search/ninja-keys.min.js"></script> <ninja-keys hidebreadcrumbs noautoloadmdicons placeholder="Type to start searching"></ninja-keys> <script src="/assets/al_search/js/search-setup.js"></script> <script>
+// get the ninja-keys element
+const ninja = document.querySelector('ninja-keys');
+
+// add the home and posts menu items
+ninja.data = [{
+    id: "nav-关于我",
+    title: "关于我",
+    section: "Navigation",
+    handler: () => {
+      window.location.href = "/";
+    },
+  },{id: "nav-研究方向",
+          title: "研究方向",
+          description: "从视觉感知到多模态理解，关注模型能力与实际应用之间的连接。",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/research/";
+          },
+        },{id: "nav-论文成果",
+          title: "论文成果",
+          description: "视频去模糊研究论文与开源代码。",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/publications/";
+          },
+        },{id: "nav-研究项目",
+          title: "研究项目",
+          description: "围绕多模态交互、视觉恢复与模型部署开展研究和工程实践。",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/projects/";
+          },
+        },{id: "nav-教育与经历",
+          title: "教育与经历",
+          description: "教育背景、工作经历与研究工程能力。",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/cv/";
+          },
+        },{id: "nav-图像超分辨论文调研",
+          title: "图像超分辨论文调研",
+          description: "从顶刊顶会论文中梳理图像超分辨方法、实验条件与证据边界，按调研月份持续归档。",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/research/image-sr/";
+          },
+        },{
+        id: 'social-github',
+        title: 'GitHub',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://github.com/chaohuawang-phd", "_blank");
+        },
+      },{
+      id: 'light-theme',
+      title: 'Change theme to light',
+      description: 'Change the theme of the site to Light',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("light");
+      },
+    },
+    {
+      id: 'dark-theme',
+      title: 'Change theme to dark',
+      description: 'Change the theme of the site to Dark',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("dark");
+      },
+    },
+    {
+      id: 'system-theme',
+      title: 'Use system default theme',
+      description: 'Change the theme of the site to System Default',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("system");
+      },
+    },];
+
+</script> <script src="/assets/al_search/js/shortcut-key.js"></script> </body> </html>
