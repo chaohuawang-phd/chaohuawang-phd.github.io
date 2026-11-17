@@ -72,7 +72,7 @@ SGN 复用同一个路由矩阵，把同一提示类别的像素分组后展开�
 
 ## 关键结果
 
-| 对照            | 参数量 |  MACs  | Urban100 2× PSNR/SSIM | Manga109 2× PSNR/SSIM |
+| 对照            | 参数量 |   MACs | Urban100 2× PSNR/SSIM | Manga109 2× PSNR/SSIM |
 | --------------- | -----: | -----: | --------------------: | --------------------: |
 | SRFormer-light  |   853K | 236.3G |        32.91 / 0.9353 |        39.28 / 0.9785 |
 | MambaIRv2-light |   774K | 286.3G |        33.26 / 0.9378 |        39.35 / 0.9785 |
@@ -82,8 +82,8 @@ SGN 复用同一个路由矩阵，把同一提示类别的像素分组后展开�
 轻量模型相对 SRFormer-light 在 Urban100 2× 高 0.35 dB、参数少 79K，但 MACs 高约 21%；“显著更高效”若只看参数成立，若看 MACs 则不成立。与 HAT 对比时，MambaIRv2-B 参数略多但 MACs 少 13.4%，Urban100/Manga109 分别高 0.04/0.16 dB。补充材料给出的不同输出尺寸 MACs 显示：256×256 时 MambaIRv2 比 HAT 低约 30%，到 1024×1024 时两者接近；这仍是理论 MACs，不是延迟或显存。
 
 <figure>
-  <a href="{{ '/research/image-sr/2026-11/assets/mambairv2-cvpr-2025/fig4-qualitative.png' | relative_url }}" target="_blank" rel="noopener">
-    <img class="img-fluid" src="{{ '/research/image-sr/2026-11/assets/mambairv2-cvpr-2025/fig4-qualitative.png' | relative_url }}" alt="MambaIRv2 原图 4：Urban100 和 Manga109 的四倍经典超分辨定性比较" width="2440" height="680" loading="lazy" decoding="async">
+  <a href="{{ '/research/image-sr/2026-11/assets/mambairv2-cvpr-2025/fig4-qualitative.jpg' | relative_url }}" target="_blank" rel="noopener">
+    <img class="img-fluid" src="{{ '/research/image-sr/2026-11/assets/mambairv2-cvpr-2025/fig4-qualitative.jpg' | relative_url }}" alt="MambaIRv2 原图 4：Urban100 和 Manga109 的四倍经典超分辨定性比较" width="2440" height="680" loading="lazy" decoding="async">
   </a>
   <figcaption><strong>原图 4｜重复结构与纹理的定性比较。</strong>来源：<a href="https://openaccess.thecvf.com/content/CVPR2025/papers/Guo_MambaIRv2_Attentive_State_Space_Restoration_CVPR_2025_paper.pdf#page=6">Guo 等，CVPR 2025，Figure 4，正文 PDF 第 6 页</a>。点击图片查看原尺寸。</figcaption>
 </figure>
