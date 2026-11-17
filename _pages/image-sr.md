@@ -54,4 +54,3 @@ nav_order: 5
 ## 相关专题
 
 [目标域引导的合成训练数据筛选]({{ '/research/target-domain-data-selection/' | relative_url }})：独立专题，同时收录恢复领域与跨领域方法，明确区分正式论文、预印本和待核摘要；不改变本栏目原有主会文献纳入标准。
-

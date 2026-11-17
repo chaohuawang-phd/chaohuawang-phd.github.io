@@ -61,4 +61,3 @@ DreamSR 以局部与全局提示的双分支控制缓解分块扩散的语义漂
 当前已核验上表 9 篇 CVPR/ICCV 官方记录，完成其中 7 篇全文与补充精读。ECCV、TPAMI、IJCV、NeurIPS、ICML、ICLR 以及 2022 年来源仍待系统补查；没有据此推断这些来源缺少合格工作。
 
 [查看调研范围与比较标准]({{ '/research/image-sr/' | relative_url }}) · [返回栏目首页]({{ '/research/image-sr/' | relative_url }})
-
