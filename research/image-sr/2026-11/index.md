@@ -6,9 +6,13 @@ description: 2026年11月完成的检索、论文精读与待核验候选。
 nav: false
 ---
 
-截至北京时间 2026 年 11 月 15 日，本月已核验 9 篇正式主会论文，HAT、ATD、SeeSR、TSD-SR、VOSR 和 DreamSR 完成正文、原图及补充材料精读，其余 3 篇等待全文核验。本轮仍未完成近五年全覆盖。
+截至北京时间 2026 年 11 月 17 日，本月已核验 9 篇正式主会论文，HAT、ATD、SeeSR、TSD-SR、MambaIRv2、VOSR 和 DreamSR 完成正文、原图及补充材料精读，其余 2 篇等待全文核验。本轮仍未完成近五年全覆盖。
 
 ## 已完成的精读
+
+[MambaIRv2 CVPR 2025 论文精读]({{ '/research/image-sr/2026-11/mambairv2-cvpr-2025/' | relative_url }})
+
+MambaIRv2 用 ASE 把提示路由加入状态空间输出矩阵，再以 SGN 将同类像素重排为序列邻居。它在若干经典 SR 协议下取得有竞争力的性能—MACs 折中，但轻量模型相对 SRFormer-light 的 MACs 更高，论文也没有同硬件延迟或多随机种子统计。
 
 [TSD-SR CVPR 2025 论文精读]({{ '/research/image-sr/2026-11/tsd-sr-cvpr-2025/' | relative_url }})
 
@@ -46,14 +50,15 @@ DreamSR 以局部与全局提示的双分支控制缓解分块扩散的语义漂
 | [ATD](https://openaccess.thecvf.com/content/CVPR2024/html/Zhang_Transcending_the_Limit_of_Local_Window_Advanced_Super-Resolution_Transformer_with_CVPR_2024_paper.html)                        | CVPR 2024 | 自适应字典、类别注意力与复杂度边界     | 正文、补充与原图已精读 |
 | [SeeSR](https://openaccess.thecvf.com/content/CVPR2024/html/Wu_SeeSR_Towards_Semantics-Aware_Real-World_Image_Super-Resolution_CVPR_2024_paper.html)                                           | CVPR 2024 | DAPE、硬软提示、LRE 与感知—忠实取舍    | 正文、补充与原图已精读 |
 | [TSD-SR](https://openaccess.thecvf.com/content/CVPR2025/html/Dong_TSD-SR_One-Step_Diffusion_with_Target_Score_Distillation_for_Real-World_Image_CVPR_2025_paper.html)                          | CVPR 2025 | TSD、DASM、感知—失真与 A100 计时边界   | 正文、补充与原图已精读 |
-| [MambaIRv2](https://openaccess.thecvf.com/content/CVPR2025/html/Guo_MambaIRv2_Attentive_State_Space_Restoration_CVPR_2025_paper.html)                                                          | CVPR 2025 | 非因果状态空间与长程交互               | 待全文精读             |
+| [MambaIRv2](https://openaccess.thecvf.com/content/CVPR2025/html/Guo_MambaIRv2_Attentive_State_Space_Restoration_CVPR_2025_paper.html)                                                          | CVPR 2025 | ASE、SGN、单向扫描与 MACs/延迟边界     | 正文、补充与原图已精读 |
 | [VOSR](https://openaccess.thecvf.com/content/CVPR2026/html/Wu_VOSR_A_Vision-Only_Generative_Model_for_Image_Super-Resolution_CVPR_2026_paper.html)                                             | CVPR 2026 | 双视觉条件、引导与一步蒸馏             | 正文、补充与原图已精读 |
 | [DreamSR](https://openaccess.thecvf.com/content/CVPR2026/html/Dong_DreamSR_Towards_Ultra-High-Resolution_Image_Super-Resolution_via_a_Receptive-Field_Enhanced_Diffusion_CVPR_2026_paper.html) | CVPR 2026 | 双分支控制、感受野与超高分辨率证据边界 | 正文、补充与原图已精读 |
 
-下一轮按 MambaIRv2、SRFormer 和 DAT 继续，并补查 ECCV、TPAMI、IJCV、NeurIPS、ICML、ICLR 及 2022 年来源。TSD-SR 已按官方论文页、正式 PDF、补充材料、标准化标题、作者与年份去重；VOSR 与 DreamSR 的既有去重记录保持不变。
+下一轮按 SRFormer 和 DAT 继续，并补查 ECCV、TPAMI、IJCV、NeurIPS、ICML、ICLR 及 2022 年来源。MambaIRv2 与 TSD-SR 已按官方论文页、正式 PDF、补充材料、标准化标题、作者与年份去重；VOSR 与 DreamSR 的既有去重记录保持不变。
 
 ## 本月覆盖边界
 
-当前已核验上表 9 篇 CVPR/ICCV 官方记录，完成其中 6 篇全文与补充精读。ECCV、TPAMI、IJCV、NeurIPS、ICML、ICLR 以及 2022 年来源仍待系统补查；没有据此推断这些来源缺少合格工作。
+当前已核验上表 9 篇 CVPR/ICCV 官方记录，完成其中 7 篇全文与补充精读。ECCV、TPAMI、IJCV、NeurIPS、ICML、ICLR 以及 2022 年来源仍待系统补查；没有据此推断这些来源缺少合格工作。
 
 [查看调研范围与比较标准]({{ '/research/image-sr/' | relative_url }}) · [返回栏目首页]({{ '/research/image-sr/' | relative_url }})
+
