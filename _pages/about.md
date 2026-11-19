@@ -26,6 +26,12 @@ latest_posts:
 [了解研究方向]({{ '/research/' | relative_url }}) · [查看研究项目]({{ '/projects/' | relative_url }})
 
 
+## 具身智能论文笔记
+
+从高频叠衣动作到在陌生厨房使用电器，追踪 Physical Intelligence 的 VLA 如何学习控制、利用真机经验，并在新任务上接受评测。
+
+[阅读 π0 到 π0.7 的 VLA 论文分析]({{ '/research/pi-vla/' | relative_url }})
+
 ## 目标域数据筛选专题
 
 利用无配对或少量配对真实图像，筛选合成整图与 patch：已整理两类文献、最接近工作、创新边界及公开数据验证方案。
